@@ -2,41 +2,34 @@
 abelian
 =======
 
-This is the documentation of **abelian**.
+A Python library for locally compact Abelian (LCA) groups.
 
 .. note::
 
-    This is the main page of your project's `Sphinx <http://sphinx-doc.org/>`_
-    documentation. It is formatted in `reStructuredText
-    <http://sphinx-doc.org/rest.html>`__. Add additional pages by creating
-    rst-files in ``docs`` and adding them to the `toctree
-    <http://sphinx-doc.org/markup/toctree.html>`_ below. Use then
-    `references <http://sphinx-doc.org/markup/inline.html>`__ in order to link
-    them from this page, e.g. :ref:`authors <authors>` and :ref:`changes`.
+    This software is being built, and is not ready to be used yet.
 
-    It is also possible to refer to the documentation of other Python packages
-    with the `Python domain syntax
-    <http://sphinx-doc.org/domains.html#the-python-domain>`__. By default you
-    can reference the documentation of `Sphinx <http://sphinx.pocoo.org>`__,
-    `Python <http://docs.python.org/>`__, `NumPy
-    <http://docs.scipy.org/doc/numpy>`__, `SciPy
-    <http://docs.scipy.org/doc/scipy/reference/>`__, `matplotlib
-    <http://matplotlib.sourceforge.net>`__, `Pandas
-    <http://pandas.pydata.org/pandas-docs/stable>`__, `Scikit-Learn
-    <http://scikit-learn.org/stable>`__. You can add more by
-    extending the ``intersphinx_mapping`` in your Sphinx's ``conf.py``.
+Project Goals
+==============
 
-    The pretty useful extension `autodoc
-    <http://www.sphinx-doc.org/en/stable/ext/autodoc.html>`__ is activated by
-    default and lets you include documentation from docstrings. Docstrings can
-    be written in `Google
-    <http://google.github.io/styleguide/pyguide.html#Comments>`__
-    (recommended!), `NumPy
-    <https://github.com/numpy/numpy/blob/master/doc/HOWTO_DOCUMENT.rst.txt>`__
-    and `classical
-    <http://www.sphinx-doc.org/en/stable/domains.html#info-field-lists>`__
-    style.
+* Classical groups :math:`\mathbb{R}`, :math:`\mathbb{T}`, :math:`\mathbb{Z}` and :math:`\mathbb{Z}_n` and computations on these.
+* Relationship between continuous and discrete should be 'pretty'.
+* FFT computations on discrete, compact groups (and their products),
+  e.g. :math:`\mathbb{Z}_{n_{1}} \oplus \mathbb{Z}_{n_{2}} \oplus \dots \oplus \mathbb{Z}_{n_{r}}`.
+* The software should build on the mathematical theory.
 
+
+Todo
+============
+
+* Create skeleton for project
+* Factorizations of homomorphisms between FGAs (tests, docs, implementation)
+
+
+
+Software specification
+===========
+
+.. include:: autodoc_overview.rst
 
 Contents
 ========
@@ -46,8 +39,8 @@ Contents
 
    License <license>
    Authors <authors>
-   Changelog <changes>
    Module Reference <api/modules>
+   Abelian <api/abelian>
 
 
 Indices and tables

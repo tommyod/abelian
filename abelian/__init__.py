@@ -8,8 +8,9 @@ except:
     __version__ = 'unknown'
 
 
+from abelian.function import Function
+from abelian.group import Group
+from abelian.linalg.factorizations import smith_normal_form, hermite_normal_form
 
-from abelian.utils import identity
 
-
-__all__ = ['identity']
+__all__ = ['identity', 'Function', 'Group']
