@@ -2,11 +2,12 @@
 abelian
 =======
 
-A Python library for locally compact Abelian (LCA) groups.
+``abelian`` is a Python library for computations on locally compact Abelian groups,
+i.e. the groups :math:`\mathbb{R}`, :math:`\mathbb{T}`, :math:`\mathbb{Z}` and :math:`\mathbb{Z}_n`.
 
 .. note::
 
-    This software is being built, and is not ready to be used yet.
+   The ``abelian`` package is currently being built, and is not ready to be used yet.
 
 Project Goals
 ==============
@@ -18,18 +19,19 @@ Project Goals
 * The software should build on the mathematical theory.
 
 
+Software specification
+========================
+
+Included below is automatically generated software specification.
+
+.. include:: autodoc_overview.rst
+
+
 Todo
 ============
 
 * Create skeleton for project
 * Factorizations of homomorphisms between FGAs (tests, docs, implementation)
-
-
-
-Software specification
-===========
-
-.. include:: autodoc_overview.rst
 
 Contents
 ========
@@ -38,9 +40,9 @@ Contents
    :maxdepth: 2
 
    License <license>
-   Authors <authors>
    Module Reference <api/modules>
-   Abelian <api/abelian>
+   API: abelian <api/abelian>
+   API: linalg <api/abelian.linalg>
 
 
 Indices and tables

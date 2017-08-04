@@ -36,8 +36,8 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
     if class_overview:
         classes_in_module = inspect.getmembers(module, inspect.isclass)
 
-        out.append('All public classes')
-        out.append('------------------------')
+        out.append('List of all public classes')
+        out.append('------------------------------------------')
         out.append('\n.. autosummary::\n')
 
         for name, cls in classes_in_module:
@@ -47,8 +47,8 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
     if functions:
         functions_in_module = inspect.getmembers(module, inspect.isfunction)
 
-        out.append('All public functions')
-        out.append('------------------------')
+        out.append('List of all public classes')
+        out.append('------------------------------------------')
         out.append('\n.. autosummary::\n')
         for name, function in functions_in_module:
             out.append('    ~' + function.__module__ + '.' + name)
@@ -57,10 +57,10 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
     if classes:
         classes_in_module = inspect.getmembers(module, inspect.isclass)
 
-        out.append('All public classes with methods')
-        out.append('-------------------------------')
+        out.append('All public classes (with methods)')
+        out.append('------------------------------------------')
         for cls_name, cls in classes_in_module:
-            header = 'Methods for :class:`~{}`'.format(cls.__module__ + '.' + cls_name)
+            header = 'Methods for class :class:`~{}`'.format(cls.__module__ + '.' + cls_name)
             out.append(header)
             out.append('~'*(25 +len(header)))
             out.append('\n.. autosummary::\n')

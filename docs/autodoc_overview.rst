@@ -1,23 +1,23 @@
-All public classes
-------------------------
+List of all public classes
+------------------------------------------
 
 .. autosummary::
 
     ~abelian.function.Function
     ~abelian.group.Group
 
-All public functions
-------------------------
+List of all public classes
+------------------------------------------
 
 .. autosummary::
 
     ~abelian.linalg.factorizations.hermite_normal_form
     ~abelian.linalg.factorizations.smith_normal_form
 
-All public classes with methods
--------------------------------
-Methods for :class:`~abelian.function.Function`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+All public classes (with methods)
+------------------------------------------
+Methods for class :class:`~abelian.function.Function`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 
@@ -30,8 +30,8 @@ Methods for :class:`~abelian.function.Function`
     ~abelian.function.Function.pullback
     ~abelian.function.Function.pushfoward
   
-Methods for :class:`~abelian.group.Group`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Methods for class :class:`~abelian.group.Group`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 

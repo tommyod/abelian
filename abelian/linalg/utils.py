@@ -5,6 +5,7 @@
 def matrix_times_diag(A, diag_as_list):
     """
 
+
     Parameters
     ----------
     A

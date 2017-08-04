@@ -13,4 +13,4 @@ from abelian.group import Group
 from abelian.linalg.factorizations import smith_normal_form, hermite_normal_form
 
 
-__all__ = ['identity', 'Function', 'Group']
+#__all__ = ['Function', 'Group']

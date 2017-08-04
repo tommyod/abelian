@@ -2,11 +2,14 @@
 # -*- coding: utf-8 -*-
 
 
-class Group(object):
+class Group:
+    """
+    A locally compact Abelian group.
+    """
 
 
     def __init__(self):
         """
-
+        Initialize new instance.
         """
         pass
