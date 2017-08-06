@@ -47,7 +47,7 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
     if functions:
         functions_in_module = inspect.getmembers(module, inspect.isfunction)
 
-        out.append('List of all public classes')
+        out.append('List of all public functions')
         out.append('------------------------------------------')
         out.append('\n.. autosummary::\n')
         for name, function in functions_in_module:

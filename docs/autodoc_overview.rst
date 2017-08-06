@@ -6,7 +6,7 @@ List of all public classes
     ~abelian.function.Function
     ~abelian.group.Group
 
-List of all public classes
+List of all public functions
 ------------------------------------------
 
 .. autosummary::
