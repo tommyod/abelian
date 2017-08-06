@@ -135,8 +135,12 @@ html_theme_options = {
     'github_user': 'tommyod',
     'github_repo': 'abelian',
     'show_powered_by' : False,
+    'logo_name' : True,
+    'logo_text_align' : 'center',
     'font_size' : '15px',
-    'description' : 'Computations on locally compact Abelian groups.'
+    'description' : 'Computations on locally compact Abelian groups.',
+    'code_font_size' : '0.9em',
+	'font_family' : "Georgia, 'Hiragino Mincho Pro', serif"
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -265,7 +269,7 @@ python_version = '.'.join(map(str, sys.version_info[0:2]))
 intersphinx_mapping = {
     #'sphinx': ('http://sphinx.pocoo.org', None),
     'python': ('http://docs.python.org/' + python_version, None),
-    #'matplotlib': ('http://matplotlib.sourceforge.net', None),
+    'sympy': ('http://docs.sympy.org/latest/', None),
     #'numpy': ('http://docs.scipy.org/doc/numpy', None),
     #'sklearn': ('http://scikit-learn.org/stable', None),
     #'pandas': ('http://pandas.pydata.org/pandas-docs/stable', None),
