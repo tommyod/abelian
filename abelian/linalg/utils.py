@@ -23,7 +23,8 @@ def columns_as_list(A):
     Examples
     ---------
     >>> from sympy import Matrix
-    >>> A = Matrix([[1, 2], [3, 4]])
+    >>> A = Matrix([[1, 2],
+    ...             [3, 4]])
     >>> list_of_cols = columns_as_list(A)
     >>> list_of_cols
     [[1, 3], [2, 4]]
@@ -50,7 +51,8 @@ def nonzero_columns(H):
     Examples
     ---------
     >>> from sympy import Matrix, diag
-    >>> A = Matrix([[0, 2], [0, 4]])
+    >>> A = Matrix([[0, 2],
+    ...             [0, 4]])
     >>> nonzero_columns(A)
     1
     >>> nonzero_columns(Matrix.eye(5))
@@ -153,11 +155,15 @@ def delete_zero_columns(M):
     Examples
     ---------
     >>> from sympy import Matrix, diag
-    >>> A = Matrix([[0, 1], [0, 2]])
+    >>> A = Matrix([[0, 1],
+    ...             [0, 2]])
     >>> delete_zero_columns(A) == Matrix([1, 2])
     True
     >>> A = diag(0,1,2)
-    >>> delete_zero_columns(A) == Matrix([[0, 0], [1, 0], [0, 2]])
+    >>> A_del = Matrix([[0, 0],
+    ...                 [1, 0],
+    ...                 [0, 2]])
+    >>> delete_zero_columns(A) == A_del
     True
     """
 
@@ -215,10 +221,15 @@ def remove_cols(A, cols_to_remove):
     if any([index >= n for index in cols_to_remove]):
         raise ValueError('Index to remove not in matrix.')
 
+    cols_to_remove.sort()
 
     new_A = A.copy()
     deleted = 0
+    from sympy import pprint
     for j in cols_to_remove:
+        #pprint(new_A)
+        #print(j, j - deleted)
+        #print('---')
         new_A.col_del(j - deleted)
         deleted += 1
 
@@ -306,10 +317,13 @@ def matrix_mod_vector(A, mod_col):
     Examples
     ---------
     >>> from sympy import Matrix
-    >>> A = Matrix([[5, 6], [8, 5], [3, 5]])
+    >>> A = Matrix([[5, 6],
+    ...             [8, 5],
+    ...             [3, 5]])
     >>> mod_col = Matrix([4, 6, 3])
     >>> A_modded = matrix_mod_vector(A, mod_col)
-    >>> A_modded == Matrix([[1, 2], [2, 5], [0, 2]])
+    >>> A_modded == Matrix([[1, 2],
+    ...                     [2, 5], [0, 2]])
     True
     """
     m, n = A.shape
@@ -373,3 +387,11 @@ def order_of_vector(v, mod_vector):
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = True)
+
+if __name__ == "__main__":
+    from sympy import Matrix
+
+    A = Matrix.eye(5)
+    A = remove_cols(A, [1, 3, 2, 0])
+    pprint(A)
+

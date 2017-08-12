@@ -11,50 +11,68 @@ from abelian.linalg.free_to_free import free_kernel
 from abelian.linalg.utils import delete_zero_columns, remove_cols
 
 
-
-
-def solve_epi(A, b, target_periods):
+def solve(A, b, p = None):
     """
-    Solve A*x = b, with x in Z^n and b in Z_`target_periods`.
+    Solve the integer equation A * x = b mod p.
 
-    Long description.
-
-    TODO Write this out.
-
+    The data (A, b, p) must be integer. The equation Ax = b mod p is solved,
+    if a solution exists. If A is an epimorphism but not a monomorphism (i.e.
+    overdetermined), one of the possible solutions is returned. If A is a
+    monomorphism but not an epimorphism (i.e. underdetermined), a solution
+    will be returned if one exists. If there is no solution, None is returned.
 
     Parameters
     ----------
     A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        A sympy integer matrix of size m x n, A must be an epimorphism.
+        A sympy integer matrix of size m x n.
 
     b : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
         A sympy column matrix of size m x 1.
 
-    target_periods : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        A sympy column matrix of size m x 1.
+    p : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        A sympy column matrix of size m x 1. This column matrix represents
+        the periods of the target group of A. If None, p will be set to the
+        zero vector, i.e. infinite period in all components.
 
     Returns
     -------
     x : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        A solution to A*x = b, where x is of size n x 1.
+        A solution to A*x = b mod p, where x is of size n x 1.
+        If no solution is found, None is returned.
 
     Examples
     ---------
     >>> from sympy import Matrix
-    >>> A = Matrix([[2, 0, 3],
-    ...             [0, 1, 4]])
-    >>> b = Matrix([5, 5])
-    >>> x = Matrix([1, 1])
-    >>> solve_epi(A, b, Matrix([0, 0])) == x
+    >>> from abelian.linalg.utils import vector_mod_vector
+    >>> A = Matrix([[5, 0, 3],
+    ...             [0, 3, 4]])
+    >>> x = Matrix([2, -1, 2])
+    >>> p = Matrix([9, 9])
+    >>> b = vector_mod_vector(A*x, p)
+    >>> x_sol = solve(A, b, p)
+    >>> vector_mod_vector(A*x_sol, p) == b
     True
     """
 
-    # We are solving A * pi * x = b
+    # If no periods are supplied by the user, set the periods to zero,
+    # i.e. infinite period or free-to-free.
+    if p is None:
+        m, n = b.shape
+        p = Matrix(m, n, lambda i, j: 0)
 
-    # Find the kernel of the projection onto the space Z_`target_periods`
-    ker_pi = delete_zero_columns(diag(*target_periods))
+    # Verify that the dimensions make sense
+    (A_rows, A_cols) = A.shape
+    (b_rows, b_cols) = b.shape
+    (p_rows, p_cols) = p.shape
+    if not (A_rows == b_rows == p_rows):
+        raise ValueError('Dimension mismatch.')
+
+    # Find the kernel of the projection onto the space Z_`p`
+    ker_pi = delete_zero_columns(diag(*p))
+
     # Stack A | ker(pi) | b
     joined_A_D_b = A.row_join(ker_pi).row_join(b)
+
     # Compute ker( A | ker(pi) | b)
     kernel = free_kernel(joined_A_D_b)
 
@@ -66,6 +84,11 @@ def solve_epi(A, b, target_periods):
     m, n = kernel.shape
     col_indices = [j for j in range(n) if kernel[-1, j] == 0]
     kernel = remove_cols(kernel, col_indices)
+
+    # Return None if the kernel is empty
+    m, n = kernel.shape
+    if n == 0:
+        return None
 
     # Iteratively 'collapse' the columns using the extended
     # euclidean algorithm till the result is 1.
@@ -90,71 +113,102 @@ def solve_epi(A, b, target_periods):
 
     # Find shape of input, since shape of output depends on it
     (m, n) = A.shape
-    if kernel[-1, 0] != 1:
-        raise ValueError('No solution found')
 
-    # Find the solution as the first rows of the kernel, invert and return
-    return kernel[:m, 0] * (-1)
+    # Make sure that the bottom row is -1 or 1.
+    # It will always be 1 if the above while loop initiated,
+    # but if it never initiated then value could be -1
+    if kernel[-1, 0] not in [1, -1]:
+        return None
+
+    # The solution tot he problem is contained the first n rows of the
+    # kernel, which is a column vector. Multiply by -1 if needed to
+    # make sure the bottom entry is -1
+    if kernel[-1, 0] == 1:
+        return -kernel[:n, 0]
+    else:
+        return kernel[:n, 0]
 
 
-def solve_eqnA(f1, f2, target_space):
+def solve_epi(A, B, p = None):
     """
-    Solve the matrix equation x \circ f_2 = f_1, where f_2 is epi.
+    Solve the equation X * mod p * A = B, where A is an epimorphism.
 
-    Long description.
-
-    TODO Write this out.
-
+    The algorithm will produce a solution if (mod p * A) has a one
+    sided inverse such that A_inv * A = I, i.e. A is an epimorphism.
 
     Parameters
     ----------
     A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        A sympy integer matrix of size m x n, A must be an epimorphism.
+        A sympy integer matrix of size m x n.
 
-    b : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        A sympy column matrix of size m x 1.
+    B : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        A sympy column matrix of size k x n.
 
-    target_periods : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        A sympy column matrix of size m x 1.
+    p : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        A sympy column matrix of size m x 1. This column matrix represents
+        the periods of the target group of A. If None, p will be set to the
+        zero vector, i.e. infinite period.
 
     Returns
     -------
     x : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        A solution to A*x = b, where x is of size n x 1.
+        A solution to X * mod p * A = B.
 
     Examples
     ---------
-    >>> 2 == 2
+    >>> from sympy import Matrix
+    >>> from abelian.linalg.utils import vector_mod_vector
+    >>> A = Matrix([[5, 0, 3],
+    ...             [0, 3, 4]])
+    >>> X = Matrix([[1, 1],
+    ...             [0, 1]])
+    >>> B = X * A
+    >>> X_sol = solve_epi(A, B)
+    >>> X_sol * A == B
     True
     """
+    # If no p (periods) are given, create a vector of zeros
+    m, n = A.shape
+    if p is None:
+        p = Matrix(m, 1, lambda i, j : 0)
 
-    # print('solve_eqnA({}, {})'.format(f1, f2))
-    m, n = f2.shape
-    k, n = f1.shape
-    identity_m = Matrix.eye(m)
+    # Verify the dimensions
+    A_rows, A_cols = A.shape
+    B_rows, B_cols = B.shape
+    p_rows, p_cols = p.shape
 
-    # For each canonical generator
-    for i in range(0, m):
-        e = identity_m[:, i]
+    if (A_cols != B_cols) or (p.rows != A.rows):
+        return ValueError('Dimension mismatch.')
 
-        # Create variable x on the first loop iteration
-        if i == 0:
-            # Attempt to solve. If not solveable, append a zero column
-            try:
-                x = f1 * solve_epi(f2, e, target_space)
-            except ValueError:
-                x = f1 * (e * 0)
+    # Step 1: Find the inverse of A by solving A * x = e mod p
+    # for each canonical generator e of the target space of A.
+    # In other words, use the identity matrix to solve A * A_inv = I
+    # by solving column-for-column.
+    # Note: Only a one-sided inverse exists, A_inv * A = I is invalid.
+    A_inv = []
+    I_m = Matrix.eye(m)
+    for i in range(m):
+        identity_col = I_m[:, i]
+        inv_col = solve(A, identity_col, p)
 
-        # Variable x is created, so row join on it x := x | new
-        else:
-            # Attempt to solve. If not solveable, append a zero column
-            try:
-                x = x.row_join(f1 * solve_epi(f2, e, target_space))
-            except ValueError:
-                x = x.row_join(f1 * (e * 0))
+        # If a solution is found, append it
+        if inv_col is not None:
+            A_inv.append(inv_col)
 
-    # Delete zero columns and return
-    return x  # delete_zero_columns(x)
+    # Create the inverse of A from the list of column matrices
+    A_inv = Matrix([[entry for entry in col] for col in A_inv]).T
+
+    # Step 2: Multiply the inverse of A and B to form the solution
+    # to the problem, the matrix X.
+    # assert A * A_inv = I
+    X = B * A_inv
+
+    return X
+
+
+
+
+
 
 
 if __name__ == "__main__":
@@ -162,12 +216,4 @@ if __name__ == "__main__":
     doctest.testmod(verbose = True)
 
 
-if __name__ == "__main__":
-    from random import randint as ri
-    from sympy import pprint
-    A = Matrix(3, 3, lambda i, j: ri(1, 9))
-    pprint(A)
-    x = Matrix([1, 1, 1])
-    b = A*x
-    pprint(solve_epi(A, b, target_periods=Matrix([0, 0, 0])))
-    pprint(x)
+

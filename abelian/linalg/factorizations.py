@@ -38,7 +38,8 @@ def hermite_normal_form(A):
     Examples
     ---------
     >>> from sympy import Matrix
-    >>> A = Matrix([[1, 2], [3, 4]])
+    >>> A = Matrix([[1, 2],
+    ...             [3, 4]])
     >>> U, H = hermite_normal_form(A)
     >>> U.det() in [1, -1] # Determinant is +/- 1
     True
@@ -141,7 +142,8 @@ def smith_normal_form(A, compute_transformation=True):
     Examples
     ---------
     >>> from sympy import Matrix
-    >>> A = Matrix([[1, 2], [3, 4]])
+    >>> A = Matrix([[1, 2],
+    ...             [3, 4]])
     >>> U, S, V = smith_normal_form(A)
     >>> U.det() in [1, -1] and V.det() in [1, -1] # Unimodularity
     True
