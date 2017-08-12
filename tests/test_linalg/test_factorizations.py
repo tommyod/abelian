@@ -7,7 +7,8 @@ from abelian.linalg.factorizations import hermite_normal_form, \
     smith_normal_form
 
 
-class TestSNF():
+class TestSNF:
+
     @classmethod
     def setup_class(cls):
         m, n = ri(3, 5), ri(3, 5)

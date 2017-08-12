@@ -4,9 +4,6 @@
 from random import randint as ri
 import random
 from sympy import Matrix, pprint
-
-from abelian.linalg.free_to_free import free_coimage, free_cokernel, \
-    free_image, free_kernel, free_quotient
 from abelian.linalg.utils import vector_mod_vector, remove_cols
 from abelian.linalg.solvers import solve, solve_epi
 from abelian.linalg.factorizations import hermite_normal_form

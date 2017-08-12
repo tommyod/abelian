@@ -72,6 +72,10 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
                         (inspect.ismethod(member) and member.__self__ is cls)):
                     print(member_name, member, type(member))
 
+                    if member_name[0] == '_' and member_name[1] != '_':
+                        # Private method, continue
+                        continue
+
                     out.append('    ~' + cls.__module__ + '.' + cls_name + '.' + member_name)
 
             out.append('  ')

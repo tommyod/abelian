@@ -9,7 +9,7 @@ from abelian.linalg.free_to_free import free_coimage, free_cokernel, \
 from abelian.linalg.utils import vector_mod_vector
 
 
-class TestFreeToFree():
+class TestFreeToFree:
     @classmethod
     def setup_class(cls):
         m, n = ri(3, 5), ri(3, 5)
@@ -24,18 +24,21 @@ class TestFreeToFree():
         cls.A_quotient = free_quotient(A)
 
     def test_im_coim(self):
-        """Test the image/coimage factorization of A.
+        """
+        Test the image/coimage factorization of A.
         """
         assert (self.A_im * self.A_coim == self.A)
 
     def test_kernel(self):
-        """Test that the composition of A and ker(A) is zero.
+        """
+        Test that the composition of A and ker(A) is zero.
         """
         sum_entries = sum(abs(entry) for entry in self.A * self.A_ker)
         assert (sum_entries == 0)
 
     def test_cokernel(self):
-        """Test that the composition of A and ker(A) is zero in the target group.
+        """
+        Test that the composition of A and ker(A) is zero in the target group.
         """
         prod = self.A_coker * self.A
         m, n = prod.shape

@@ -388,10 +388,3 @@ if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = True)
 
-if __name__ == "__main__":
-    from sympy import Matrix
-
-    A = Matrix.eye(5)
-    A = remove_cols(A, [1, 3, 2, 0])
-    pprint(A)
-

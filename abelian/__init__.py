@@ -8,9 +8,10 @@ except:
     __version__ = 'unknown'
 
 
-from abelian.function import Function
-from abelian.group import Group
+from abelian.linalg.solvers import solve
 from abelian.linalg.factorizations import smith_normal_form, hermite_normal_form
+from abelian.groups import LCA
+from abelian.morphisms import HomFGA, HomLCA, Homomorphism
 
 
-#__all__ = ['Function', 'Group']
+__all__ = []

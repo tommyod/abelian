@@ -250,33 +250,6 @@ def smith_normal_form(A, compute_transformation=True):
         return S
 
 
-if __name__ == '__main__':
-    from random import randint
-
-    for test in range(10):
-        print('Running test', test + 1)
-        A = Matrix(4, 3, lambda i, j: randint(-99, 99))
-        U, S, V = smith_normal_form(A)
-
-    A = Matrix([[5, 0], [0, 4]])
-    U, S, V = smith_normal_form(A)
-    pprint(U.inv())
-    pprint(S)
-    pprint(V.inv())
-    from sympy import diag
-
-    S = diag(1, 2)
-    A = diag(5, 4)
-
-    pprint((S * A).inv())
-
-    A = Matrix([[0, 0], [0, 1]])
-    U, S, V = smith_normal_form(A)
-    pprint(S)
-
-
-
-
 
 if __name__ == "__main__":
     import doctest

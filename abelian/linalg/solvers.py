@@ -206,11 +206,6 @@ def solve_epi(A, B, p = None):
     return X
 
 
-
-
-
-
-
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = True)
