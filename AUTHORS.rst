@@ -2,4 +2,4 @@
 Developers
 ==========
 
-* tommyod <tommy.odland@gmail.com>
+* tommyod <tommy.odland@student.uib.no>
