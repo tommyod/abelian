@@ -207,10 +207,14 @@ class HomLCA:
 
         Parameters
         ----------
-        other
+        other : HomLCA
+            The homomorphism to compose with.
 
         Returns
         -------
+
+        Examples
+        --------
         >>> phi = HomFGA([[1, 0, 1],
         ...               [0, 1, 1]])
         >>> ker_phi = HomFGA([1, 1, -1])
