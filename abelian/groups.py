@@ -46,6 +46,13 @@ class LCA(object):
         """
         Verify the user inputs.
         """
+
+        if isinstance(periods, Matrix):
+            periods = list(periods)
+
+        if isinstance(discrete, Matrix):
+            discrete = list(discrete)
+
         if len(periods) <= 0:
             raise ValueError('List of periods must have length >0.')
 

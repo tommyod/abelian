@@ -42,6 +42,8 @@ class HomLCA:
         """
 
         A, target, source = self._verify_init(A, target, source)
+        assert isinstance(target, LCA)
+        assert isinstance(source, LCA)
         self.A = A
         self.target = target
         self.source = source
@@ -50,9 +52,27 @@ class HomLCA:
     def _verify_init(A, target, source):
         """
         Verify the inputs.
+
+        Parameters
+        ----------
+        A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix` or list
+            A sympy matrix representing the homomorphism. The user may also
+            use a list of lists in the form [row1, row2, ...] as input.
+        target : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`,
+        list or LCA
+            The target of the homomorphism. If None, a discrete target of
+            infinite period is used as the default.
+        source : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`,
+        list or LCA
+            The source of the homomorphism. If None, a discrete source of
+            infinite period is used as the default.
+
+        Returns
+        -------
+        A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        target : LCA
+        source : LCA
         """
-
-
 
         # If the input matrix is a list of lists, convert to matrix
         if isinstance(A, list):
@@ -67,11 +87,12 @@ class HomLCA:
         elif (source is None):
             source = [0] * A.cols
 
-        # If lists were passed as source/targets, convert to LCAs
-        if isinstance(target, list):
-            target = LCA(target)
-        if isinstance(source, list):
-            source = LCA(source)
+        # If lists of matrices were passed, convert to LCAs
+        if isinstance(target, (list, Matrix)):
+            target = LCA(list(target))
+
+        if isinstance(source, (list, Matrix)):
+            source = LCA(list(source))
 
         return A, target, source
 
@@ -582,55 +603,24 @@ if __name__ == "__main__":
 
 
 if __name__ == '__main__':
+
+    print('Creating from lists')
     target = [7, 12]
     phi = HomFGA([[15, 12], [9, 17]], target=target)
-    phi_proj = HomFGA([[1, 5], [9, 5]], target=target)
-    print(phi.project_to_target())
-    print(phi_proj)
-    print(phi.project_to_target() == phi_proj)
+    print(type(phi.source), type(phi.target))
+    assert isinstance(phi.source, LCA)
+    assert isinstance(phi.target, LCA)
 
-    print('-----------------------------')
-    phi = HomFGA([[2, 3], [2, 5]], target=[0, 17])
-    print(phi)
-    print('---image---')
-    im = phi.image()
-    print(im)
+    print('Creating from objects')
+    target = LCA([7, 12])
+    phi = HomFGA([[15, 12], [9, 17]], target=target)
+    print(type(phi.source), type(phi.target))
+    assert isinstance(phi.source, LCA)
+    assert isinstance(phi.target, LCA)
 
-    print('---coimage---')
-    coim = phi.coimage()
-    print(coim)
-
-    print('---kernel---')
-    ker = phi.kernel()
-    print(ker)
-
-    print('---cokernel---')
-    coker = phi.cokernel()
-    print(coker)
-
-
-    print('---------------')
-    phi = HomFGA([[1, 0, 1],
-                  [0, 1, 1]])
-    ker_phi = HomFGA([1, 1, -1])
-    print(phi * ker_phi)
-
-    print('---------------')
-    phi = HomFGA([[2, 0],
-                  [0, 2]])
-    print(phi*phi)
-    print(phi**3)
-    print(phi*3)
-    print(3*phi)
-    print('-------------------------------------------')
-    print(phi + phi)
-    print(phi + 2)
-    print(3 + phi)
-    print('-------------------------------------------')
-    print(phi)
-    print('keep first column')
-    print(phi[:, 0])
-    print('keep first row')
-    print(phi[0, :])
-    print('-------------------------------------------')
-    print(phi.to_latex())
+    print('Creating from matrices')
+    target = Matrix([7, 12])
+    phi = HomFGA([[15, 12], [9, 17]], target=target)
+    print(type(phi.source), type(phi.target))
+    assert isinstance(phi.source, LCA)
+    assert isinstance(phi.target, LCA)

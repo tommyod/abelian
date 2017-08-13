@@ -374,12 +374,35 @@ def order_of_vector(v, mod_vector):
     0
     >>> order_of_vector([1,2,3], [7, 5, 2]) # lcm(7, 10, 2) is 70
     70
+    >>> order_of_vector([0,0,0], [0,0,0]) # Identity element
+    1
+    >>> order_of_vector([0,2, 3], [0,0,0]) # Non-trivial element
+    0
+    >>> order_of_vector([1, 0, 1], [5, 0, 0])
+    0
+
     """
 
     if len(v) != len(mod_vector):
         raise ValueError('The arguments must have the same length.')
 
-    gcd_list = [order // gcd(element, order) for
+    # Identity element, order 1
+        #if all(e == 0 for e in v):
+        #   return 1
+
+    # Non identity element in infintite group -> infinite period
+        #if all(period == 0 for period in mod_vector):
+        #    return 0
+
+    def div(top, bottom):
+        try:
+            return top // bottom
+        except:
+            return 1
+
+
+
+    gcd_list = [div(order, gcd(element, order)) for
                 (element, order) in zip(v, mod_vector)]
 
     return functools.reduce(lcm, gcd_list)
@@ -387,4 +410,6 @@ def order_of_vector(v, mod_vector):
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = True)
+
+    print(order_of_vector([1, 0, 1], [5, 0, 0]))
 

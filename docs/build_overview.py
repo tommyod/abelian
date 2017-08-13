@@ -59,18 +59,35 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
 
         out.append('All public classes (with methods)')
         out.append('------------------------------------------')
-        for cls_name, cls in classes_in_module:
-            header = 'Methods for class :class:`~{}`'.format(cls.__module__ + '.' + cls_name)
+        for cls_name, cls in sorted(classes_in_module, reverse = True):
+
+            # Find inheritance information
+            bases = [basecls for basecls in cls.__bases__ if basecls != object]
+            inherits = ', '.join([':class:`~{}`'.format(
+                basecls.__module__ + '.' + basecls.__name__) for basecls in
+                bases])
+
+            header_clsname = cls.__module__ + '.' + cls_name
+            header = 'Methods for class :class:`~{}` '.format(header_clsname)
+            # Add inheritance if it exists
+            if len(inherits) > 0:
+                header += '(inherits from: {} )'.format(inherits)
             out.append(header)
             out.append('~'*(25 +len(header)))
             out.append('\n.. autosummary::\n')
             members = inspect.getmembers(cls)
+
+            out.append('    ~' + header_clsname)
             for member_name, member in members:
 
                 # If it's a function (normal method) or @classmethod
                 if (inspect.isfunction(member) or
                         (inspect.ismethod(member) and member.__self__ is cls)):
                     print(member_name, member, type(member))
+
+                    # If inherited, continue
+                    if member_name not in list(cls.__dict__.keys()):
+                        continue
 
                     if member_name[0] == '_' and member_name[1] != '_':
                         # Private method, continue

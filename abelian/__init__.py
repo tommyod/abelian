@@ -15,3 +15,7 @@ from abelian.morphisms import HomFGA, HomLCA, Homomorphism
 
 
 __all__ = []
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
