@@ -330,6 +330,25 @@ class LCA(object):
         # TODO: Should trivial groups be removed first?
         return len(self.periods)
 
+    def delete_by_index(self, indices):
+        """
+        Return a copy with some deleted.
+
+        Parameters
+        ----------
+        indices
+
+        Returns
+        -------
+
+        """
+        enu = enumerate
+        periods = [p for (i, p) in enu(self.periods) if i not in indices]
+        discrete = [p for (i, p) in enu(self.discrete) if i not in indices]
+        return type(self)(periods = periods, discrete = discrete)
+
+
+
     @staticmethod
     def _dual_of_single_group(period, discrete):
         """

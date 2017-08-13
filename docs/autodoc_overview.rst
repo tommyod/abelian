@@ -24,38 +24,59 @@ Methods for class :class:`~abelian.morphisms.HomFGA`
 
 .. autosummary::
 
+    ~abelian.morphisms.HomFGA.__add__
     ~abelian.morphisms.HomFGA.__eq__
+    ~abelian.morphisms.HomFGA.__getitem__
     ~abelian.morphisms.HomFGA.__init__
+    ~abelian.morphisms.HomFGA.__mul__
+    ~abelian.morphisms.HomFGA.__pow__
+    ~abelian.morphisms.HomFGA.__radd__
     ~abelian.morphisms.HomFGA.__repr__
+    ~abelian.morphisms.HomFGA.__rmul__
+    ~abelian.morphisms.HomFGA.add
     ~abelian.morphisms.HomFGA.coimage
     ~abelian.morphisms.HomFGA.cokernel
     ~abelian.morphisms.HomFGA.compose
+    ~abelian.morphisms.HomFGA.copy
     ~abelian.morphisms.HomFGA.equal
     ~abelian.morphisms.HomFGA.evaluate
     ~abelian.morphisms.HomFGA.image
     ~abelian.morphisms.HomFGA.kernel
+    ~abelian.morphisms.HomFGA.pow
     ~abelian.morphisms.HomFGA.project_to_source
     ~abelian.morphisms.HomFGA.project_to_target
+    ~abelian.morphisms.HomFGA.remove_trivial_groups
     ~abelian.morphisms.HomFGA.stack_diag
     ~abelian.morphisms.HomFGA.stack_horiz
     ~abelian.morphisms.HomFGA.stack_vert
     ~abelian.morphisms.HomFGA.to_HomFGA
+    ~abelian.morphisms.HomFGA.to_latex
   
 Methods for class :class:`~abelian.morphisms.HomLCA`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 
+    ~abelian.morphisms.HomLCA.__add__
     ~abelian.morphisms.HomLCA.__eq__
+    ~abelian.morphisms.HomLCA.__getitem__
     ~abelian.morphisms.HomLCA.__init__
+    ~abelian.morphisms.HomLCA.__mul__
+    ~abelian.morphisms.HomLCA.__pow__
+    ~abelian.morphisms.HomLCA.__radd__
     ~abelian.morphisms.HomLCA.__repr__
+    ~abelian.morphisms.HomLCA.__rmul__
+    ~abelian.morphisms.HomLCA.add
     ~abelian.morphisms.HomLCA.compose
+    ~abelian.morphisms.HomLCA.copy
     ~abelian.morphisms.HomLCA.equal
     ~abelian.morphisms.HomLCA.evaluate
+    ~abelian.morphisms.HomLCA.pow
     ~abelian.morphisms.HomLCA.stack_diag
     ~abelian.morphisms.HomLCA.stack_horiz
     ~abelian.morphisms.HomLCA.stack_vert
     ~abelian.morphisms.HomLCA.to_HomFGA
+    ~abelian.morphisms.HomLCA.to_latex
   
 Methods for class :class:`~abelian.groups.LCA`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,6 +91,7 @@ Methods for class :class:`~abelian.groups.LCA`
     ~abelian.groups.LCA.__len__
     ~abelian.groups.LCA.__repr__
     ~abelian.groups.LCA.copy
+    ~abelian.groups.LCA.delete_by_index
     ~abelian.groups.LCA.direct_sum
     ~abelian.groups.LCA.dual
     ~abelian.groups.LCA.equal
