@@ -242,7 +242,7 @@ class HomLCA:
         """
         Override the multiplication (`*`) operator.
         """
-        return self.__mul__(other)
+        return self.compose(other)
 
     def stack_vert(self, other):
         """
@@ -353,7 +353,7 @@ class HomLCA:
 
 class HomFGA(HomLCA):
     """
-    A homomorphism between two FGAs.
+    A homomorphism between FGAs.
     """
 
     # The types allowed as entries in A
@@ -589,9 +589,9 @@ def Homomorphism(A, target = None, source = None):
     A, target, source = HomLCA._verify_init(A, target, source)
     integer_entries = all([i % 1 == 0 for i in A])
     if target.is_FGA() and source.is_FGA() and integer_entries:
-        return HomFGA(A, source, target)
+        return HomFGA(A, target=target, source=source)
     else:
-        return HomLCA(A, source, target)
+        return HomLCA(A, target=target, source=source)
 
 
 
@@ -624,3 +624,9 @@ if __name__ == '__main__':
     print(type(phi.source), type(phi.target))
     assert isinstance(phi.source, LCA)
     assert isinstance(phi.target, LCA)
+
+    print('-------------------------')
+    phi = HomFGA([[4, 5], [9, -3]])
+    psi = HomFGA([[1, 0, 1], [0, 1, 1]])
+
+    print(2 * psi)

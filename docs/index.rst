@@ -46,6 +46,8 @@ Contents
 .. toctree::
    :maxdepth: 2
 
+   Tutorial: LCAs <notebooks/LCA.ipynb>
+   Tutorial: Homomorphisms <notebooks/homomorphisms.ipynb>
    License <license>
    Module Reference <api/modules>
    API: abelian <api/abelian>

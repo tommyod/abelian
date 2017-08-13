@@ -6,16 +6,15 @@ from abelian.utils import mod
 
 class LCA(object):
     """
-    Class for Locally Compact Abelian (LCA) groups.
+    A locally compact Abelian group (LCA).
     """
-
 
     _repr_dict = {True: 'd', False :'c'}
     _repr_dict_inv = {'d':True, 'c':False}
 
     def __init__(self, periods, discrete = None):
         """
-        Initialize a new Locally Compact Abelian (LCA) group.
+        Initialize a new LCA.
 
         Parameters
         ----------
@@ -104,7 +103,7 @@ class LCA(object):
 
     def __repr__(self):
         """
-        Representation.
+        Override the ``repr()`` function.
         """
 
         def repr_single(p, d):
@@ -192,8 +191,18 @@ class LCA(object):
         >>> G.project_element(g) == Matrix([3, 4])
         True
         """
-        generator = zip(element, self.periods)
-        projected = [mod(element, period) for (element, period) in generator]
+
+        def project(element, period, discrete):
+            if not discrete:
+                return mod(element, period)
+            if discrete:
+                if isinstance(element, int):
+                    return mod(element, period)
+                raise ValueError('Non-integer cannot be projected to '
+                                 'discrete group.')
+
+        generator = zip(element, self.periods, self.discrete)
+        projected = [project(e, p, d) for (e, p, d) in generator]
 
         # If the input is a list, return a list
         if isinstance(element, list):
@@ -252,7 +261,8 @@ class LCA(object):
 
     def __eq__(self, other):
         """
-        Override the equality (`==`) operator.
+        Override the equality (`==`) operator,
+        see :py:meth:`~abelian.groups.LCA.equal`.
         """
         return self.equal(other)
 
@@ -262,7 +272,7 @@ class LCA(object):
         """
         pass
 
-    def direct_sum(self, other):
+    def sum(self, other):
         """
         Returns the direct sum of two LCAs.
 
@@ -274,7 +284,7 @@ class LCA(object):
         Returns
         --------
         group : LCA
-            The direct product of self and other.
+            The direct sum of self and other.
 
 
         Examples
@@ -283,7 +293,7 @@ class LCA(object):
         >>> H = LCA([7])
         >>> G + H == LCA([5, 7])  # The `+` operator is overloaded
         True
-        >>> G + H == G.direct_sum(H)  # Directs sums two ways
+        >>> G + H == G.sum(H)  # Directs sums two ways
         True
         """
         new_periods = self.periods + other.periods
@@ -292,9 +302,10 @@ class LCA(object):
 
     def __add__(self, other):
         """
-        Override the addition (`+`) operator.
+        Override the addition (`+`) operator,
+        see :py:meth:`~abelian.groups.LCA.sum`.
         """
-        return self.direct_sum(other)
+        return self.sum(other)
 
     def remove_trivial(self):
         """
@@ -410,30 +421,27 @@ class LCA(object):
 
     def __getitem__(self, slice):
         """
-        Override the slice (`obj[a:b]`) operator.
+        Override the slice operator,
+        see :py:meth:`~abelian.groups.LCA.get_groups`.
         """
         return self.get_groups(slice)
 
     def __iter__(self):
         """
-
-        Returns
-        -------
-
+        Override the iteration protocol.
         """
         if self.is_FGA():
             for period in self.periods:
                 yield period
+        else:
+            raise ValueError('Can only iterate over FGAs, not all LCAs.')
 
     def __len__(self):
         """
-        The rank.
-
-        Returns
-        -------
-
+        Override the ``len()`` function,
+        see :py:meth:`~abelian.groups.LCA.rank`.
         """
-        return len(self.periods)
+        return self.rank()
 
     def to_list(self):
         """
@@ -460,7 +468,7 @@ if __name__ == '__main__':
     print(G.dual())
     print(G.dual().to_latex())
     print(G.dual().remove_trivial())
-    print(G.direct_sum(G.dual()))
+    print(G.sum(G.dual()))
     print(G.project_element([5, 17, 7, 8.4]))
 
 

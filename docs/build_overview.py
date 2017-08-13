@@ -5,6 +5,7 @@
 import inspect
 import importlib
 import os
+import sys
 
 here = os.path.dirname(os.path.realpath(__file__))
 
@@ -30,6 +31,7 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
     """
 
     out = []
+    sys.path.insert(0, '/home/tommy/Desktop/abelian')
     module = importlib.import_module(module_name)
     print(module)
 
