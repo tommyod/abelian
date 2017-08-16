@@ -6,7 +6,7 @@ from abelian.utils import mod
 from abelian.linalg.factorizations import smith_normal_form
 from abelian.linalg.utils import nonzero_diag_as_list
 
-class LCA(object):
+class LCA:
     """
     A locally compact Abelian group (LCA).
     """
@@ -138,7 +138,7 @@ class LCA(object):
 
     def to_latex(self):
         """
-        Write object to latex string.
+        Return the LCA as a :math:`\LaTeX` string.
 
         Returns
         -------
@@ -164,7 +164,7 @@ class LCA(object):
 
     def dual(self):
         """
-        Return the Pontryagin dual.
+        Return the Pontryagin dual of the LCA.
 
         Returns a group isomorphic to the Pontryagin dual.
 
@@ -185,6 +185,9 @@ class LCA(object):
         >>> self_dual.dual() == self_dual
         True
         """
+
+        # TODO : Is only allowing T, and not T_{n}, sensible?
+
         single_dual = self._dual_of_single_group
         dual_lists = list(single_dual(p, d) for (p, d) in self)
         new_periods = [p for (p, d) in dual_lists]
@@ -193,7 +196,7 @@ class LCA(object):
 
     def iterate(self):
         """
-        Yield pairs of (`period`, `discrete`).
+        Yields tuples with (`period`, `discrete`).
 
         Iterate through the `period` and `discrete` lists and yield tuples.
 
@@ -218,6 +221,11 @@ class LCA(object):
     def project_element(self, element):
         """
         Project an element onto the group.
+
+        Parameters
+        -----------
+        element : :py:class:`~sympy.matrices.dense.MutableDenseMatrix` or list
+            The group element to project to the LCA.
 
         Returns
         -------
@@ -267,7 +275,7 @@ class LCA(object):
         Returns
         --------
         group : LCA
-            A copy of the object.
+            A copy of the LCA.
 
         Examples
         ---------
@@ -320,11 +328,12 @@ class LCA(object):
 
     def canonical(self):
         """
-        Return the LCA in canonical form.
+        Return the LCA in canonical form using SNF.
 
         The canonical form decomposition will:
         (1) Put the torsion (discrete with period >= 1) subgroup in
-        a canonical form using invariant factor decomposition.
+        a canonical form using invariant factor decomposition from
+        the Smith Normal Form decomposition.
         (2) Sort the non-torsion subgroup.
 
         Returns
@@ -421,7 +430,7 @@ class LCA(object):
 
     def sum(self, other):
         """
-        Returns the direct sum of two LCAs.
+        Return the direct sum of two LCAs.
 
         Parameters
         ----------
@@ -499,19 +508,22 @@ class LCA(object):
 
     def remove_indices(self, indices):
         """
-        Return a copy with some removed.
+        Return a LCA with some groups removed.
 
         Parameters
         ----------
-        indices
+        indices : list
+            A list of indices corresponding to LCAs to remove.
 
         Returns
         -------
+        group : LCA
+            The LCA with some groups removed.
 
         Examples
         --------
-        >>> G = LCA([1, 2])
-        >>> G.remove_indices([0]) == LCA([2])
+        >>> G = LCA([5, 8, 9])
+        >>> G.remove_indices([0, 2]) == LCA([8])
         True
 
         """
@@ -545,19 +557,19 @@ class LCA(object):
                 # Dual of T is Z
                 return [0, True]  # Return Z
 
-    def slice(self, slice):
+    def getitem(self, key):
         """
         Return a slice of the LCA.
 
         Parameters
         ----------
-        slice: slice
-            A slice object.
+        key: :py:class:`~python.slice`
+            A slice object, or an integer.
 
         Returns
         -------
         group: LCA
-            A slice as specified by the slice object.
+            A slice of the FGA as specified by the slice object.
 
         Examples
         ---------
@@ -568,23 +580,23 @@ class LCA(object):
         True
         """
 
-        periods = self.periods[slice]
-        discrete = self.discrete[slice]
+        periods = self.periods[key]
+        discrete = self.discrete[key]
         periods = periods if isinstance(periods, list) else [periods]
         discrete = discrete if isinstance(discrete, list) else [discrete]
         return type(self)(periods = periods, discrete = discrete)
 
-    def __getitem__(self, slice):
+    def __getitem__(self, key):
         """
         Override the slice operator,
         see :py:meth:`~abelian.groups.LCA.slice`.
         """
-        return self.slice(slice)
+        return self.getitem(key)
 
     def __iter__(self):
         """
-        Override the iteration protocol
-        , see :py:meth:`~abelian.groups.LCA.iterate`.
+        Override the iteration protocol,
+        see :py:meth:`~abelian.groups.LCA.iterate`.
         """
         yield from self.iterate()
 
@@ -612,9 +624,25 @@ class LCA(object):
     def __len__(self):
         """
         Override the ``len()`` function,
-        see :py:meth:`~abelian.groups.LCA.rank`.
+        see :py:meth:`~abelian.groups.LCA.length`.
         """
         return self.length()
+
+    def __contains__(self, item):
+        """
+        Whether or not one LCA is a subset of another.
+
+        https://docs.python.org/3/reference/datamodel.html#object# .__contains__
+
+        Parameters
+        ----------
+        item
+
+        Returns
+        -------
+
+        """
+        pass
 
 
 

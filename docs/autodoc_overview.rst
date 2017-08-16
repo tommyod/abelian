@@ -26,6 +26,7 @@ Methods for class :class:`~abelian.groups.LCA`
 
     ~abelian.groups.LCA
     ~abelian.groups.LCA.__add__
+    ~abelian.groups.LCA.__contains__
     ~abelian.groups.LCA.__eq__
     ~abelian.groups.LCA.__getitem__
     ~abelian.groups.LCA.__init__
@@ -36,6 +37,7 @@ Methods for class :class:`~abelian.groups.LCA`
     ~abelian.groups.LCA.copy
     ~abelian.groups.LCA.dual
     ~abelian.groups.LCA.equal
+    ~abelian.groups.LCA.getitem
     ~abelian.groups.LCA.is_FGA
     ~abelian.groups.LCA.isomorphic
     ~abelian.groups.LCA.iterate
@@ -44,7 +46,6 @@ Methods for class :class:`~abelian.groups.LCA`
     ~abelian.groups.LCA.rank
     ~abelian.groups.LCA.remove_indices
     ~abelian.groups.LCA.remove_trivial
-    ~abelian.groups.LCA.slice
     ~abelian.groups.LCA.sum
     ~abelian.groups.LCA.to_latex
   
@@ -65,10 +66,12 @@ Methods for class :class:`~abelian.morphisms.HomLCA`
     ~abelian.morphisms.HomLCA.__rmul__
     ~abelian.morphisms.HomLCA.add
     ~abelian.morphisms.HomLCA.compose
+    ~abelian.morphisms.HomLCA.compose_self
     ~abelian.morphisms.HomLCA.copy
     ~abelian.morphisms.HomLCA.equal
     ~abelian.morphisms.HomLCA.evaluate
-    ~abelian.morphisms.HomLCA.pow
+    ~abelian.morphisms.HomLCA.getitem
+    ~abelian.morphisms.HomLCA.ismomorphic
     ~abelian.morphisms.HomLCA.stack_diag
     ~abelian.morphisms.HomLCA.stack_horiz
     ~abelian.morphisms.HomLCA.stack_vert
