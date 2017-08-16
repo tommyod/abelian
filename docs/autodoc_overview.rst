@@ -32,19 +32,21 @@ Methods for class :class:`~abelian.groups.LCA`
     ~abelian.groups.LCA.__iter__
     ~abelian.groups.LCA.__len__
     ~abelian.groups.LCA.__repr__
+    ~abelian.groups.LCA.canonical
     ~abelian.groups.LCA.copy
-    ~abelian.groups.LCA.delete_by_index
     ~abelian.groups.LCA.dual
     ~abelian.groups.LCA.equal
-    ~abelian.groups.LCA.get_groups
     ~abelian.groups.LCA.is_FGA
     ~abelian.groups.LCA.isomorphic
+    ~abelian.groups.LCA.iterate
+    ~abelian.groups.LCA.length
     ~abelian.groups.LCA.project_element
     ~abelian.groups.LCA.rank
+    ~abelian.groups.LCA.remove_indices
     ~abelian.groups.LCA.remove_trivial
+    ~abelian.groups.LCA.slice
     ~abelian.groups.LCA.sum
     ~abelian.groups.LCA.to_latex
-    ~abelian.groups.LCA.to_list
   
 Methods for class :class:`~abelian.morphisms.HomLCA` 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

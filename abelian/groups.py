@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from sympy import Matrix
+from sympy import Matrix, Integer, diag
 from abelian.utils import mod
+from abelian.linalg.factorizations import smith_normal_form
+from abelian.linalg.utils import nonzero_diag_as_list
 
 class LCA(object):
     """
@@ -11,6 +13,8 @@ class LCA(object):
 
     _repr_dict = {True: 'd', False :'c'}
     _repr_dict_inv = {'d':True, 'c':False}
+
+    _integer_types = (int, Integer)
 
     def __init__(self, periods, discrete = None):
         """
@@ -27,12 +31,16 @@ class LCA(object):
 
 
         Examples
-        ---------
+        ---------'
+        >>> # Create G = Z_5 + Z_6 + Z_7 in three ways
         >>> G1 = LCA([5, 6, 7])
         >>> G2 = LCA([5, 6, 7], [True, True, True])
         >>> G3 = LCA([5, 6, 7], ['d']*3)
         >>> (G1 == G2 == G3)
         True
+
+        >>> # Create G = R + Z
+        >>> G = LCA(periods = [0, 0], discrete = [False, True])
         """
 
         periods, discrete = self._verify_init(periods, discrete)
@@ -44,6 +52,8 @@ class LCA(object):
     def _verify_init(cls, periods, discrete):
         """
         Verify the user inputs.
+
+        Return `periods` and `discrete` as lists.
         """
 
         if isinstance(periods, Matrix):
@@ -52,8 +62,8 @@ class LCA(object):
         if isinstance(discrete, Matrix):
             discrete = list(discrete)
 
-        if len(periods) <= 0:
-            raise ValueError('List of periods must have length >0.')
+        if len(periods) < 0:
+            raise ValueError('List of periods must have length >=0.')
 
         if any(i < 0 for i in periods):
             raise ValueError('Every period must be >= 0.')
@@ -83,9 +93,12 @@ class LCA(object):
         """
         Whether or not the LCA is a FGA.
 
+        A locally compact Abelian group (LCA) is a finitely generated
+        Abelian group (FGA) iff all the groups in the direct sum are discrete.
+
         Returns
         -------
-        order : bool
+        is_FGA : bool
             True if the object is an FGA, False if not.
 
         Examples
@@ -97,13 +110,18 @@ class LCA(object):
         >>> G.dual().is_FGA()
         True
         """
-        return all(self.discrete)
+        is_FGA = all(self.discrete)
+        return is_FGA
 
 
 
     def __repr__(self):
         """
         Override the ``repr()`` function.
+
+        This method is called for computer representation, and if no
+        __str__ method is defined this function will be called when ``print()``
+        is called on an instance too.
         """
 
         def repr_single(p, d):
@@ -113,18 +131,25 @@ class LCA(object):
                 return r'R'
             if d:
                 return r'Z_' + str(p) + ''
-            return r'T_' + str(p) + ''
+            return r'T' # r'T_' + str(p) + ''
 
-        joined = r', '.join(repr_single(p, d) for (p, d) in self._gen())
+        joined = r', '.join(repr_single(p, d) for (p, d) in self)
         return '[' + joined + ']'
-
-        repr_dict = self._repr_dict
-        return '[' + ', '.join([str(num) + '({})'.format(repr_dict[i]) for (
-            num, i) in self._gen()]) + ']'
 
     def to_latex(self):
         """
         Write object to latex string.
+
+        Returns
+        -------
+        latex_str : str
+            A string with LaTeX code for the object.
+
+        Examples
+        ---------
+        >>> G = LCA([5, 0], [True, False])
+        >>> G.to_latex()
+        '\\\mathbb{Z}_{5} \\\oplus \\\mathbb{R}'
         """
         def repr_single(p, d):
             if p == 0:
@@ -135,11 +160,13 @@ class LCA(object):
                 return r'\mathbb{Z}_{' + str(p) + '}'
             return r'T_{' + str(p) + '}'
 
-        return r' \oplus '.join(repr_single(p, d) for (p, d) in self._gen())
+        return r' \oplus '.join(repr_single(p, d) for (p, d) in self)
 
     def dual(self):
         """
         Return the Pontryagin dual.
+
+        Returns a group isomorphic to the Pontryagin dual.
 
         Returns
         -------
@@ -159,16 +186,33 @@ class LCA(object):
         True
         """
         single_dual = self._dual_of_single_group
-        dual_lists = list(single_dual(p, d) for (p, d) in self._gen())
+        dual_lists = list(single_dual(p, d) for (p, d) in self)
         new_periods = [p for (p, d) in dual_lists]
         new_discrete = [d for (p, d) in dual_lists]
         return type(self)(periods = new_periods, discrete = new_discrete)
 
-    def _gen(self):
+    def iterate(self):
         """
-        Yield pairs of (period, discrete).
+        Yield pairs of (`period`, `discrete`).
+
+        Iterate through the `period` and `discrete` lists and yield tuples.
+
+        Yields
+        -------
+        period : int
+            The period of a group.
+        discrete : bool
+            Whether or not the group is discrete.
+
+        Examples
+        ---------
+        >>> G = LCA([5, 1], [True, False])
+        >>> for (period, discrete) in G:
+        ...     print(period, discrete)
+        5 True
+        1 False
         """
-        for period, discrete in zip(self.periods, self.discrete):
+        for (period, discrete) in zip(self.periods, self.discrete):
             yield (period, discrete)
 
     def project_element(self, element):
@@ -192,12 +236,16 @@ class LCA(object):
         True
         """
 
+        if not (len(element) == len(self.periods) == len(self.discrete)):
+            raise ValueError('Length of element must match groups.')
+
         def project(element, period, discrete):
             if not discrete:
                 return mod(element, period)
             if discrete:
-                if isinstance(element, int):
+                if isinstance(element, self._integer_types):
                     return mod(element, period)
+
                 raise ValueError('Non-integer cannot be projected to '
                                  'discrete group.')
 
@@ -221,7 +269,6 @@ class LCA(object):
         group : LCA
             A copy of the object.
 
-
         Examples
         ---------
         >>> G = LCA([1, 5, 7], [False, True, True])
@@ -229,23 +276,26 @@ class LCA(object):
         >>> G == H
         True
         """
-        return type(self)(periods = self.periods.copy(),
-                          discrete = self.discrete.copy())
+        periods_cp = self.periods.copy()
+        discrete_cp = self.discrete.copy()
+        return type(self)(periods = periods_cp, discrete = discrete_cp)
 
     def equal(self, other):
         """
         Whether or not two LCAs are equal.
 
+        Two LCAs are equal iff the list of `periods` and the list of `discrete`
+        are both equal.
+
         Parameters
         ----------
         other : LCA
-            The LCA to compare with.
+            The LCA to compare equality with.
 
         Returns
         --------
         equal : bool
             Whether or not the LCAs are equal.
-
 
         Examples
         ---------
@@ -256,8 +306,9 @@ class LCA(object):
         >>> G.equal(H)  # Equality using the method
         True
         """
-        return ((self.periods == other.periods) and
-                (self.discrete ==  other.discrete))
+        periods_equal = self.periods == other.periods
+        discrete_equal = self.discrete ==  other.discrete
+        return periods_equal and discrete_equal
 
     def __eq__(self, other):
         """
@@ -266,11 +317,107 @@ class LCA(object):
         """
         return self.equal(other)
 
-    def isomorphic(self):
+
+    def canonical(self):
         """
-        TODO.
+        Return the LCA in canonical form.
+
+        The canonical form decomposition will:
+        (1) Put the torsion (discrete with period >= 1) subgroup in
+        a canonical form using invariant factor decomposition.
+        (2) Sort the non-torsion subgroup.
+
+        Returns
+        --------
+        group : LCA
+            The LCA in canonical form.
+
+        Examples
+        ---------
+        >>> G = LCA([4, 3])
+        >>> G.canonical() == LCA([12])
+        True
+        >>> G = LCA([1, 1, 8, 2, 4], ['c', 'd', 'd', 'd', 'd'])
+        >>> G.canonical() == LCA([1], ['c']) + LCA([2, 4, 8])
+        True
         """
-        pass
+
+        def is_t(period, discrete):
+            """
+            Function to determine if a group is torsion or not.
+            """
+            if period > 0 and discrete:
+                return True
+            return False
+
+        def split_torsion(LCA):
+            """
+            Split a group into (torsion, non_torsion).
+            """
+            gen_list = list(enumerate(LCA))
+            torsion_i = [i for (i, (p, d)) in gen_list if is_t(p, d)]
+            nontorsion_i = [i for (i, (p, d)) in gen_list if not is_t(p, d)]
+            torsion = LCA.remove_indices(nontorsion_i)
+            non_torsion = LCA.remove_indices(torsion_i)
+            return torsion, non_torsion
+
+
+        # Get information pertaining to self
+        self_tors, self_non_tors = split_torsion(self)
+
+
+        # Sort the non-torsion subgroup
+        non_tors_periods = [p for (p, d) in sorted(self_non_tors)]
+        non_tors_discrete = [d for (p, d) in sorted(self_non_tors)]
+
+        # Get canonical decomposition of the torsion subgroup
+        self_SNF = smith_normal_form(diag(*self_tors.periods), False)
+        self_SNF_p = [p for p in nonzero_diag_as_list(self_SNF) if p != 1]
+
+        # Construct the new group
+        periods = non_tors_periods + self_SNF_p
+        discrete = non_tors_discrete + [True] * len(self_SNF_p)
+        return type(self)(periods = periods, discrete = discrete)
+
+
+    def isomorphic(self, other):
+        """
+        Whether or not two LCAs are isomorphic.
+
+        Two LCAs are isomorphic iff they can be put into the same
+        canonical form.
+
+        Parameters
+        ----------
+        other : LCA
+            The LCA to compare with.
+
+        Returns
+        --------
+        isomorphic : bool
+            Whether or not the LCAs are isomorphic.
+
+        Examples
+        ---------
+        >>> G = LCA([3, 4])
+        >>> H = LCA([12])
+        >>> G.isomorphic(H)
+        True
+        >>> G.equal(H)
+        False
+
+        >>> LCA([2, 6]).isomorphic(LCA([12]))
+        False
+
+        >>> G = LCA([0, 0, 1, 3, 4], [False, True, True, True, True])
+        >>> H = LCA([0, 0, 3, 4], [True, False, True, True])
+        >>> G.isomorphic(H)
+        True
+        """
+
+        isomorphic = self.canonical().equal(other.canonical())
+        return isomorphic
+
 
     def sum(self, other):
         """
@@ -325,7 +472,7 @@ class LCA(object):
         def trivial(period, discrete):
             return discrete and (period == 1)
 
-        purged_lists = [(p, d) for (p, d) in self._gen() if not trivial(p, d)]
+        purged_lists = [(p, d) for (p, d) in self if not trivial(p, d)]
         new_periods = [p for (p, d) in purged_lists]
         new_discrete = [d for (p, d) in purged_lists]
         return type(self)(periods=new_periods, discrete=new_discrete)
@@ -343,14 +490,16 @@ class LCA(object):
         ---------
         >>> G = LCA([5, 6, 1])
         >>> G.rank()
-        3
+        1
         """
-        # TODO: Should trivial groups be removed first?
-        return len(self.periods)
+        # TODO: Is this the correct implementation of RANK?
+        # TODO: Or should rank = length?
 
-    def delete_by_index(self, indices):
+        return len(self.canonical())
+
+    def remove_indices(self, indices):
         """
-        Return a copy with some deleted.
+        Return a copy with some removed.
 
         Parameters
         ----------
@@ -358,6 +507,12 @@ class LCA(object):
 
         Returns
         -------
+
+        Examples
+        --------
+        >>> G = LCA([1, 2])
+        >>> G.remove_indices([0]) == LCA([2])
+        True
 
         """
         enu = enumerate
@@ -390,7 +545,7 @@ class LCA(object):
                 # Dual of T is Z
                 return [0, True]  # Return Z
 
-    def get_groups(self, slice):
+    def slice(self, slice):
         """
         Return a slice of the LCA.
 
@@ -422,37 +577,44 @@ class LCA(object):
     def __getitem__(self, slice):
         """
         Override the slice operator,
-        see :py:meth:`~abelian.groups.LCA.get_groups`.
+        see :py:meth:`~abelian.groups.LCA.slice`.
         """
-        return self.get_groups(slice)
+        return self.slice(slice)
 
     def __iter__(self):
         """
-        Override the iteration protocol.
+        Override the iteration protocol
+        , see :py:meth:`~abelian.groups.LCA.iterate`.
         """
-        if self.is_FGA():
-            for period in self.periods:
-                yield period
-        else:
-            raise ValueError('Can only iterate over FGAs, not all LCAs.')
+        yield from self.iterate()
+
+    def length(self):
+        """
+        The number of groups in the direct sum.
+
+        Returns
+        -------
+        length : int
+            The number of groups in the direct sum.
+
+        Examples
+        --------
+        >>> G = LCA([])
+        >>> G.length()
+        0
+
+        >>> G = LCA([0, 1, 1, 5])
+        >>> G.length()
+        4
+        """
+        return len(self.periods)
 
     def __len__(self):
         """
         Override the ``len()`` function,
         see :py:meth:`~abelian.groups.LCA.rank`.
         """
-        return self.rank()
-
-    def to_list(self):
-        """
-        Returns periods if FGA.
-
-        Returns
-        -------
-
-        """
-        if self.is_FGA():
-            return self.periods
+        return self.length()
 
 
 
@@ -462,14 +624,25 @@ if __name__ == "__main__":
 
 
 if __name__ == '__main__':
-    G = LCA([0 ,1 ,5 ,0], [True, False, True, False])
-    print(G)
-    print(G.to_latex())
-    print(G.dual())
-    print(G.dual().to_latex())
-    print(G.dual().remove_trivial())
-    print(G.sum(G.dual()))
-    print(G.project_element([5, 17, 7, 8.4]))
+    G = LCA([0, 0, 0], [False, True, False])
+    H = LCA([0, 0, 0], [False, False, True])
+    assert G.isomorphic(H)
+
+    G = LCA([0, 0, 0, 1, 1, 3, 1, 4], [False, True, False] + [True] * 5)
+    H = LCA([0, 0, 0, 1, 12, 1, 1, 1], [False, False, True] + [True] * 5)
+    assert G.isomorphic(H)
+
+    G = LCA([0, 0, 0, 1, 1, 3, 1, 4], [False, True, False] + [True]*5)
+    H = LCA([0, 0, 0, 1, 12, 1, 1], [False, False, True] + [True]*4)
+    assert G.isomorphic(H)
+
+    G = LCA([], [])
+    H = LCA([1])
+    assert G.isomorphic(H)
+
+    G = LCA([])
+    G = G.canonical()
+    print(G.rank())
 
 
 

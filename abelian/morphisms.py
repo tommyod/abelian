@@ -397,7 +397,7 @@ class HomFGA(HomLCA):
         >>> phi = HomFGA([[1, 0],
         ...               [3, 3]], target = target)
         >>> phi = phi.project_to_source()
-        >>> phi.source.to_list() == [6, 2]
+        >>> phi.source.periods == [6, 2]
         True
         """
 
@@ -426,7 +426,8 @@ class HomFGA(HomLCA):
 
         """
         # Horizontally stack A and ker(pi_2)
-        A_ker_pi = self.A.row_join(delete_zero_columns(diag(*self.target)))
+        periods = self.target.periods
+        A_ker_pi = self.A.row_join(delete_zero_columns(diag(*periods)))
 
         # Compute SNF, get size and the kernel
         U, S, V = smith_normal_form(A_ker_pi)
@@ -539,17 +540,17 @@ class HomFGA(HomLCA):
             return discrete and (period == 1)
 
         # Get indices where the value of the source is 1
-        generator = enumerate(self.source._gen())
+        generator = enumerate(self.source.iterate())
         cols_to_del = [i for (i, (d, p)) in generator if trivial(d, p)]
         new_A = remove_cols(self.A, cols_to_del)
 
         # Get indices where the value of the target is 1
-        generator = enumerate(self.target._gen())
+        generator = enumerate(self.target.iterate())
         rows_to_del = [i for (i, (d, p)) in generator if trivial(d, p)]
         new_A = remove_rows(new_A, rows_to_del)
 
-        new_source = self.source.delete_by_index(cols_to_del)
-        new_target = self.target.delete_by_index(rows_to_del)
+        new_source = self.source.remove_indices(cols_to_del)
+        new_target = self.target.remove_indices(rows_to_del)
 
         return type(self)(new_A, new_target, new_source)
 
