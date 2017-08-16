@@ -48,6 +48,13 @@ class HomLCA:
         self.target = target
         self.source = source
 
+    @classmethod
+    def zero(cls, target, source):
+        rows = len(target)
+        cols = len(source)
+        return cls(Matrix(rows, cols, lambda i, j : 0), target = target,
+                   source = source)
+
     @staticmethod
     def _verify_init(A, target, source):
         """

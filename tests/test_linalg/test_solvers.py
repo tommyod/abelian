@@ -14,7 +14,7 @@ class TestSolveEpi():
     @classmethod
     def setup_class(cls):
         # Set up the sizes for the tests
-        cls.m = 4
+        cls.m = 3
         cls.k = 2
 
 
@@ -58,7 +58,7 @@ class TestSolve():
     @classmethod
     def setup_class(cls):
         # Set up the sizes for the tests
-        cls.n = 4
+        cls.n = 3
         cls.r = cls.n - 2
 
 
