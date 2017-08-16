@@ -50,10 +50,29 @@ class HomLCA:
 
     @classmethod
     def zero(cls, target, source):
+        """
+        Initialize the zero morphism.
+
+        Parameters
+        ----------
+        target : LCA or list
+            The target of the homomorphism. If None, a discrete target of
+            infinite period is used as the default.
+        source : LCA or list
+            The source of the homomorphism. If None, a discrete source of
+            infinite period is used as the default.
+
+        Examples
+        ---------
+        >>> zero = HomFGA.zero([0]*3, [0]*3)
+        >>> zero([1, 5, 7]) == [0, 0, 0]
+        True
+        """
         rows = len(target)
         cols = len(source)
-        return cls(Matrix(rows, cols, lambda i, j : 0), target = target,
-                   source = source)
+        A = Matrix(rows, cols, lambda i, j : 0)
+        return cls(A, target = target, source = source)
+
 
     @staticmethod
     def _verify_init(A, target, source):
@@ -466,6 +485,13 @@ class HomLCA:
 
         return type(self)(new_A, target = new_target, source = new_source)
 
+    def __call__(self, source_element):
+        """
+        Override function calls,
+        see :py:meth:`~abelian.morphisms.HomLCA.evaluate`.
+        """
+        return self.evaluate(source_element)
+
 
     def evaluate(self, source_element):
         """
@@ -821,6 +847,40 @@ class HomFGA(HomLCA):
         new_target = self.target.remove_indices(rows_to_del)
 
         return type(self)(new_A, new_target, new_source)
+
+
+    def dual(self):
+        """
+        Compute the dual homomorphism.
+
+
+        Returns
+        -------
+
+        """
+        # TODO: Write this method.
+
+        # To compute the dual, the source and target must be known
+        if self.target is None or self.source is None:
+            raise GroupError('Target and source must be known to compute dual.')
+
+        # Flip the source and target for the dual morphism
+        dual_source, dual_target = self.target, self.source
+
+        # Calculate the matrix representing the dual homomorphism
+        diag_p = Matrix([1 if e == 0 else e for e in self.source])
+        diag_q_inv = reciprocal_entrywise(Matrix([1 if e == 0 else e for e in self.target]))
+        dual_A = mat_times_diag(diag_times_mat(diag_p, self.A.T), diag_q_inv)
+
+        # Create new FGA object and return
+        return type(self)(dual_A, target = dual_target, source = dual_source)
+
+    def annihilator(self):
+        """
+        The annihilator morphism.
+        """
+        # TODO: Write this method.
+        return self.cokernel().dual().remove_trivial_groups()
 
 
 def Homomorphism(A, target = None, source = None):

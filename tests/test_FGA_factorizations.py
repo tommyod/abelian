@@ -72,12 +72,3 @@ class TestSNF:
         zero_morphism = HomFGA.zero(source = self.phi.source,
                                     target = cokernel.target)
         assert coker_phi == zero_morphism
-
-if __name__ == '__main__':
-
-    t = TestSNF()
-    t.setup_class()
-    t.test_project_to_source()
-    t.test_image_coimage_factorization()
-    t.test_kernel()
-    t.test_cokernel()

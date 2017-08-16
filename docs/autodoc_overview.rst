@@ -56,6 +56,7 @@ Methods for class :class:`~abelian.morphisms.HomLCA`
 
     ~abelian.morphisms.HomLCA
     ~abelian.morphisms.HomLCA.__add__
+    ~abelian.morphisms.HomLCA.__call__
     ~abelian.morphisms.HomLCA.__eq__
     ~abelian.morphisms.HomLCA.__getitem__
     ~abelian.morphisms.HomLCA.__init__
@@ -77,6 +78,7 @@ Methods for class :class:`~abelian.morphisms.HomLCA`
     ~abelian.morphisms.HomLCA.stack_vert
     ~abelian.morphisms.HomLCA.to_HomFGA
     ~abelian.morphisms.HomLCA.to_latex
+    ~abelian.morphisms.HomLCA.zero
   
 Methods for class :class:`~abelian.morphisms.HomFGA` (inherits from: :class:`~abelian.morphisms.HomLCA` )
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,8 +86,10 @@ Methods for class :class:`~abelian.morphisms.HomFGA` (inherits from: :class:`~ab
 .. autosummary::
 
     ~abelian.morphisms.HomFGA
+    ~abelian.morphisms.HomFGA.annihilator
     ~abelian.morphisms.HomFGA.coimage
     ~abelian.morphisms.HomFGA.cokernel
+    ~abelian.morphisms.HomFGA.dual
     ~abelian.morphisms.HomFGA.image
     ~abelian.morphisms.HomFGA.kernel
     ~abelian.morphisms.HomFGA.project_to_source
