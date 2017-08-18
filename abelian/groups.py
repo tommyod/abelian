@@ -133,7 +133,8 @@ class LCA:
                 return r'Z_' + str(p) + ''
             return r'T' # r'T_' + str(p) + ''
 
-        joined = r', '.join(repr_single(p, d) for (p, d) in self)
+        tuples = self._iterate_tuples()
+        joined = r', '.join(repr_single(p, d) for (p, d) in tuples)
         return '[' + joined + ']'
 
     def to_latex(self):
@@ -160,7 +161,8 @@ class LCA:
                 return r'\mathbb{Z}_{' + str(p) + '}'
             return r'T_{' + str(p) + '}'
 
-        return r' \oplus '.join(repr_single(p, d) for (p, d) in self)
+        tuples = self._iterate_tuples()
+        return r' \oplus '.join(repr_single(p, d) for (p, d) in tuples)
 
     def dual(self):
         """
@@ -189,10 +191,20 @@ class LCA:
         # TODO : Is only allowing T, and not T_{n}, sensible?
 
         single_dual = self._dual_of_single_group
-        dual_lists = list(single_dual(p, d) for (p, d) in self)
+        dual_lists = list(single_dual(p, d) for (p, d) in self._iterate_tuples())
         new_periods = [p for (p, d) in dual_lists]
         new_discrete = [d for (p, d) in dual_lists]
         return type(self)(periods = new_periods, discrete = new_discrete)
+
+    def _iterate_tuples(self):
+        """
+
+        Returns
+        -------
+
+        """
+        for (period, discrete) in zip(self.periods, self.discrete):
+            yield (period, discrete)
 
     def iterate(self):
         """
@@ -210,13 +222,14 @@ class LCA:
         Examples
         ---------
         >>> G = LCA([5, 1], [True, False])
-        >>> for (period, discrete) in G:
-        ...     print(period, discrete)
-        5 True
-        1 False
+        >>> groups = [LCA([5], [True]), LCA([1], [False])]
+        >>> for i, group in enumerate(G):
+        ...     group == groups[i]
+        True
+        True
         """
         for (period, discrete) in zip(self.periods, self.discrete):
-            yield (period, discrete)
+            yield type(self)([period], [discrete])
 
     def project_element(self, element):
         """
@@ -363,7 +376,7 @@ class LCA:
             """
             Split a group into (torsion, non_torsion).
             """
-            gen_list = list(enumerate(LCA))
+            gen_list = list(enumerate(LCA._iterate_tuples()))
             torsion_i = [i for (i, (p, d)) in gen_list if is_t(p, d)]
             nontorsion_i = [i for (i, (p, d)) in gen_list if not is_t(p, d)]
             torsion = LCA.remove_indices(nontorsion_i)
@@ -376,8 +389,9 @@ class LCA:
 
 
         # Sort the non-torsion subgroup
-        non_tors_periods = [p for (p, d) in sorted(self_non_tors)]
-        non_tors_discrete = [d for (p, d) in sorted(self_non_tors)]
+        tuples = list(self_non_tors._iterate_tuples())
+        non_tors_periods = [p for (p, d) in sorted(tuples)]
+        non_tors_discrete = [d for (p, d) in sorted(tuples)]
 
         # Get canonical decomposition of the torsion subgroup
         self_SNF = smith_normal_form(diag(*self_tors.periods), False)
@@ -423,7 +437,6 @@ class LCA:
         >>> G.isomorphic(H)
         True
         """
-
         isomorphic = self.canonical().equal(other.canonical())
         return isomorphic
 
@@ -481,7 +494,8 @@ class LCA:
         def trivial(period, discrete):
             return discrete and (period == 1)
 
-        purged_lists = [(p, d) for (p, d) in self if not trivial(p, d)]
+        self_tuples = self._iterate_tuples()
+        purged_lists = [(p, d) for (p, d) in self_tuples if not trivial(p, d)]
         new_periods = [p for (p, d) in purged_lists]
         new_discrete = [d for (p, d) in purged_lists]
         return type(self)(periods=new_periods, discrete=new_discrete)
@@ -628,22 +642,6 @@ class LCA:
         """
         return self.length()
 
-    def __contains__(self, item):
-        """
-        Whether or not one LCA is a subset of another.
-
-        https://docs.python.org/3/reference/datamodel.html#object# .__contains__
-
-        Parameters
-        ----------
-        item
-
-        Returns
-        -------
-
-        """
-        pass
-
 
 
 if __name__ == "__main__":
@@ -671,6 +669,7 @@ if __name__ == '__main__':
     G = LCA([])
     G = G.canonical()
     print(G.rank())
+
 
 
 

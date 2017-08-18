@@ -6,7 +6,8 @@ from sympy import Matrix, diag, latex
 from abelian.utils import mod
 from abelian.groups import LCA
 from abelian.linalg.utils import delete_zero_columns, nonzero_diag_as_list, \
-    matrix_mod_vector, order_of_vector, remove_cols, remove_rows, columns_as_list
+    matrix_mod_vector, order_of_vector, remove_cols, remove_rows, \
+    columns_as_list, reciprocal_entrywise, diag_times_mat, mat_times_diag
 from abelian.linalg.factorizations import smith_normal_form
 from abelian.linalg.solvers import solve_epi
 
@@ -125,7 +126,7 @@ class HomLCA:
 
     def to_latex(self):
         """
-        Return the HomLCA as a :math:`\LaTeX` string.
+        Return the homomorphism as a :math:`\LaTeX` string.
 
         Returns
         -------
@@ -285,7 +286,7 @@ class HomLCA:
 
     def compose_self(self, power):
         """
-        Repeated composition of an automorphism.
+        Repeated composition of an endomorphism.
 
         Parameters
         ----------
@@ -295,7 +296,7 @@ class HomLCA:
         Returns
         -------
         homomorphism : HomLCA
-            The automorphism composed with itself `power` times.
+            The endomorphism composed with itself `power` times.
 
         Examples
         --------
@@ -319,7 +320,7 @@ class HomLCA:
 
     def copy(self):
         """
-        Return a copy.
+        Return a copy of the homomorphism.
 
         Returns
         -------
@@ -379,14 +380,14 @@ class HomLCA:
 
     def __mul__(self, other):
         """
-        Override the (`*`) operator,
+        Override the `*` operator,
         see :py:meth:`~abelian.morphisms.HomLCA.compose`.
         """
         return self.compose(other)
 
     def __rmul__(self, other):
         """
-        Override the (`*`) operator,
+        Override the `*` operator,
         see :py:meth:`~abelian.morphisms.HomLCA.compose`.
         """
         return self.compose(other)
@@ -495,7 +496,7 @@ class HomLCA:
 
     def evaluate(self, source_element):
         """
-        Apply the morphism to an element.
+        Apply the homomorphism to an element.
 
         Parameters
         ----------
@@ -566,7 +567,7 @@ class HomLCA:
 
     def equal(self, other):
         """
-        Whether or not two HomLCAs are equal.
+        Whether or not two homomorphisms are equal.
 
         Two HomLCAs are equal iff (1) the sources are equal, (2) the targets
         are equal and (3) the matrices representing the homomorphisms are
@@ -610,6 +611,53 @@ class HomLCA:
         """
         pass
 
+
+    def remove_trivial_groups(self):
+        """
+        Remove trivial groups.
+
+        A group is trivial if it is discrete with period 1, i.e. Z_1.
+        Removing trivial groups from the target group means removing the
+        Z_1 groups from the target, along with the corresponding rows of
+        the matrix representing the homomorphism.
+        Removing trivial groups from the source group means removing the
+        groups Z_1 from the source, i.e. removing every column (generator)
+        with period 1.
+
+        Returns
+        -------
+        homomorphism : HomFGA
+            A homomorphism where the trivial groups have been removed from
+            the source and the target. The corresponding rows and columns of
+            the matrix representing the homomorphism are also removed.
+
+        Examples
+        --------
+        >>> target = [1, 7]
+        >>> phi = HomFGA([[2, 1], [7, 2]], target=target)
+        >>> projected = HomFGA([[2]], target=[7], source = [7])
+        >>> phi.project_to_source().remove_trivial_groups() == projected
+        True
+
+        """
+        def trivial(period, discrete):
+            return discrete and (period == 1)
+
+        # Get indices where the value of the source is 1
+        generator = enumerate(self.source._iterate_tuples())
+        cols_to_del = [i for (i, (d, p)) in generator if trivial(d, p)]
+        new_A = remove_cols(self.A, cols_to_del)
+
+        # Get indices where the value of the target is 1
+        generator = enumerate(self.target._iterate_tuples())
+        rows_to_del = [i for (i, (d, p)) in generator if trivial(d, p)]
+        new_A = remove_rows(new_A, rows_to_del)
+
+        new_source = self.source.remove_indices(cols_to_del)
+        new_target = self.target.remove_indices(rows_to_del)
+
+        return type(self)(new_A, new_target, new_source)
+
     def __eq__(self, other):
         """
         Override the equality (`==`) operator,
@@ -640,6 +688,52 @@ class HomLCA:
                                                    repr(self.target))
         rep += str(self.A)
         return rep
+
+    def dual(self):
+        """
+        Compute the dual homomorphism.
+
+        TODO: Write detailed description.
+
+
+        Returns
+        -------
+        dual : HomLCA
+            The dual homomorphism.
+
+        Examples
+        ---------
+        >>> phi = HomFGA([2])
+        >>> phi_dual = phi.dual()
+        >>> phi_dual.source == phi_dual.target
+        True
+
+        Computing duals by first calculating periods
+
+        >>> # Project, then find dual
+        >>> phi = HomFGA([2], target = [10])
+        >>> phi_proj = phi.project_to_source()
+        >>> phi_project_dual = phi_proj.dual()
+        >>> phi_project_dual == Homomorphism([1], [5], [10])
+        True
+        >>> # Do not project
+        >>> phi_dual = phi.dual()
+        >>> phi_dual == Homomorphism([1/5], LCA([1], [False]), [10])
+        True
+        """
+
+        # Flip the source and target for the dual morphism
+        dual_source, dual_target = self.target.dual(), self.source.dual()
+
+        # Calculate the matrix representing the dual homomorphism
+        diag_p = Matrix([1 if e == 0 else e for e in self.source.periods])
+        diag_q_inv = reciprocal_entrywise(Matrix([1 if e == 0 else e for e
+                                                  in self.target.periods]))
+        dual_A = mat_times_diag(diag_times_mat(diag_p, self.A.T), diag_q_inv)
+
+        # Create new FGA object and return
+        return Homomorphism(dual_A, target = dual_target, source = dual_source)
+
 
 
 
@@ -676,7 +770,7 @@ class HomFGA(HomLCA):
 
     def project_to_source(self):
         """
-        Project columns to source group, i.e. compute periods.
+        Project columns to source group, calculating periods.
 
         Returns
         -------
@@ -802,79 +896,6 @@ class HomFGA(HomLCA):
         coimage = kernel.cokernel()
         return coimage
 
-    def remove_trivial_groups(self):
-        """
-        Remove trivial from source and target.
-
-        A group is trivial if it is discrete with period 1, i.e. Z_1.
-        Removing trivial groups from the target group means removing the
-        Z_1 groups from the target, along with the corresponding rows of
-        the matrix representing the homomorphism.
-        Removing trivial groups from the source group means removing the
-        groups Z_1 from the source, i.e. removing every column (generator)
-        with period 1.
-
-        Returns
-        -------
-        homomorphism : HomFGA
-            A homomorphism where the trivial groups have been removed from
-            the source and the target. The corresponding rows and columns of
-            the matrix representing the homomorphism are also removed.
-
-        Examples
-        --------
-        >>> target = [1, 7]
-        >>> phi = HomFGA([[2, 1], [7, 2]], target=target)
-        >>> projected = HomFGA([[2]], target=[7], source = [7])
-        >>> phi.project_to_source().remove_trivial_groups() == projected
-        True
-
-        """
-        def trivial(period, discrete):
-            return discrete and (period == 1)
-
-        # Get indices where the value of the source is 1
-        generator = enumerate(self.source.iterate())
-        cols_to_del = [i for (i, (d, p)) in generator if trivial(d, p)]
-        new_A = remove_cols(self.A, cols_to_del)
-
-        # Get indices where the value of the target is 1
-        generator = enumerate(self.target.iterate())
-        rows_to_del = [i for (i, (d, p)) in generator if trivial(d, p)]
-        new_A = remove_rows(new_A, rows_to_del)
-
-        new_source = self.source.remove_indices(cols_to_del)
-        new_target = self.target.remove_indices(rows_to_del)
-
-        return type(self)(new_A, new_target, new_source)
-
-
-    def dual(self):
-        """
-        Compute the dual homomorphism.
-
-
-        Returns
-        -------
-
-        """
-        # TODO: Write this method.
-
-        # To compute the dual, the source and target must be known
-        if self.target is None or self.source is None:
-            raise GroupError('Target and source must be known to compute dual.')
-
-        # Flip the source and target for the dual morphism
-        dual_source, dual_target = self.target, self.source
-
-        # Calculate the matrix representing the dual homomorphism
-        diag_p = Matrix([1 if e == 0 else e for e in self.source])
-        diag_q_inv = reciprocal_entrywise(Matrix([1 if e == 0 else e for e in self.target]))
-        dual_A = mat_times_diag(diag_times_mat(diag_p, self.A.T), diag_q_inv)
-
-        # Create new FGA object and return
-        return type(self)(dual_A, target = dual_target, source = dual_source)
-
     def annihilator(self):
         """
         The annihilator morphism.
@@ -936,8 +957,16 @@ if __name__ == "__main__":
 
 
 if __name__ == '__main__':
-    phi = HomLCA([])
-    psi = HomLCA([1])
-    print(phi)
+    psi = Homomorphism([2, 1], target = [4, 3])
+    psi = psi.project_to_source()
+    print('----- psi ------')
     print(psi)
-    phi == psi
+
+    print('----- dual ------')
+    print(psi.dual())
+
+    print('----- dual.dual ------')
+    print(psi.dual().dual())
+
+    print('----- annihilator ------')
+    print(psi.annihilator().remove_trivial_groups())

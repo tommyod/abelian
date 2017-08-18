@@ -3,6 +3,7 @@ List of all public classes
 
 .. autosummary::
 
+    ~abelian.functions.Function
     ~abelian.morphisms.HomFGA
     ~abelian.morphisms.HomLCA
     ~abelian.groups.LCA
@@ -26,7 +27,6 @@ Methods for class :class:`~abelian.groups.LCA`
 
     ~abelian.groups.LCA
     ~abelian.groups.LCA.__add__
-    ~abelian.groups.LCA.__contains__
     ~abelian.groups.LCA.__eq__
     ~abelian.groups.LCA.__getitem__
     ~abelian.groups.LCA.__init__
@@ -69,10 +69,12 @@ Methods for class :class:`~abelian.morphisms.HomLCA`
     ~abelian.morphisms.HomLCA.compose
     ~abelian.morphisms.HomLCA.compose_self
     ~abelian.morphisms.HomLCA.copy
+    ~abelian.morphisms.HomLCA.dual
     ~abelian.morphisms.HomLCA.equal
     ~abelian.morphisms.HomLCA.evaluate
     ~abelian.morphisms.HomLCA.getitem
     ~abelian.morphisms.HomLCA.ismomorphic
+    ~abelian.morphisms.HomLCA.remove_trivial_groups
     ~abelian.morphisms.HomLCA.stack_diag
     ~abelian.morphisms.HomLCA.stack_horiz
     ~abelian.morphisms.HomLCA.stack_vert
@@ -89,10 +91,23 @@ Methods for class :class:`~abelian.morphisms.HomFGA` (inherits from: :class:`~ab
     ~abelian.morphisms.HomFGA.annihilator
     ~abelian.morphisms.HomFGA.coimage
     ~abelian.morphisms.HomFGA.cokernel
-    ~abelian.morphisms.HomFGA.dual
     ~abelian.morphisms.HomFGA.image
     ~abelian.morphisms.HomFGA.kernel
     ~abelian.morphisms.HomFGA.project_to_source
     ~abelian.morphisms.HomFGA.project_to_target
-    ~abelian.morphisms.HomFGA.remove_trivial_groups
+  
+Methods for class :class:`~abelian.functions.Function` 
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+    ~abelian.functions.Function
+    ~abelian.functions.Function.__call__
+    ~abelian.functions.Function.__init__
+    ~abelian.functions.Function.convolve
+    ~abelian.functions.Function.dft
+    ~abelian.functions.Function.evaluate
+    ~abelian.functions.Function.pointwise
+    ~abelian.functions.Function.pullback
+    ~abelian.functions.Function.pushfoward
   

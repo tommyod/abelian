@@ -386,14 +386,6 @@ def order_of_vector(v, mod_vector):
     if len(v) != len(mod_vector):
         raise ValueError('The arguments must have the same length.')
 
-    # Identity element, order 1
-        #if all(e == 0 for e in v):
-        #   return 1
-
-    # Non identity element in infintite group -> infinite period
-        #if all(period == 0 for period in mod_vector):
-        #    return 0
-
     def div(top, bottom):
         try:
             return top // bottom
@@ -407,9 +399,160 @@ def order_of_vector(v, mod_vector):
 
     return functools.reduce(lcm, gcd_list)
 
+
+def mat_times_diag(A, diagonal):
+    """
+    Multiply a dense matrix and a diagonal.
+
+    Multiplies `A` with a column vector `diagonal`, which is interpreted as
+    the diagonal of a matrix. This algorithm exploids the diagonal structure
+    to reduce the number of computations.
+
+    Parameters
+    ----------
+    A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        A dense matrix.
+    diag : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        The diagonal of a matrix, represented as a sympy column vector.
+
+    Returns
+    -------
+    product : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        The product `A` times `diag`.
+
+    Examples
+    ---------
+    >>> from sympy import Matrix, diag
+    >>> A = Matrix([[1, 2],
+    ...             [3, 4]])
+    >>> diagonal = Matrix([2, 3])
+    >>> mat_times_diag(A, diagonal) == A * diag(2, 3)
+    True
+    """
+    m, n = A.shape
+    new_A = A.copy()
+    for col in range(0, n):
+        new_A[:, col] *= diagonal[col]
+    return new_A
+
+
+def diag_times_mat(diagonal, A):
+    """
+    Multiply a diagonal and a dense matrix.
+
+    Multiplies a column vector `diagonal` with `A`, in that order.
+    This algorithm exploids the diagonal structure
+    to reduce the number of computations.
+
+    Parameters
+    ----------
+    diag : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        The diagonal of a matrix, represented as a sympy column vector.
+    A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        A dense matrix.
+
+    Returns
+    -------
+    product : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        The product `diag` times `A`.
+
+    Examples
+    ---------
+    >>> from sympy import Matrix, diag
+    >>> A = Matrix([[1, 2],
+    ...             [3, 4]])
+    >>> diagonal = Matrix([2, 3])
+    >>> diag_times_mat(diagonal, A) == diag(2, 3) * A
+    True
+    """
+    m, n = A.shape
+    new_A = A.copy()
+    for row in range(0, m):
+        new_A[row, :] *= diagonal[row]
+    return new_A
+
+
+def reciprocal_entrywise(A):
+    """
+    Returns the entrywise reciprocal of a matrix or vector.
+
+    Will skip zero entries.
+
+    Parameters
+    ----------
+    A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        A sympy matrix, or vector ( m x 1 matrix).
+
+    Returns
+    -------
+    reciprocal : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
+        The entrywise reciprocal of `A`.
+
+    Examples
+    ---------
+    >>> from sympy import Matrix, diag
+    >>> D = diag(1, 2, 3)
+    >>> D_inv = reciprocal_entrywise(D)
+    >>> D * D_inv == Matrix.eye(3)
+    True
+    >>> A = Matrix([[1, 5], [4, 1]])
+    >>> A_recip = reciprocal_entrywise(A)
+    >>> A_recip == Matrix([[1, 1/5], [1/4, 1]])
+    True
+    """
+    m, n = A.shape
+    def recip(x):
+        if x == 0:
+            return x
+        return 1/x
+
+
+
+    return Matrix(m, n, [recip(e) for e in A])
+
+
+def norm(vector, p = 2):
+    """
+    The p-norm.
+
+
+    Parameters
+    ----------
+    vector : :py:class:`~sympy.matrices.dense.MutableDenseMatrix` or list
+        The iterable to compute the norm over.
+    p : float
+        The p-value in the p-norm. Should be between 1 and infinity (None).
+
+    Returns
+    -------
+    norm : float
+        The computed norm.
+
+    Examples
+    --------
+    >>> vector = [1, 2, 3]
+    >>> norm(vector, 1)
+    6.0
+    >>> norm(vector, None)
+    3.0
+    >>> norm(vector, 2)
+    3.7416573867739413
+    >>> from sympy import Matrix
+    >>> vector = Matrix(vector)
+    >>> norm(vector, 1)
+    6.0
+    >>> norm(vector, None)
+    3.0
+    >>> norm(vector, 2)
+    3.7416573867739413
+
+    """
+    if p == None:
+        return float(max(list(vector)))
+
+    return float(sum(i**p for i in vector)**(1/p))
+
+
 if __name__ == "__main__":
     import doctest
-    doctest.testmod(verbose = True)
-
-    print(order_of_vector([1, 0, 1], [5, 0, 0]))
-
+    doctest.testmod(verbose = False)
