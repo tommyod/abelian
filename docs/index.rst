@@ -11,7 +11,7 @@ The library is structured into two packages, the ``abelian`` package and the
 :py:mod:`sympy` library for symoblic mathematics.
 
 Project Goals
-==============
+--------------
 
 * Classical groups :math:`\mathbb{R}`, :math:`\mathbb{T}`, :math:`\mathbb{Z}` and :math:`\mathbb{Z}_n` and computations on these.
 * Relationship between continuous and discrete should be 'pretty'.
@@ -25,29 +25,14 @@ Project Goals
    and is not ready to be used yet.
 
 
-
-Software specification
-========================
-
-Included below is automatically generated software specification.
-
-.. include:: autodoc_overview.rst
-
-
-Todo
-============
-
-* Create skeleton for project
-* Factorizations of homomorphisms between FGAs (tests, docs, implementation)
-
 Contents
-========
+---------
 
 .. toctree::
    :maxdepth: 2
 
-   Tutorial: LCAs <notebooks/LCA.ipynb>
-   Tutorial: Homomorphisms <notebooks/homomorphisms.ipynb>
+   Software Specification <software_specification>
+   Tutorials <notebooks/tutorials>
    License <license>
    Module Reference <api/modules>
    API: abelian <api/abelian>
@@ -55,7 +40,7 @@ Contents
 
 
 Indices and tables
-==================
+--------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

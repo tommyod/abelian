@@ -1,5 +1,5 @@
-List of all public classes
-------------------------------------------
+Public classes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 
@@ -8,8 +8,8 @@ List of all public classes
     ~abelian.morphisms.HomLCA
     ~abelian.groups.LCA
 
-List of all public functions
-------------------------------------------
+Public functions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 
@@ -18,10 +18,10 @@ List of all public functions
     ~abelian.linalg.factorizations.smith_normal_form
     ~abelian.linalg.solvers.solve
 
-All public classes (with methods)
-------------------------------------------
-Methods for class :class:`~abelian.groups.LCA` 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Public classes (detailed)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:class:`~abelian.groups.LCA`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
 
@@ -49,8 +49,8 @@ Methods for class :class:`~abelian.groups.LCA`
     ~abelian.groups.LCA.sum
     ~abelian.groups.LCA.to_latex
   
-Methods for class :class:`~abelian.morphisms.HomLCA` 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:class:`~abelian.morphisms.HomLCA`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
 
@@ -82,8 +82,9 @@ Methods for class :class:`~abelian.morphisms.HomLCA`
     ~abelian.morphisms.HomLCA.to_latex
     ~abelian.morphisms.HomLCA.zero
   
-Methods for class :class:`~abelian.morphisms.HomFGA` (inherits from: :class:`~abelian.morphisms.HomLCA` )
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:class:`~abelian.morphisms.HomFGA`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ (inherits from: :class:`~abelian.morphisms.HomLCA` )
 
 .. autosummary::
 
@@ -96,8 +97,8 @@ Methods for class :class:`~abelian.morphisms.HomFGA` (inherits from: :class:`~ab
     ~abelian.morphisms.HomFGA.project_to_source
     ~abelian.morphisms.HomFGA.project_to_target
   
-Methods for class :class:`~abelian.functions.Function` 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:class:`~abelian.functions.Function`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autosummary::
 

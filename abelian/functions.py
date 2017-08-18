@@ -213,7 +213,7 @@ class Function:
     def dft(self):
         """
         TODO: The discrete fourier transform.
-        
+
         Discrete fourier transform (if domain is discrete + compact).
 
         Returns

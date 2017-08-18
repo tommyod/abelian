@@ -38,8 +38,8 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
     if class_overview:
         classes_in_module = inspect.getmembers(module, inspect.isclass)
 
-        out.append('List of all public classes')
-        out.append('------------------------------------------')
+        out.append('Public classes')
+        out.append('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         out.append('\n.. autosummary::\n')
 
         for name, cls in classes_in_module:
@@ -49,8 +49,8 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
     if functions:
         functions_in_module = inspect.getmembers(module, inspect.isfunction)
 
-        out.append('List of all public functions')
-        out.append('------------------------------------------')
+        out.append('Public functions')
+        out.append('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         out.append('\n.. autosummary::\n')
         for name, function in functions_in_module:
             out.append('    ~' + function.__module__ + '.' + name)
@@ -59,8 +59,8 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
     if classes:
         classes_in_module = inspect.getmembers(module, inspect.isclass)
 
-        out.append('All public classes (with methods)')
-        out.append('------------------------------------------')
+        out.append('Public classes (detailed)')
+        out.append('~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
         for cls_name, cls in sorted(classes_in_module, reverse = True):
 
             # Find inheritance information
@@ -70,12 +70,12 @@ def build_autosummaries(module_name, class_overview = True, functions = True, cl
                 bases])
 
             header_clsname = cls.__module__ + '.' + cls_name
-            header = 'Methods for class :class:`~{}` '.format(header_clsname)
+            header = ':class:`~{}`'.format(header_clsname)
             # Add inheritance if it exists
-            if len(inherits) > 0:
-                header += '(inherits from: {} )'.format(inherits)
             out.append(header)
-            out.append('~'*(25 +len(header)))
+            out.append('^'*(25 +len(header)))
+            if len(inherits) > 0:
+                out.append(' (inherits from: {} )'.format(inherits))
             out.append('\n.. autosummary::\n')
             members = inspect.getmembers(cls)
 
