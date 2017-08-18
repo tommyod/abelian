@@ -33,7 +33,6 @@ Contents
 
    Software Specification <software_specification>
    Tutorials <notebooks/tutorials>
-   License <license>
    Module Reference <api/modules>
    API: abelian <api/abelian>
    API: linalg <api/abelian.linalg>
