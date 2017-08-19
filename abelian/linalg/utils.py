@@ -550,7 +550,7 @@ def norm(vector, p = 2):
     if p == None:
         return float(max(list(vector)))
 
-    return float(sum(i**p for i in vector)**(1/p))
+    return float(sum(abs(i)**p for i in vector)**(1/p))
 
 
 if __name__ == "__main__":

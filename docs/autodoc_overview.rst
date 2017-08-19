@@ -105,10 +105,14 @@ Public classes (detailed)
     ~abelian.functions.Function
     ~abelian.functions.Function.__call__
     ~abelian.functions.Function.__init__
+    ~abelian.functions.Function.__repr__
     ~abelian.functions.Function.convolve
     ~abelian.functions.Function.dft
     ~abelian.functions.Function.evaluate
     ~abelian.functions.Function.pointwise
     ~abelian.functions.Function.pullback
-    ~abelian.functions.Function.pushfoward
+    ~abelian.functions.Function.pushforward
+    ~abelian.functions.Function.pushforward_by_transversal
+    ~abelian.functions.Function.sample
+    ~abelian.functions.Function.shift
   
