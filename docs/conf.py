@@ -73,7 +73,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'abelian'
-copyright = u'2017, tommyod'
+copyright = u'2017, Tommy Odland'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -174,7 +174,7 @@ html_static_path = ['_static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-html_last_updated_fmt = '%B %Y'
+html_last_updated_fmt = '%B %Y %m'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -241,7 +241,7 @@ latex_elements = {
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
   ('index', 'user_guide.tex', u'abelian Documentation',
-   u'tommyod', 'manual'),
+   u'Tommy Odland', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -250,7 +250,7 @@ latex_documents = [
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
-# latex_use_parts = False
+latex_use_parts = True
 
 # If true, show page references after internal links.
 # latex_show_pagerefs = False

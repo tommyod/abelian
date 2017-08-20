@@ -1,5 +1,5 @@
 Tutorials
--------------
+==========
 Here you will find tutorials convering all the main aspects of the ``abelian``
 library.
 

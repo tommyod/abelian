@@ -234,6 +234,7 @@ class Function:
         True
 
         Using a simple function and homomorphism represented as matrix.
+
         >>> from abelian import Homomorphism, LCA
         >>> def func(list_arg):
         ...     x, y = tuple(list_arg)
@@ -245,7 +246,6 @@ class Function:
         >>>
         >>> f_pullback([8]) == 13
         True
-
         """
 
         if not self.domain == morphism.target:
