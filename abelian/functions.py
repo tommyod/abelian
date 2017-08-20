@@ -22,7 +22,7 @@ class Function:
 
     def __init__(self, representation, domain):
         """
-        Create a function.
+        Initialize a function.
 
         Parameters
         ----------
@@ -96,6 +96,7 @@ class Function:
 
     def __repr__(self):
         """
+        Override the ``repr()`` function.
 
         Returns
         -------
@@ -106,6 +107,14 @@ class Function:
         return str
 
     def to_latex(self):
+        """
+        Return as a :math:`\LaTeX` string.
+
+
+        Returns
+        -------
+
+        """
         latex_str = r'\operatorname{FUNC} \in \mathbb{C}^G, \ G = GRP'
         latex_str = latex_str.replace('FUNC', self.representation.__name__)
         latex_str = latex_str.replace('GRP', self.domain.to_latex())
@@ -115,6 +124,7 @@ class Function:
 
     def sample(self, list_of_points, *args, **kwargs):
         """
+        Sample the function on points.
 
         Parameters
         ----------
@@ -173,7 +183,7 @@ class Function:
 
     def evaluate(self, list_arg, *args, **kwargs):
         """
-        Evaluate the function.
+        Evaluate at a point.
 
         Parameters
         ----------
@@ -216,7 +226,7 @@ class Function:
 
     def pullback(self, morphism):
         """
-        Return the pullback function, along `morphism`.
+        Return the pullback along `morphism`.
 
         Parameters
         ----------
@@ -286,7 +296,7 @@ class Function:
 
     def pushforward(self, morphism, norm_condition = None):
         """
-        Pushforward.
+        Return the pushforward along `morphism`.
 
         Parameters
         ----------
@@ -353,9 +363,10 @@ class Function:
         return type(self)(representation=new_representation, domain=domain)
 
 
-    def pushforward_by_transversal(self, epimorphism, transversal_rule,
-                                   default = 0):
+    def transversal(self, epimorphism, transversal_rule,
+                    default = 0):
         """
+        Pushforward along a transversal.
 
         Parameters
         ----------
@@ -385,7 +396,8 @@ class Function:
 
     def pointwise(self, func, operator):
         """
-        TODO: Pointwise mult/add/... .
+        Pointwise add/mult/etc.
+
 
         Parameters
         ----------
@@ -397,10 +409,9 @@ class Function:
 
         """
 
-    def convolve(self, other):
+    def convolve(self, other, norm_cond):
         """
-        TODO.
-        Convolution (if domain is discrete + compact).
+        Convolution.
 
         Parameters
         ----------
@@ -414,6 +425,8 @@ class Function:
 
     def dft(self):
         """
+        The discrete fourier transform.
+        
         TODO: The discrete fourier transform.
 
         Discrete fourier transform (if domain is discrete + compact).
@@ -533,7 +546,7 @@ if __name__ == '__main__':
     for element in range(10):
         print(element, transverse([element]))
 
-    f_transversed_to_Z = f.pushforward_by_transversal(epi, transverse)
+    f_transversed_to_Z = f.transversal(epi, transverse)
     print('transversed')
     x = list(range(-10, 10))
     print(*x, sep = '\t')

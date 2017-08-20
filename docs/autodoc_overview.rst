@@ -112,8 +112,8 @@ Public classes (detailed)
     ~abelian.functions.Function.pointwise
     ~abelian.functions.Function.pullback
     ~abelian.functions.Function.pushforward
-    ~abelian.functions.Function.pushforward_by_transversal
     ~abelian.functions.Function.sample
     ~abelian.functions.Function.shift
     ~abelian.functions.Function.to_latex
+    ~abelian.functions.Function.transversal
   
