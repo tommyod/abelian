@@ -6,6 +6,7 @@
 This module contains ...
 """
 
+from sympy import Matrix
 from abelian.linalg.utils import norm
 from abelian.utils import call_nested_list, verify_dims_list, argmin, argmax
 from types import FunctionType
@@ -88,6 +89,7 @@ class Function:
                 return call_nested_list(representation, list_of_points)
 
             self.representation = list_caller
+            self.representation.__name__ = 'table'
 
 
 
@@ -102,6 +104,13 @@ class Function:
         f_name = self.representation.__name__
         str = r'Function ({}) on domain {}'.format(f_name, self.domain)
         return str
+
+    def to_latex(self):
+        latex_str = r'\operatorname{FUNC} \in \mathbb{C}^G, \ G = GRP'
+        latex_str = latex_str.replace('FUNC', self.representation.__name__)
+        latex_str = latex_str.replace('GRP', self.domain.to_latex())
+        return latex_str
+
 
 
     def sample(self, list_of_points, *args, **kwargs):
