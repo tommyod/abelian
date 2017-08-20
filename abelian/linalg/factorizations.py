@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+This module contains factorization algorithms for matrices over the
+integers. All the inputs and outputs are of type
+:py:class:`~sympy.matrices.dense.MutableDenseMatrix`.
+"""
+
 
 from sympy import Matrix, gcdex, pprint
 from abelian.utils import mod
@@ -10,10 +16,10 @@ def hermite_normal_form(A):
     Compute U and H such that A*U = H.
 
     This algorithm computes the column version of the
-    Hermite normal form [1]_, and returns a tuple (U, H)
+    Hermite normal form [1]_, and returns a tuple of matrices (U, H)
     such that A*U = H. The matrix U is an unimodular transformation
-    matrix and H is the result of the transformation, i.e.
-    H is in Hermite normal form.
+    matrix and H is the result of the transformation, i.e. H is in Hermite
+    normal form.
 
     Parameters
     ----------
@@ -41,8 +47,10 @@ def hermite_normal_form(A):
     >>> A = Matrix([[1, 2],
     ...             [3, 4]])
     >>> U, H = hermite_normal_form(A)
-    >>> U.det() in [1, -1] # Determinant is +/- 1
+    >>> # Verify that U is unimodular (determinant +/- 1)
+    >>> U.det() in [1, -1]
     True
+    >>> # Verify the decomposition
     >>> A*U == H
     True
     """
@@ -110,23 +118,22 @@ def hermite_normal_form(A):
     # assert A * U == H
     return U, H
 
-def smith_normal_form(A, compute_transformation=True):
+def smith_normal_form(A, compute_unimod = True):
     """
-    Compute (U, S, V) such that U*A*V = S.
+    Compute U,S,V such that U*A*V = S.
 
-    This algorithm computes the Smith normal form [1]_
-    of an integer matrix. If `compute_transformation`
-    is True, it returns matrices U, S, V such that
-    U * A * V = S, where U and V are unimodular and S
-    is in Smith normal form. If `compute_transformation`
-    is false, it returns S and does not compute U and V.
+    This algorithm computes the Smith normal form [1]_ of an integer matrix.
+    If `compute_transformation` is True, it returns matrices (U, S, V) such
+    that U*A*V = S, where U and V are unimodular and S is in Smith normal
+    form. If `compute_transformation` is False, it returns S and does not
+    compute U and V.
 
     Parameters
     ----------
     A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
         The matrix to factor.
-    compute_transformation : bool
-        If True, computes and returns (U, S, V). If, false, returns S.
+    compute_unimod : bool
+        Whether or not to compute and return unimodular matrices U and V.
 
     Returns
     -------
@@ -145,11 +152,14 @@ def smith_normal_form(A, compute_transformation=True):
     >>> A = Matrix([[1, 2],
     ...             [3, 4]])
     >>> U, S, V = smith_normal_form(A)
-    >>> U.det() in [1, -1] and V.det() in [1, -1] # Unimodularity
+    >>> # Verify that U and V are both unimodular
+    >>> U.det() in [1, -1] and V.det() in [1, -1]
     True
-    >>> U * A * V == S # Verify factorization
+    >>> # Verify the factorization
+    >>> U * A * V == S
     True
-    >>> K = smith_normal_form(A, compute_transformation=False)
+    >>> # Compute without U and V, verify that the result is the same
+    >>> K = smith_normal_form(A, compute_unimod=False)
     >>> K == S
     True
     """
@@ -158,7 +168,7 @@ def smith_normal_form(A, compute_transformation=True):
     m, n = A.shape
     min_m_n = min(m, n)
     S = A[:, :]
-    if compute_transformation:
+    if compute_unimod:
         U, V = Matrix.eye(m), Matrix.eye(n)
 
     def row_col_all_zero(matrix, f):
@@ -191,14 +201,14 @@ def smith_normal_form(A, compute_transformation=True):
             # Permute S to move the minimal element to the pivot location
             S[f:, j], S[f:, f] = S[f:, f], S[f:, j]
             S[i, f:], S[f, f:] = S[f, f:], S[i, f:]
-            if compute_transformation:
+            if compute_unimod:
                 V[:, j], V[:, f] = V[:, f], V[:, j]
                 U[i, :], U[f, :] = U[f, :], U[i, :]
 
             # If the freshly permuted pivot is negative, make it positive
             if S[f, f] < 0:
                 S[f:, f] = -S[f:, f]
-                if compute_transformation:
+                if compute_unimod:
                     V[:, f] = -V[:, f]
 
             # Reduce row f so every entry is smaller than pivot
@@ -208,7 +218,7 @@ def smith_normal_form(A, compute_transformation=True):
                 # Subtract a times column f from column k
                 a = S[f, k] // S[f, f]
                 S[f:, k] = S[f:, k] - a * S[f:, f]
-                if compute_transformation:
+                if compute_unimod:
                     V[:, k] = V[:, k] - a * V[:, f]
 
             # Reduce column f so every entry is smaller than pivot
@@ -218,7 +228,7 @@ def smith_normal_form(A, compute_transformation=True):
                 # Subtract a times row f from row k
                 a = S[k, f] // S[f, f]
                 S[k, f:] = S[k, f:] - a * S[f, f:]
-                if compute_transformation:
+                if compute_unimod:
                     U[k, :] = U[k, :] - a * U[f, :]
 
         f += 1
@@ -236,15 +246,13 @@ def smith_normal_form(A, compute_transformation=True):
             r, s = S[f, f], S[k, k]
             a, b, c = gcdex(r, s)
             S[f, f], S[k, k] = c, (r * s) // c
-            if compute_transformation:
-                V[:, f], V[:, k] = V[:, f] + V[:, k], -b * (s / c) * V[:,
-                                                                     f] + a * (
-                                   r / c) * V[:, k]
-                U[f, :], U[k, :] = a * U[f, :] + b * U[k, :], -(s / c) * U[f,
-                                                                         :] + (
-                                   r / c) * U[k, :]
+            if compute_unimod:
+                V[:, f], V[:, k] = (V[:, f] + V[:, k],
+                                    -b * (s / c) * V[:,f] + a * (r / c) * V[:, k])
+                U[f, :], U[k, :] = (a * U[f, :] + b * U[k, :],
+                                    -(s / c) * U[f, :] + (r / c) * U[k, :])
 
-    if compute_transformation:
+    if compute_unimod:
         return U, S, V
     else:
         return S

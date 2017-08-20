@@ -8,12 +8,12 @@ This module contains equation solvers. All the inputs and outputs are of type
 
 from sympy import gcdex, Matrix, diag
 from abelian.linalg.free_to_free import free_kernel
-from abelian.linalg.utils import delete_zero_columns, remove_cols
+from abelian.linalg.utils import remove_zero_columns, remove_cols
 
 
 def solve(A, b, p = None):
     """
-    Solve the integer equation A * x = b mod p.
+    Solve the Ax = b mod p over Z.
 
     The data (A, b, p) must be integer. The equation Ax = b mod p is solved,
     if a solution exists. If A is an epimorphism but not a monomorphism (i.e.
@@ -68,7 +68,7 @@ def solve(A, b, p = None):
         raise ValueError('Dimension mismatch.')
 
     # Find the kernel of the projection onto the space Z_`p`
-    ker_pi = delete_zero_columns(diag(*p))
+    ker_pi = remove_zero_columns(diag(*p))
 
     # Stack A | ker(pi) | b
     joined_A_D_b = A.row_join(ker_pi).row_join(b)
@@ -175,7 +175,6 @@ def solve_epi(A, B, p = None):
     # Verify the dimensions
     A_rows, A_cols = A.shape
     B_rows, B_cols = B.shape
-    p_rows, p_cols = p.shape
 
     if (A_cols != B_cols) or (p.rows != A.rows):
         return ValueError('Dimension mismatch.')

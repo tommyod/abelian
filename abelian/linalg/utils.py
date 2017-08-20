@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+This module contains a set of utility functions which are used by the
+other modules in the `linalg` package. The functions defined herein
+operate on matrices, or are at the very least related to linear algebra
+computations.
+"""
+
 import functools
 from sympy import Matrix, pprint, gcd, lcm
 from abelian.utils import mod
@@ -18,7 +25,8 @@ def columns_as_list(A):
     Returns
     -------
     list_of_cols : list
-        A list of lists with [[col1], [col2], ...].
+        A list of lists, where each sub_list is a column,
+        e.g. structure [[col1], [col2], ...].
 
     Examples
     ---------
@@ -64,17 +72,13 @@ def nonzero_columns(H):
     nonzero_cols = 0
     # Loop over the columns
     for j in range(0, n):
-        found_nonzero = False
 
         # Loop over the rows
         for i in range(0, m):
             if H[i, j] != 0:
                 nonzero_cols += 1
-                found_nonzero = True
                 break
-        # TODO: This seems to be correct now. Verify with tests.
-        #if not found_nonzero:
-            #break
+
     return nonzero_cols
 
 
@@ -102,13 +106,6 @@ def diagonal_rank(S):
     4
     """
     return len(nonzero_diag_as_list(S))
-
-    #m, n = S.shape
-    #for i in range(0, min(m, n)):
-    #    if S[i, i] == 0:
-    #        return i
-    #else:
-    #    return min(m, n)
 
 
 def nonzero_diag_as_list(S):
@@ -138,7 +135,7 @@ def nonzero_diag_as_list(S):
     return nonzero_diags
 
 
-def delete_zero_columns(M):
+def remove_zero_columns(M):
     """
     Return a copy of M where the columns that are identically zero are deleted.
 
@@ -157,20 +154,21 @@ def delete_zero_columns(M):
     >>> from sympy import Matrix, diag
     >>> A = Matrix([[0, 1],
     ...             [0, 2]])
-    >>> delete_zero_columns(A) == Matrix([1, 2])
+    >>> remove_zero_columns(A) == Matrix([1, 2])
     True
     >>> A = diag(0,1,2)
     >>> A_del = Matrix([[0, 0],
     ...                 [1, 0],
     ...                 [0, 2]])
-    >>> delete_zero_columns(A) == A_del
+    >>> remove_zero_columns(A) == A_del
     True
     """
 
     A = M.copy()
     m, n = A.shape
 
-    cols_to_delete = []
+    # STEP 1: Find the columns to remove
+    cols_to_remove = []
     # Iterate over columns
     for j in range(0, n):
         all_zero = True
@@ -180,15 +178,10 @@ def delete_zero_columns(M):
                 break
         # If the column has all zeros, we delete it later
         if all_zero:
-            cols_to_delete.append(j)
+            cols_to_remove.append(j)
 
-    # Delete the columns that are to be deleted
-    deleted = 0
-    for j in cols_to_delete:
-        A.col_del(j - deleted)
-        deleted += 1
-
-    return A
+    # STEP 2: Remove the columns and return
+    return remove_cols(A, cols_to_remove)
 
 
 def remove_cols(A, cols_to_remove):
@@ -225,11 +218,7 @@ def remove_cols(A, cols_to_remove):
 
     new_A = A.copy()
     deleted = 0
-    from sympy import pprint
     for j in cols_to_remove:
-        #pprint(new_A)
-        #print(j, j - deleted)
-        #print('---')
         new_A.col_del(j - deleted)
         deleted += 1
 
@@ -392,10 +381,8 @@ def order_of_vector(v, mod_vector):
         except:
             return 1
 
-
-
-    gcd_list = [div(order, gcd(element, order)) for
-                (element, order) in zip(v, mod_vector)]
+    gen = zip(v, mod_vector)
+    gcd_list = [div(order, gcd(element, order)) for(element, order) in gen]
 
     return functools.reduce(lcm, gcd_list)
 
@@ -465,11 +452,16 @@ def diag_times_mat(diagonal, A):
     >>> diag_times_mat(diagonal, A) == diag(2, 3) * A
     True
     """
-    m, n = A.shape
-    new_A = A.copy()
-    for row in range(0, m):
-        new_A[row, :] *= diagonal[row]
-    return new_A
+
+    #m, n = A.shape
+    #new_A = A.copy()
+    #for row in range(0, m):
+    #    new_A[row, :] *= diagonal[row]
+    #return new_A
+
+    return mat_times_diag(A.T, diagonal).T
+
+
 
 
 def reciprocal_entrywise(A):
@@ -513,8 +505,7 @@ def reciprocal_entrywise(A):
 
 def norm(vector, p = 2):
     """
-    The p-norm.
-
+    The p-norm of an iterable.
 
     Parameters
     ----------
@@ -547,10 +538,14 @@ def norm(vector, p = 2):
     3.7416573867739413
 
     """
+
+    # If no p is given, assume the infinity norm and return the max value
     if p == None:
         return float(max(list(vector)))
 
-    return float(sum(abs(i)**p for i in vector)**(1/p))
+    # Return the p-norm
+    norm = sum(abs(i)**p for i in vector)**(1/p)
+    return float(norm)
 
 
 if __name__ == "__main__":

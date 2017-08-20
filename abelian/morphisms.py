@@ -1,14 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+"""
+This module consists of classes representing homomorphisms between
+finitely generated Abelian groups, namely the HomLCA class and the
+subclass HomFGA.
+"""
+
+
 import types
 from sympy import Matrix, diag, latex
 from abelian.utils import mod
 from abelian.groups import LCA
-from abelian.linalg.utils import delete_zero_columns, nonzero_diag_as_list, \
+from abelian.linalg.utils import remove_zero_columns, nonzero_diag_as_list, \
     matrix_mod_vector, order_of_vector, remove_cols, remove_rows, \
     columns_as_list, reciprocal_entrywise, diag_times_mat, mat_times_diag
-from abelian.linalg.factorizations import smith_normal_form
+from abelian.linalg.factorizations import smith_normal_form, hermite_normal_form
 from abelian.linalg.solvers import solve_epi
 
 
@@ -49,31 +57,7 @@ class HomLCA:
         self.target = target
         self.source = source
 
-    @classmethod
-    def zero(cls, target, source):
-        """
-        Initialize the zero morphism.
-
-        Parameters
-        ----------
-        target : LCA or list
-            The target of the homomorphism. If None, a discrete target of
-            infinite period is used as the default.
-        source : LCA or list
-            The source of the homomorphism. If None, a discrete source of
-            infinite period is used as the default.
-
-        Examples
-        ---------
-        >>> zero = HomFGA.zero([0]*3, [0]*3)
-        >>> zero([1, 5, 7]) == [0, 0, 0]
-        True
-        """
-        rows = len(target)
-        cols = len(source)
-        A = Matrix(rows, cols, lambda i, j : 0)
-        return cls(A, target = target, source = source)
-
+        # TODO : Should we project to target automatically?
 
     @staticmethod
     def _verify_init(A, target, source):
@@ -124,30 +108,28 @@ class HomLCA:
         return A, target, source
 
 
-    def to_latex(self):
+    def __add__(self, other):
         """
-        Return the homomorphism as a :math:`\LaTeX` string.
-
-        Returns
-        -------
-        latex : str
-            The HomLCA formatted as a LaTeX string.
-
-        Examples
-        --------
-        >>> phi = HomLCA([1])
-        >>> phi.to_latex()
-        '\\\\begin{pmatrix}1\\\\end{pmatrix}:\\\\mathbb{Z} \\\\to \\\\mathbb{Z}'
+        Override the addition (`+`) operator,
+        see :py:meth:`~abelian.morphisms.HomLCA.add`.
         """
-        latex_code = latex(self.A)
-        latex_code = latex_code.replace(r'\left[\begin{matrix}',
-                                        r'\begin{pmatrix}')
-        latex_code = latex_code.replace(r'\end{matrix}\right]',
-                                        r'\end{pmatrix}')
-        format_args = self.source.to_latex(), self.target.to_latex()
-        latex_code += r':{} \to {}'.format(*format_args)
-        return latex_code
+        return self.add(other)
 
+
+    def __call__(self, source_element):
+        """
+        Override function calls,
+        see :py:meth:`~abelian.morphisms.HomLCA.evaluate`.
+        """
+        return self.evaluate(source_element)
+
+
+    def __eq__(self, other):
+        """
+        Override the equality (`==`) operator,
+        see :py:meth:`~abelian.morphisms.HomLCA.equal`.
+        """
+        return self.equal(other)
 
     def __getitem__(self, args):
         """
@@ -155,6 +137,285 @@ class HomLCA:
         see :py:meth:`~abelian.morphisms.HomLCA.getitem`.
         """
         return self.getitem(args)
+
+
+    def __mul__(self, other):
+        """
+        Override the `*` operator,
+        see :py:meth:`~abelian.morphisms.HomLCA.compose`.
+        """
+        return self.compose(other)
+
+    def __pow__(self, power, modulo=None):
+        """
+        Override the pow (`**`) operator,
+        see :py:meth:`~abelian.morphisms.HomLCA.compose_self`.
+        """
+        return self.compose_self(power)
+
+    def __radd__(self, other):
+        """
+        Override the addition (`+`) operator,
+        see :py:meth:`~abelian.morphisms.HomLCA.add`.
+        """
+        return self.add(other)
+
+
+    def __repr__(self):
+        """
+        Override the ``repr()`` function.
+        """
+        rep = 'source: {}     target: {}\n'.format(repr(self.source),
+                                                   repr(self.target))
+        rep += str(self.A)
+        return rep
+
+
+    def __rmul__(self, other):
+        """
+        Override the `*` operator,
+        see :py:meth:`~abelian.morphisms.HomLCA.compose`.
+        """
+        return self.compose(other)
+
+    def add(self, other):
+        """
+        Elementwise addition.
+
+        Elementwise addition of the underlying matrix.
+
+        Parameters
+        ----------
+        other : HomLCA or numeric
+            A homomorphism to add to the current one, or a number.
+
+        Returns
+        -------
+        homomorphism : HomLCA
+            A new homomorphism with the argument added.
+
+        """
+        # If the `other` argument is a numeric type
+        if isinstance(other, self._A_entry_types):
+            m, n = self.A.shape
+            new_A = self.A + Matrix(m, n, lambda i,j : other)
+            return type(self)(new_A, target=self.target, source=self.source)
+
+        # If the `other` argument is a numeric type
+        if isinstance(other, type(self)):
+            if not self.target == other.target and self.source == other.source:
+                raise ValueError('Sources and targets must match..')
+
+            new_A = self.A + other.A
+            return type(self)(new_A, target=self.target, source=self.source)
+
+        format_args = type(self), type(other)
+        raise ValueError('Cannot add {} and {}'.format(*format_args))
+
+
+    def compose(self, other):
+        """
+        Compose two homomorphisms.
+
+        The composition of `self` and `other` is first other, then self.
+
+        Parameters
+        ----------
+        other : HomLCA
+            The homomorphism to compose with.
+
+        Returns
+        -------
+        homomorphism : HomLCA
+            The composition of `self` and `other`, i.e. `self` ( `other` (x)).
+
+        Examples
+        --------
+        >>> phi = HomFGA([[1, 0, 1],
+        ...               [0, 1, 1]])
+        >>> ker_phi = HomFGA([1, 1, -1])
+        >>> (phi * ker_phi) == HomFGA([0, 0])
+        True
+        >>> phi.compose(ker_phi) == HomFGA([0, 0])
+        True
+        """
+
+        # If the `other` argument is a numeric type
+        if isinstance(other, self._A_entry_types):
+            new_A = self.A * other
+            return type(self)(new_A, target=self.target, source=self.source)
+
+        if isinstance(other, type(self)):
+            if not other.target == self.source:
+                raise ValueError('Target of other must equal source of self.')
+
+            new_A = self.A * other.A
+            return type(self)(new_A, target=self.target, source=other.source)
+
+        format_args = type(self), type(other)
+        raise ValueError('Cannot compose/add {} and {}'.format(*format_args))
+
+    def compose_self(self, power):
+        """
+        Repeated composition of an endomorphism.
+
+        Parameters
+        ----------
+        power : int
+            The number of times to compose with self.
+
+        Returns
+        -------
+        homomorphism : HomLCA
+            The endomorphism composed with itself `power` times.
+
+        Examples
+        --------
+        >>> from sympy import diag
+        >>> phi = HomLCA(diag(2, 3))
+        >>> phi**3 == HomLCA(diag(2**3, 3**3))
+        True
+        """
+        product = self.copy()
+        for prod in range(power - 1):
+            product = product.compose(self)
+        return product
+
+    def copy(self):
+        """
+        Return a copy of the homomorphism.
+
+        Returns
+        -------
+        homomorphism : HomLCA
+            A copy of the homomorphism.
+
+        Examples
+        --------
+        >>> phi = HomLCA([1, 2, 3])
+        >>> phi.copy() == phi
+        True
+        """
+        return type(self)(self.A, target = self.target, source = self.source)
+
+    def dual(self):
+        """
+        Compute the dual homomorphism.
+
+        TODO: Write detailed description.
+
+
+        Returns
+        -------
+        dual : HomLCA
+            The dual homomorphism.
+
+        Examples
+        ---------
+        >>> phi = HomFGA([2])
+        >>> phi_dual = phi.dual()
+        >>> phi_dual.source == phi_dual.target
+        True
+
+        Computing duals by first calculating periods
+
+        >>> # Project, then find dual
+        >>> phi = HomFGA([2], target = [10])
+        >>> phi_proj = phi.project_to_source()
+        >>> phi_project_dual = phi_proj.dual()
+        >>> phi_project_dual == Homomorphism([1], [5], [10])
+        True
+        >>> # Do not project
+        >>> phi_dual = phi.dual()
+        >>> phi_dual == Homomorphism([1/5], LCA([1], [False]), [10])
+        True
+        """
+
+        # Flip the source and target for the dual morphism
+        dual_source, dual_target = self.target.dual(), self.source.dual()
+
+        # Calculate the matrix representing the dual homomorphism
+        diag_p = Matrix([1 if e == 0 else e for e in self.source.periods])
+        diag_q_inv = reciprocal_entrywise(Matrix([1 if e == 0 else e for e
+                                                  in self.target.periods]))
+        dual_A = mat_times_diag(diag_times_mat(diag_p, self.A.T), diag_q_inv)
+
+        # Create new FGA object and return
+        return Homomorphism(dual_A, target = dual_target, source = dual_source)
+
+    def equal(self, other):
+        """
+        Whether or not two homomorphisms are equal.
+
+        Two HomLCAs are equal iff (1) the sources are equal, (2) the targets
+        are equal and (3) the matrices representing the homomorphisms are
+        equal.
+
+        Parameters
+        ----------
+        other : HomLCA
+            A HomLCA to compare equality with.
+
+        Returns
+        -------
+        equal : bool
+            Whether or not the HomLCAs are equal.
+
+        Examples
+        ---------
+        >>> phi = HomFGA([1], target=[0], source = [0]) # Explicit
+        >>> psi = HomLCA([1])   # Shorter, defaults to the above
+        >>> phi == psi
+        True
+
+        """
+        source_equal = self.source == other.source
+        target_equal = self.target == other.target
+        A_equal = self.A == other.A
+        return source_equal and target_equal and A_equal
+
+    def evaluate(self, source_element):
+        """
+        Apply the homomorphism to an element.
+
+        Parameters
+        ----------
+        source_element
+
+        Returns
+        -------
+
+        Examples
+        ---------
+        >>> from sympy import diag
+        >>> phi = HomFGA(diag(3, 4), target = [5, 6])
+        >>> phi.evaluate([2, 3])
+        [1, 0]
+        >>> phi.evaluate(Matrix([2, 3]))
+        Matrix([
+        [1],
+        [0]])
+        """
+
+        # Project the element to the source LCA of the homomorphism
+        source_element = self.source.project_element(source_element)
+
+        # Apply the homomorphism using matrix multiplication, depending
+        # on the type of the input
+        if isinstance(source_element, Matrix):
+            evaluated = self.A * source_element
+        else:
+            evaluated = self.A * Matrix(source_element)
+
+        # Project to the target LCA of the homomorphism
+        projected = self.target.project_element(evaluated)
+
+        # Return the same type of data as the input
+        if isinstance(source_element, Matrix):
+            return projected
+        else:
+            rows = columns_as_list(projected.T)
+            return [r[0] for r in rows]
 
     def getitem(self, args):
         """
@@ -235,383 +496,6 @@ class HomLCA:
             raise ValueError('slice() takes 1 or 2 arguments.')
 
 
-    def add(self, other):
-        """
-        Elementwise addition.
-
-        Elementwise addition of the underlying matrix.
-
-        Parameters
-        ----------
-        other : HomLCA or numeric
-            A homomorphism to add to the current one, or a number.
-
-        Returns
-        -------
-        homomorphism : HomLCA
-            A new homomorphism with the argument added.
-
-        """
-        # If the `other` argument is a numeric type
-        if isinstance(other, self._A_entry_types):
-            m, n = self.A.shape
-            new_A = self.A + Matrix(m, n, lambda i,j : other)
-            return type(self)(new_A, target=self.target, source=self.source)
-
-        # If the `other` argument is a numeric type
-        if isinstance(other, type(self)):
-            if not self.target == other.target and self.source == other.source:
-                raise ValueError('Sources and targets must match..')
-
-            new_A = self.A + other.A
-            return type(self)(new_A, target=self.target, source=self.source)
-
-        format_args = type(self), type(other)
-        raise ValueError('Cannot add {} and {}'.format(*format_args))
-
-    def __add__(self, other):
-        """
-        Override the addition (`+`) operator,
-        see :py:meth:`~abelian.morphisms.HomLCA.add`.
-        """
-        return self.add(other)
-
-    def __radd__(self, other):
-        """
-        Override the addition (`+`) operator,
-        see :py:meth:`~abelian.morphisms.HomLCA.add`.
-        """
-        return self.add(other)
-
-
-    def compose_self(self, power):
-        """
-        Repeated composition of an endomorphism.
-
-        Parameters
-        ----------
-        power : int
-            The number of times to compose with self.
-
-        Returns
-        -------
-        homomorphism : HomLCA
-            The endomorphism composed with itself `power` times.
-
-        Examples
-        --------
-        >>> from sympy import diag
-        >>> phi = HomLCA(diag(2, 3))
-        >>> phi**3 == HomLCA(diag(2**3, 3**3))
-        True
-        """
-        product = self.copy()
-        for prod in range(power - 1):
-            product = product.compose(self)
-        return product
-
-
-    def __pow__(self, power, modulo=None):
-        """
-        Override the pow (`**`) operator,
-        see :py:meth:`~abelian.morphisms.HomLCA.compose_self`.
-        """
-        return self.compose_self(power)
-
-    def copy(self):
-        """
-        Return a copy of the homomorphism.
-
-        Returns
-        -------
-        homomorphism : HomLCA
-            A copy of the homomorphism.
-
-        Examples
-        --------
-        >>> phi = HomLCA([1, 2, 3])
-        >>> phi.copy() == phi
-        True
-        """
-        return type(self)(self.A, target = self.target, source = self.source)
-
-
-    def compose(self, other):
-        """
-        Compose two homomorphisms.
-
-        The composition of `self` and `other` is first other, then self.
-
-        Parameters
-        ----------
-        other : HomLCA
-            The homomorphism to compose with.
-
-        Returns
-        -------
-        homomorphism : HomLCA
-            The composition of `self` and `other`, i.e. `self` ( `other` (x)).
-
-        Examples
-        --------
-        >>> phi = HomFGA([[1, 0, 1],
-        ...               [0, 1, 1]])
-        >>> ker_phi = HomFGA([1, 1, -1])
-        >>> (phi * ker_phi) == HomFGA([0, 0])
-        True
-        >>> phi.compose(ker_phi) == HomFGA([0, 0])
-        True
-        """
-
-        # If the `other` argument is a numeric type
-        if isinstance(other, self._A_entry_types):
-            new_A = self.A * other
-            return type(self)(new_A, target=self.target, source=self.source)
-
-        if isinstance(other, type(self)):
-            if not other.target == self.source:
-                raise ValueError('Target of other must equal source of self.')
-
-            new_A = self.A * other.A
-            return type(self)(new_A, target=self.target, source=other.source)
-
-        format_args = type(self), type(other)
-        raise ValueError('Cannot compose/add {} and {}'.format(*format_args))
-
-    def __mul__(self, other):
-        """
-        Override the `*` operator,
-        see :py:meth:`~abelian.morphisms.HomLCA.compose`.
-        """
-        return self.compose(other)
-
-    def __rmul__(self, other):
-        """
-        Override the `*` operator,
-        see :py:meth:`~abelian.morphisms.HomLCA.compose`.
-        """
-        return self.compose(other)
-
-    def stack_vert(self, other):
-        """
-        Stack vertically (row wise).
-
-        The sources must be the same, the targets will be concatenated.
-        The stacking is done to create a matrix with structure [[self],
-        [other]], i.e. "Putting `self` on top of of `other`."
-
-        Parameters
-        ----------
-        other : HomLCA
-            A homomorphism to stack with the current one.
-
-        Returns
-        -------
-        stacked_vert : HomLCA
-            The result of stacking the homomorphisms on top of each other.
-
-        Examples
-        --------
-        >>> phi = HomFGA([1])
-        >>> psi = HomFGA([2])
-        >>> phi.stack_vert(psi) == HomFGA([1, 2])
-        True
-
-        """
-        if not self.source == other.source:
-            raise ValueError('Sources must be equal to stack vertically.')
-        new_source = self.source
-        new_target = self.target + other.target
-        new_A = self.A.col_join(other.A)
-        return type(self)(new_A, target = new_target, source = new_source)
-
-    def stack_horiz(self, other):
-        """
-        Stack horizontally (column wise).
-
-        The targets must be the same, the sources will be concatenated.
-        The stacking is done to create a matrix with structure [self,
-        other], i.e. "Putting `self` to the left of `other`."
-
-        Parameters
-        ----------
-        other : HomLCA
-            A homomorphism to stack with the current one.
-
-        Returns
-        -------
-        stacked_vert : HomLCA
-            The result of stacking the homomorphisms side by side.
-
-        Examples
-        --------
-        >>> phi = HomFGA([1])
-        >>> psi = HomFGA([2])
-        >>> phi.stack_horiz(psi) == HomFGA([[1, 2]])
-        True
-
-        """
-        if not self.target == other.target:
-            raise ValueError('Targets must be equal to stack horizontally.')
-        new_source = self.source + other.source
-        new_target = self.target
-        new_A = self.A.row_join(other.A)
-        return type(self)(new_A, target = new_target, source = new_source)
-
-    def stack_diag(self, other):
-        """
-        Stack diagonally.
-
-        Parameters
-        ----------
-        other : HomLCA
-            A homomorphism to stack with the current one.
-
-        Returns
-        -------
-        stacked_vert : HomLCA
-            The result of stacking the homomorphisms on diagonally.
-
-        Examples
-        --------
-        >>> phi = HomFGA([1])
-        >>> psi = HomFGA([2])
-        >>> phi.stack_diag(psi) == HomFGA([[1, 0], [0, 2]])
-        True
-
-        """
-        new_source = self.source + other.source
-        new_target = self.target + other.target
-        new_A = diag(self.A, other.A)
-
-        return type(self)(new_A, target = new_target, source = new_source)
-
-    def __call__(self, source_element):
-        """
-        Override function calls,
-        see :py:meth:`~abelian.morphisms.HomLCA.evaluate`.
-        """
-        return self.evaluate(source_element)
-
-
-    def evaluate(self, source_element):
-        """
-        Apply the homomorphism to an element.
-
-        Parameters
-        ----------
-        source_element
-
-        Returns
-        -------
-
-        Examples
-        ---------
-        >>> from sympy import diag
-        >>> phi = HomFGA(diag(3, 4), target = [5, 6])
-        >>> phi.evaluate([2, 3])
-        [1, 0]
-        >>> phi.evaluate(Matrix([2, 3]))
-        Matrix([
-        [1],
-        [0]])
-        """
-
-        # Project the element to the source LCA of the homomorphism
-        source_element = self.source.project_element(source_element)
-
-        # Apply the homomorphism using matrix multiplication, depending
-        # on the type of the input
-        if isinstance(source_element, Matrix):
-            evaluated = self.A * source_element
-        else:
-            evaluated = self.A * Matrix(source_element)
-
-        # Project to the target LCA of the homomorphism
-        projected = self.target.project_element(evaluated)
-
-        # Return the same type of data as the input
-        if isinstance(source_element, Matrix):
-            return projected
-        else:
-            rows = columns_as_list(projected.T)
-            return [r[0] for r in rows]
-
-
-
-    def to_HomFGA(self):
-        """
-        Convert object to HomFGA if possible.
-
-        Returns
-        -------
-        homomorphism : HomFGA
-            The homomorphism converted to a HomFGA instance, if possible.
-
-        Examples
-        ---------
-        >>> phi = HomLCA([1], source = [1], target = [1])
-        >>> isinstance(phi, HomFGA)
-        False
-        >>> phi = phi.to_HomFGA()
-        >>> isinstance(phi, HomFGA)
-        True
-
-        """
-        integer_entries = all([i % 1 == 0 for i in self.A])
-        if self.source.is_FGA() and self.target.is_FGA() and integer_entries:
-            return HomFGA(self.A, self.target, self.source)
-        else:
-            return self
-
-
-    def equal(self, other):
-        """
-        Whether or not two homomorphisms are equal.
-
-        Two HomLCAs are equal iff (1) the sources are equal, (2) the targets
-        are equal and (3) the matrices representing the homomorphisms are
-        equal.
-
-        Parameters
-        ----------
-        other : HomLCA
-            A HomLCA to compare equality with.
-
-        Returns
-        -------
-        equal : bool
-            Whether or not the HomLCAs are equal.
-
-        Examples
-        ---------
-        >>> phi = HomFGA([1], target=[0], source = [0]) # Explicit
-        >>> psi = HomLCA([1])   # Shorter, defaults to the above
-        >>> phi == psi
-        True
-
-        """
-        source_equal = self.source == other.source
-        target_equal = self.target == other.target
-        A_equal = self.A == other.A
-        return source_equal and target_equal and A_equal
-
-    def ismomorphic(self, other):
-        """
-        TODO: Implement this.
-
-
-        Parameters
-        ----------
-        other
-
-        Returns
-        -------
-
-        """
-        pass
-
-
     def remove_trivial_groups(self):
         """
         Remove trivial groups.
@@ -658,12 +542,176 @@ class HomLCA:
 
         return type(self)(new_A, new_target, new_source)
 
-    def __eq__(self, other):
+
+    def stack_diag(self, other):
         """
-        Override the equality (`==`) operator,
-        see :py:meth:`~abelian.morphisms.HomLCA.equal`.
+        Stack diagonally.
+
+        Parameters
+        ----------
+        other : HomLCA
+            A homomorphism to stack with the current one.
+
+        Returns
+        -------
+        stacked_vert : HomLCA
+            The result of stacking the homomorphisms on diagonally.
+
+        Examples
+        --------
+        >>> phi = HomFGA([1])
+        >>> psi = HomFGA([2])
+        >>> phi.stack_diag(psi) == HomFGA([[1, 0], [0, 2]])
+        True
+
         """
-        return self.equal(other)
+        new_source = self.source + other.source
+        new_target = self.target + other.target
+        new_A = diag(self.A, other.A)
+
+        return type(self)(new_A, target = new_target, source = new_source)
+
+    def stack_horiz(self, other):
+        """
+        Stack horizontally (column wise).
+
+        The targets must be the same, the sources will be concatenated.
+        The stacking is done to create a matrix with structure [self,
+        other], i.e. "Putting `self` to the left of `other`."
+
+        Parameters
+        ----------
+        other : HomLCA
+            A homomorphism to stack with the current one.
+
+        Returns
+        -------
+        stacked_vert : HomLCA
+            The result of stacking the homomorphisms side by side.
+
+        Examples
+        --------
+        >>> phi = HomFGA([1])
+        >>> psi = HomFGA([2])
+        >>> phi.stack_horiz(psi) == HomFGA([[1, 2]])
+        True
+
+        """
+        if not self.target == other.target:
+            raise ValueError('Targets must be equal to stack horizontally.')
+        new_source = self.source + other.source
+        new_target = self.target
+        new_A = self.A.row_join(other.A)
+        return type(self)(new_A, target = new_target, source = new_source)
+
+
+    def stack_vert(self, other):
+        """
+        Stack vertically (row wise).
+
+        The sources must be the same, the targets will be concatenated.
+        The stacking is done to create a matrix with structure [[self],
+        [other]], i.e. "Putting `self` on top of of `other`."
+
+        Parameters
+        ----------
+        other : HomLCA
+            A homomorphism to stack with the current one.
+
+        Returns
+        -------
+        stacked_vert : HomLCA
+            The result of stacking the homomorphisms on top of each other.
+
+        Examples
+        --------
+        >>> phi = HomFGA([1])
+        >>> psi = HomFGA([2])
+        >>> phi.stack_vert(psi) == HomFGA([1, 2])
+        True
+
+        """
+        if not self.source == other.source:
+            raise ValueError('Sources must be equal to stack vertically.')
+        new_source = self.source
+        new_target = self.target + other.target
+        new_A = self.A.col_join(other.A)
+        return type(self)(new_A, target = new_target, source = new_source)
+
+    def to_HomFGA(self):
+        """
+        Convert object to HomFGA if possible.
+
+        Returns
+        -------
+        homomorphism : HomFGA
+            The homomorphism converted to a HomFGA instance, if possible.
+
+        Examples
+        ---------
+        >>> phi = HomLCA([1], source = [1], target = [1])
+        >>> isinstance(phi, HomFGA)
+        False
+        >>> phi = phi.to_HomFGA()
+        >>> isinstance(phi, HomFGA)
+        True
+
+        """
+        integer_entries = all([i % 1 == 0 for i in self.A])
+        if self.source.is_FGA() and self.target.is_FGA() and integer_entries:
+            return HomFGA(self.A, self.target, self.source)
+        else:
+            return self
+
+    def to_latex(self):
+        """
+        Return the homomorphism as a :math:`\LaTeX` string.
+
+        Returns
+        -------
+        latex : str
+            The HomLCA formatted as a LaTeX string.
+
+        Examples
+        --------
+        >>> phi = HomLCA([1])
+        >>> phi.to_latex()
+        '\\\\begin{pmatrix}1\\\\end{pmatrix}:\\\\mathbb{Z} \\\\to \\\\mathbb{Z}'
+        """
+        latex_code = latex(self.A)
+        latex_code = latex_code.replace(r'\left[\begin{matrix}',
+                                        r'\begin{pmatrix}')
+        latex_code = latex_code.replace(r'\end{matrix}\right]',
+                                        r'\end{pmatrix}')
+        format_args = self.source.to_latex(), self.target.to_latex()
+        latex_code += r':{} \to {}'.format(*format_args)
+        return latex_code
+
+
+    @classmethod
+    def zero(cls, target, source):
+        """
+        Initialize the zero morphism.
+
+        Parameters
+        ----------
+        target : LCA or list
+            The target of the homomorphism. If None, a discrete target of
+            infinite period is used as the default.
+        source : LCA or list
+            The source of the homomorphism. If None, a discrete source of
+            infinite period is used as the default.
+
+        Examples
+        ---------
+        >>> zero = HomFGA.zero([0]*3, [0]*3)
+        >>> zero([1, 5, 7]) == [0, 0, 0]
+        True
+        """
+        rows = len(target)
+        cols = len(source)
+        A = Matrix(rows, cols, lambda i, j : 0)
+        return cls(A, target = target, source = source)
 
     @property
     def shape(self):
@@ -680,61 +728,6 @@ class HomLCA:
         return self.A.shape
 
 
-    def __repr__(self):
-        """
-        Override the ``repr()`` function.
-        """
-        rep = 'source: {}     target: {}\n'.format(repr(self.source),
-                                                   repr(self.target))
-        rep += str(self.A)
-        return rep
-
-    def dual(self):
-        """
-        Compute the dual homomorphism.
-
-        TODO: Write detailed description.
-
-
-        Returns
-        -------
-        dual : HomLCA
-            The dual homomorphism.
-
-        Examples
-        ---------
-        >>> phi = HomFGA([2])
-        >>> phi_dual = phi.dual()
-        >>> phi_dual.source == phi_dual.target
-        True
-
-        Computing duals by first calculating periods
-
-        >>> # Project, then find dual
-        >>> phi = HomFGA([2], target = [10])
-        >>> phi_proj = phi.project_to_source()
-        >>> phi_project_dual = phi_proj.dual()
-        >>> phi_project_dual == Homomorphism([1], [5], [10])
-        True
-        >>> # Do not project
-        >>> phi_dual = phi.dual()
-        >>> phi_dual == Homomorphism([1/5], LCA([1], [False]), [10])
-        True
-        """
-
-        # Flip the source and target for the dual morphism
-        dual_source, dual_target = self.target.dual(), self.source.dual()
-
-        # Calculate the matrix representing the dual homomorphism
-        diag_p = Matrix([1 if e == 0 else e for e in self.source.periods])
-        diag_q_inv = reciprocal_entrywise(Matrix([1 if e == 0 else e for e
-                                                  in self.target.periods]))
-        dual_A = mat_times_diag(diag_times_mat(diag_p, self.A.T), diag_q_inv)
-
-        # Create new FGA object and return
-        return Homomorphism(dual_A, target = dual_target, source = dual_source)
-
-
 
 
 class HomFGA(HomLCA):
@@ -745,28 +738,169 @@ class HomFGA(HomLCA):
     # The types allowed as entries in A
     _A_entry_types = (int,)
 
-    def project_to_target(self):
+    def annihilator(self):
         """
-        Project columns to target group.
+        The annihilator morphism.
+        """
+        # TODO: Write this method.
+        return self.cokernel().dual().remove_trivial_groups()
+
+    def coimage(self):
+        """
+        Compute the coimage homomorphism.
 
         Returns
         -------
         homomorphism : HomFGA
-            A homomorphism with columns projected to the target FGA.
+            The coimage homomorphism.
 
         Examples
         --------
-        >>> target = [7, 12]
-        >>> phi = HomFGA([[15, 12],
-        ...               [9,  17]], target = target)
-        >>> phi_proj = HomFGA([[1, 5],
-        ...                    [9, 5]], target = target)
-        >>> phi.project_to_target() == phi_proj
+        >>> phi = HomFGA([[4, 4],
+        ...               [2, 8]], target = [16, 16])
+        >>> im = phi.image().remove_trivial_groups()
+        >>> coim = phi.coimage().remove_trivial_groups()
+        >>> phi == (im * coim).project_to_target()
+        True
+
+        """
+        # Compute the cokernel of the kernel and return
+        kernel = self.kernel()
+        coimage = kernel.cokernel()
+        return coimage
+
+    def cokernel(self):
+        """
+        Compute the cokernel homomorphism.
+
+        Returns
+        -------
+        homomorphism : HomFGA
+            The cokernel homomorphism.
+
+        Examples
+        --------
+        >>> phi = HomFGA([[1, 0], [0, 1], [1, 1]])
+        >>> coker = phi.cokernel()
+        >>> coker.target.isomorphic(LCA([1, 1, 0]))
+        True
+
+        """
+        # Horizontally stack A and ker(pi_2)
+        A_ker_pi = self.A.row_join(remove_zero_columns(diag(
+            *self.target.periods)))
+        # Compute SNF, get size and the kernel
+        U, S, V = smith_normal_form(A_ker_pi)
+        diagonal = nonzero_diag_as_list(S)
+        (m, n), r = self.A.shape, len(diagonal)
+        quotient = diagonal + [0] * (m - r)
+
+        # Initialize the cokernel morphism and project it onto the target
+        coker = type(self)(U, target = quotient, source=self.target)
+        return coker.project_to_target()
+
+    def image(self):
+        """
+        Compute the image homomorphism.
+
+        Returns
+        -------
+        homomorphism : HomFGA
+            The image homomorphism.
+
+        Examples
+        --------
+        >>> phi = HomFGA([[4, 4],
+        ...               [2, 8]], target = [64, 32])
+        >>> im = phi.image().remove_trivial_groups()
+        >>> coim = phi.coimage().remove_trivial_groups()
+        >>> phi == (im * coim).project_to_target()
+        True
+
+        """
+        # Solve equation for the image
+        coim = self.coimage()
+        coim_target = Matrix(coim.target.periods)
+        solved_mat = solve_epi(coim.A, self.A, coim_target)
+
+        # Initialize morphism and return project onto target
+        image = type(self)(solved_mat, self.target, source=coim.target)
+        return image.project_to_target()
+
+    def isomorphic(self, other):
+        """
+        Whether or not two HomFGAs are isomorphic.
+
+        Two homomorphisms are isomorphic iff they generate the same group.
+
+        Parameters
+        ----------
+        other : HomFGA
+            The homomorphism to compare with.
+
+        Returns
+        -------
+        isomorphic : bool
+            Whether or not `self` and `other` are isomorphic.
+
+        Examples
+        --------
+        >>> from sympy import diag
+        >>> # The order does not matter
+        >>> phi = HomFGA(diag(2, 3))
+        >>> psi = HomFGA(diag(3, 2))
+        >>> phi.isomorphic(psi)
+        True
+        >>> # These homomorphisms both generate Z_2 + Z
+        >>> phi = HomFGA([[2, 0],
+        ...               [0, 1]], target=[4, 0])
+        >>> psi = HomFGA([[1, 0],
+        ...               [0, 1]], target=[2, 0])
+        >>> phi.isomorphic(psi)
+        True
+        >>> # They both generate a group isomorphic to Z_6
+        >>> phi = HomFGA([[2, 0], [0, 1]], target=[4, 3])
+        >>> psi = HomFGA([2, 2], target=[4, 3])
+        >>> phi.isomorphic(psi)
         True
         """
+        # TODO: Is this correct?
 
-        A = matrix_mod_vector(self.A, Matrix(self.target.periods))
-        return type(self)(A, target = self.target, source = self.source)
+
+        self_no_triv = self.remove_trivial_groups().image()
+        other_no_triv = other.remove_trivial_groups().image()
+
+        isomorphic = self_no_triv.source.isomorphic(other_no_triv.source)
+
+        return isomorphic
+
+    def kernel(self):
+        """
+        Compute the kernel homomorphism.
+
+        Returns
+        -------
+        homomorphism : HomFGA
+            The kernel homomorphism.
+
+        Examples
+        --------
+        >>> phi = HomFGA([[1, 0, 1], [0, 1, 1]])
+        >>> phi.kernel() == HomFGA([-1, -1, 1])
+        True
+
+        """
+        # Horizontally stack A and ker(pi_2)
+        periods = self.target.periods
+        A_ker_pi = self.A.row_join(remove_zero_columns(diag(*periods)))
+
+        # Compute SNF, get size and the kernel
+        U, S, V = smith_normal_form(A_ker_pi)
+        (m, n), r = self.A.shape, len(nonzero_diag_as_list(S))
+        kernel_matrix = V[:n, r:]
+
+        kernel = type(self)(kernel_matrix, target = self.source)
+        return kernel.project_to_target()
 
     def project_to_source(self):
         """
@@ -795,113 +929,28 @@ class HomFGA(HomLCA):
         source = [order_of_vector(self.A[:, i], target_vect) for i in range(n)]
         return type(self)(self.A, self.target, source)
 
-    def kernel(self):
+    def project_to_target(self):
         """
-        Compute the kernel homomorphism.
+        Project columns to target group.
 
         Returns
         -------
         homomorphism : HomFGA
-            The kernel homomorphism.
+            A homomorphism with columns projected to the target FGA.
 
         Examples
         --------
-        >>> phi = HomFGA([[1, 0, 1], [0, 1, 1]])
-        >>> phi.kernel() == HomFGA([-1, -1, 1])
+        >>> target = [7, 12]
+        >>> phi = HomFGA([[15, 12],
+        ...               [9,  17]], target = target)
+        >>> phi_proj = HomFGA([[1, 5],
+        ...                    [9, 5]], target = target)
+        >>> phi.project_to_target() == phi_proj
         True
-
         """
-        # Horizontally stack A and ker(pi_2)
-        periods = self.target.periods
-        A_ker_pi = self.A.row_join(delete_zero_columns(diag(*periods)))
 
-        # Compute SNF, get size and the kernel
-        U, S, V = smith_normal_form(A_ker_pi)
-        (m, n), r = self.A.shape, len(nonzero_diag_as_list(S))
-        kernel_matrix = V[:n, r:]
-
-        kernel = type(self)(kernel_matrix, target = self.source)
-        return kernel.project_to_target()
-
-    def cokernel(self):
-        """
-        Compute the cokernel homomorphism.
-
-        Returns
-        -------
-        homomorphism : HomFGA
-            The cokernel homomorphism.
-
-        Examples
-        --------
-        >>> phi = HomFGA([[1, 0], [0, 1], [1, 1]])
-        >>> coker = phi.cokernel()
-        >>> coker.target.isomorphic(LCA([1, 1, 0]))
-        True
-
-        """
-        # Horizontally stack A and ker(pi_2)
-        A_ker_pi = self.A.row_join(delete_zero_columns(diag(
-            *self.target.periods)))
-        # Compute SNF, get size and the kernel
-        U, S, V = smith_normal_form(A_ker_pi)
-        diagonal = nonzero_diag_as_list(S)
-        (m, n), r = self.A.shape, len(diagonal)
-        quotient = diagonal + [0] * (m - r)
-
-        # Initialize the cokernel morphism and project it onto the target
-        coker = type(self)(U, target = quotient, source=self.target)
-        return coker.project_to_target()
-
-    def image(self):
-        """
-        Compute the image homomorphism.
-
-        Returns
-        -------
-        homomorphism : HomFGA
-            The image homomorphism.
-
-        Examples
-        --------
-        >>> phi = HomFGA([[1, 0, 1], [0, 1, 1]])
-
-        """
-        # Solve equation for the image
-        coim = self.coimage()
-        coim_target = Matrix(coim.target.periods)
-        solved_mat = solve_epi(coim.A, self.A, coim_target)
-
-        # Initialize morphism and return project onto target
-        image = type(self)(solved_mat, self.target, source=coim.target)
-        return image.project_to_target()
-
-    def coimage(self):
-        """
-        Compute the coimage homomorphism.
-
-        Returns
-        -------
-        homomorphism : HomFGA
-            The coimage homomorphism.
-
-        Examples
-        --------
-        >>> 1 == 1
-        True
-
-        """
-        # Compute the cokernel of the kernel and return
-        kernel = self.kernel()
-        coimage = kernel.cokernel()
-        return coimage
-
-    def annihilator(self):
-        """
-        The annihilator morphism.
-        """
-        # TODO: Write this method.
-        return self.cokernel().dual().remove_trivial_groups()
+        A = matrix_mod_vector(self.A, Matrix(self.target.periods))
+        return type(self)(A, target = self.target, source = self.source)
 
 
 def Homomorphism(A, target = None, source = None):
@@ -957,16 +1006,16 @@ if __name__ == "__main__":
 
 
 if __name__ == '__main__':
-    psi = Homomorphism([2, 1], target = [4, 3])
-    psi = psi.project_to_source()
-    print('----- psi ------')
-    print(psi)
+    from sympy import pprint, diag, Matrix
 
-    print('----- dual ------')
-    print(psi.dual())
+    phi = HomFGA([[4, 4], [2, 8]], target=[16, 16])
+    print('projected')
+    print(phi.project_to_source())
+    print('coimage')
+    print(phi.coimage())
+    print('image')
+    print(phi.image())
 
-    print('----- dual.dual ------')
-    print(psi.dual().dual())
+    print(phi.image() * phi.coimage())
 
-    print('----- annihilator ------')
-    print(psi.annihilator().remove_trivial_groups())
+

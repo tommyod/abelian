@@ -73,7 +73,6 @@ Public classes (detailed)
     ~abelian.morphisms.HomLCA.equal
     ~abelian.morphisms.HomLCA.evaluate
     ~abelian.morphisms.HomLCA.getitem
-    ~abelian.morphisms.HomLCA.ismomorphic
     ~abelian.morphisms.HomLCA.remove_trivial_groups
     ~abelian.morphisms.HomLCA.stack_diag
     ~abelian.morphisms.HomLCA.stack_horiz
@@ -93,6 +92,7 @@ Public classes (detailed)
     ~abelian.morphisms.HomFGA.coimage
     ~abelian.morphisms.HomFGA.cokernel
     ~abelian.morphisms.HomFGA.image
+    ~abelian.morphisms.HomFGA.isomorphic
     ~abelian.morphisms.HomFGA.kernel
     ~abelian.morphisms.HomFGA.project_to_source
     ~abelian.morphisms.HomFGA.project_to_target

@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+"""
+This module contains ...
+"""
+
 from abelian.linalg.utils import norm
 from abelian.utils import call_nested_list, verify_dims_list, argmin, argmax
 from types import FunctionType
