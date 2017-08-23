@@ -109,6 +109,7 @@ Public classes (detailed)
     ~abelian.functions.Function.convolve
     ~abelian.functions.Function.dft
     ~abelian.functions.Function.evaluate
+    ~abelian.functions.Function.idft
     ~abelian.functions.Function.pointwise
     ~abelian.functions.Function.pullback
     ~abelian.functions.Function.pushforward

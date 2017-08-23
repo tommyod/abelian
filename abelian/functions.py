@@ -12,6 +12,7 @@ from abelian.utils import call_nested_list, verify_dims_list, argmin, argmax
 from types import FunctionType
 from abelian.linalg.solvers import solve
 import itertools
+import numpy as np
 
 
 class Function:
@@ -422,27 +423,146 @@ class Function:
 
         """
 
-
-    def dft(self):
+    def idft(self, func_type = ''):
         """
-        The discrete fourier transform.
-        
-        TODO: The discrete fourier transform.
+        Compute the inverse discrete fourier transform.
 
-        Discrete fourier transform (if domain is discrete + compact).
+        This is a wrapper around np.fft.ifftn.
+
+        Parameters
+        ----------
+        func_type : str
+            If empty, compute the function values using pure python.
+            If 'ogrid', use a numpy.ogrid (open mesh-grid) to compute the
+            functino values.
+            If 'mgrid', use a numpy.mgrid (dense mesh-grid) to compute the
+            function values.
 
         Returns
         -------
+        function : Function
+            The inverse discrete Fourier transformation of the original
+            function.
+
+
+        Examples
+        --------
+        >>> from abelian import LCA, Function
+        >>> # Create a simple linear function on Z_5 + Z_4 + Z_3
+        >>> domain = LCA([5, 4, 3])
+        >>> def linear(list_arg):
+        ...     x, y, z = list_arg
+        ...     return complex(x + y, z - x)
+        >>> func = Function(linear, domain)
+        >>> func([1, 2, 1])
+        (3+0j)
+        >>> func_idft = func.idft()
+        >>> func_idft([0, 0, 0])
+        (3.5-1j)
+        """
+        return self._fft_wrapper(func_to_wrap='ifftn', func_type=func_type)
+
+    def dft(self, func_type = ''):
+        """
+        Compute the discrete fourier transform.
+
+        This is a wrapper around np.fft.fftn.
+
+        Parameters
+        ----------
+        func_type : str
+            If empty, compute the function values using pure python.
+            If 'ogrid', use a numpy.ogrid (open mesh-grid) to compute the
+            functino values.
+            If 'mgrid', use a numpy.mgrid (dense mesh-grid) to compute the
+            function values.
+
+        Returns
+        -------
+        function : Function
+            The discrete Fourier transformation of the original function.
+
+
+        Examples
+        --------
+        >>> from abelian import LCA, Function
+        >>> # Create a simple linear function on Z_5 + Z_4 + Z_3
+        >>> domain = LCA([5, 4, 3])
+        >>> def linear(list_arg):
+        ...     return sum(list_arg)
+        >>> func = Function(linear, domain)
+        >>> func([1, 2, 1])
+        4
+        >>> # Take the discrete fourier transform and evaluate
+        >>> func_dft = func.dft()
+        >>> func_dft([0, 0, 0])
+        (270+0j)
+        >>> # Take the inverse discrete fourier transform
+        >>> func_dft_idft = func_dft.idft()
+        >>> # Numerics might not make this equal, but mathematically it is
+        >>> abs(func_dft_idft([1, 2, 1]) - func([1, 2, 1])) < 10e-10
+        True
+        """
+        return self._fft_wrapper(func_to_wrap='fftn', func_type=func_type)
+
+
+    def _fft_wrapper(self, func_to_wrap = 'fftn', func_type = ''):
+        """
+        Common wrapper for FFT and IFFT routines.
+
+        Parameters
+        ----------
+        func_to_wrap : str
+            Name of the function from the np.fft library to call.
+        func_type : str
+            If empty, compute the function values using pure python.
+            If 'ogrid', use a numpy.ogrid (open mesh-grid) to compute the
+            functino values.
+            If 'mgrid', use a numpy.mgrid (dense mesh-grid) to compute the
+            function values.
+
+        Returns
+        -------
+        function : Function
+            The function with a numpy routine applied to every element
+            in the domain.
 
         """
 
+        # Verify that the inputs are sensible
+        domain = self.domain
+        dims = domain.periods
+        if not all(p > 0 for p in dims) and domain.is_FGA():
+            return ValueError('Domain must be discrete and periodic.')
+
+        # Put the function values in a table in preparation for FFT/IFFT
+        if func_type == '':
+            table = np.empty(dims, dtype=complex)
+            for element in itertools.product(*[range(k) for k in dims]):
+                table[element] = self.representation(element)
+        else:
+            # Here the np.ogrid or np.mgrid can be used, see
+            # https://arxiv.org/pdf/1102.1523.pdf
+            funtion = getattr(np, func_type)
+            table = func(funtion[tuple([slice(k) for k in dims])])
+
+        # Take fft and convert to list of lists
+        function_wrapped = getattr(np.fft, func_to_wrap, None)
+        if function_wrapped is None:
+            raise ValueError('Could not wrap:', func_to_wrap)
+        table_computed = function_wrapped(table).tolist()
+
+        # Create a new instance and return
+        return type(self)(domain = domain, representation = table_computed)
 
 
 
 
-if __name__ == "__main__":
-    import doctest
-    doctest.testmod(verbose = False)
+
+
+
+
+
 
 if __name__ == '__main__':
     print('------------------------------')
@@ -554,6 +674,32 @@ if __name__ == '__main__':
 
 
 
+    print('---------------- DFT -----------------------')
+
+    def linear(list_arg):
+        return sum(abs(i) for i in list_arg)
+
+    f = Function(linear, LCA([5, 4, 3]))
+    print(f)
+
+    f_dft = f.dft()
+    print(f_dft([1, 1, 1]), f_dft([0, 0, 0]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod(verbose = False)
 
 
 
