@@ -107,6 +107,7 @@ Public classes (detailed)
     ~abelian.functions.Function.__init__
     ~abelian.functions.Function.__repr__
     ~abelian.functions.Function.convolve
+    ~abelian.functions.Function.copy
     ~abelian.functions.Function.dft
     ~abelian.functions.Function.evaluate
     ~abelian.functions.Function.idft

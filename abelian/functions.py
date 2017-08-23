@@ -8,7 +8,7 @@ This module contains ...
 
 from sympy import Matrix
 from abelian.linalg.utils import norm
-from abelian.utils import call_nested_list, verify_dims_list, argmin, argmax
+from abelian.utils import call_nested_list, verify_dims_list, copy_func
 from types import FunctionType
 from abelian.linalg.solvers import solve
 import itertools
@@ -20,23 +20,26 @@ class Function:
     A function on a LCA.
     """
 
-
     def __init__(self, representation, domain):
         """
         Initialize a function.
 
         Parameters
         ----------
-        representation : function
-            The representation is a function.
+        representation : function (or list of lists if domain is discrete
+        and periodic, i.e. Z_p with p_i > 0)
+            A function which takes in a list as a first argument, representing
+            the group element. Alternatively a list of lists if the domain is
+            discrete and periodic.
         domain : LCA
-            A locally compact Abelian group for the domain.
+            A locally compact Abelian group, which is the domain of the
+            function.
 
         Examples
         ---------
 
         If a function representation is used, functions on domains are
-        straightforward.
+        relatively straightforward.
 
         >>> def power(list_arg, exponent = 2):
         ...     return sum(x**exponent for x in list_arg)
@@ -57,6 +60,7 @@ class Function:
         If a table representation is used, the function can be defined on
         direct products of Z_n.
 
+        >>> # Define a table: a list of lists
         >>> table = [[1, 2],
         ...          [3, 4],
         ...          [5, 6]]
@@ -69,14 +73,14 @@ class Function:
 
         self.domain = domain
 
+        # A function representation has been passed
         if isinstance(representation, FunctionType):
             # A function representation has been passed
             self.representation = representation
-        else:
+
             # A table representation has been passed
-            is_FGA = domain.is_FGA()
-            is_periodic = all(p > 0 for p in self.domain.periods)
-            if not is_FGA or not is_periodic:
+        else:
+            if not self._discrete_periodic_domain():
                 raise TypeError('When the function representation is a table,'
                                 'the domain must be a FGA with finite '
                                 'periods.')
@@ -95,92 +99,118 @@ class Function:
 
 
 
+    def __call__(self, list_arg, *args, **kwargs):
+        """
+        Override function calls,
+        see :py:meth:`~abelian.functions.Function.evaluate`.
+        """
+        return self.evaluate(list_arg, *args, **kwargs)
+
     def __repr__(self):
         """
         Override the ``repr()`` function.
 
         Returns
         -------
+        representation :str
+            A representation of the instance.
 
         """
-        f_name = self.representation.__name__
-        str = r'Function ({}) on domain {}'.format(f_name, self.domain)
+        func_name = self.representation.__name__
+        str = r'Function ({}) on domain {}'.format(func_name, self.domain)
         return str
 
-    def to_latex(self):
+
+
+    def convolve(self, other, norm_cond = None):
         """
-        Return as a :math:`\LaTeX` string.
-
-
-        Returns
-        -------
-
-        """
-        latex_str = r'\operatorname{FUNC} \in \mathbb{C}^G, \ G = GRP'
-        latex_str = latex_str.replace('FUNC', self.representation.__name__)
-        latex_str = latex_str.replace('GRP', self.domain.to_latex())
-        return latex_str
-
-
-
-    def sample(self, list_of_points, *args, **kwargs):
-        """
-        Sample the function on points.
+        TODO: implement convolutions on some/all domains?
 
         Parameters
         ----------
-        list_of_points
+        other
 
         Returns
         -------
 
         """
-        # TODO: Make sure sampling is consistent with domain
-        # Z should not be sampled at 0.5, 1.5, etc
+        if not self.domain.is_FGA() and other.domain.is_FGA():
+            return ValueError('Both domains must be FGAs.')
 
-        return [self.evaluate(p, *args, **kwargs) for p in list_of_points]
+        if norm_cond is None:
+            def norm_cond(arg):
+                return norm(arg, p = 2) < 10
+
+        # Do the convolution
+
+        return None
 
 
-    def shift(self, list_shift):
+    def copy(self):
         """
-        Shift the function.
+        Return a copy of the function.
 
+        Returns
+        -------
+        function : Function
+            A copy of `self`.
+
+        Examples
+        --------
+        >>> from abelian import LCA, Function
+        >>> f = Function(lambda x:sum(x), LCA([0]))
+        >>> g = f.copy()
+        >>> f([1]) == g([1])
+        True
+        """
+        repr = copy_func(self.representation)
+        domain = self.domain.copy()
+        return type(self)(representation = repr, domain = domain)
+
+
+
+    def dft(self, func_type = ''):
+        """
+        Compute the discrete fourier transform.
+
+        This is a wrapper around np.fft.fftn.
 
         Parameters
         ----------
-        list_shift
+        func_type : str
+            If empty, compute the function values using pure python.
+            If 'ogrid', use a numpy.ogrid (open mesh-grid) to compute the
+            functino values.
+            If 'mgrid', use a numpy.mgrid (dense mesh-grid) to compute the
+            function values.
 
         Returns
         -------
+        function : Function
+            The discrete Fourier transformation of the original function.
 
+
+        Examples
+        --------
+        >>> from abelian import LCA, Function
+        >>> # Create a simple linear function on Z_5 + Z_4 + Z_3
+        >>> domain = LCA([5, 4, 3])
+        >>> def linear(list_arg):
+        ...     return sum(list_arg)
+        >>> func = Function(linear, domain)
+        >>> func([1, 2, 1])
+        4
+        >>> # Take the discrete fourier transform and evaluate
+        >>> func_dft = func.dft()
+        >>> func_dft([0, 0, 0])
+        (270+0j)
+        >>> # Take the inverse discrete fourier transform
+        >>> func_dft_idft = func_dft.idft()
+        >>> # Numerics might not make this equal, but mathematically it is
+        >>> abs(func_dft_idft([1, 2, 1]) - func([1, 2, 1])) < 10e-10
+        True
         """
-        new_domain = self.domain
-
-        def new_representation(list_arg, *args, **kwargs):
-            """
-            A function which first applies the morphism,
-            then applies the function.
-            """
-            generator = zip(list_arg, list_shift)
-            shifted_arg = [arg-shift for (arg, shift) in generator]
-            applied_func = self.representation(shifted_arg, *args, **kwargs)
-            return applied_func
-
-        # Update the name
-        new_representation.__name__ = 'shift'
-        new_representation = self._update_name(new_representation,
-                                               self.representation)
-
-        return type(self)(representation = new_representation,
-                          domain = new_domain)
-
-    @staticmethod
-    def _update_name(new_func, old_func):
-        new_func.__name__ = old_func.__name__ + ' * ' + new_func.__name__
-        return new_func
-
-
-
+        return self._fft_wrapper(func_to_wrap='fftn', func_type=func_type)
 
     def evaluate(self, list_arg, *args, **kwargs):
         """
@@ -218,12 +248,90 @@ class Function:
         proj_args = self.domain.project_element(list_arg)
         return self.representation(proj_args, *args, **kwargs)
 
-    def __call__(self, list_arg, *args, **kwargs):
+
+
+
+    def idft(self, func_type = ''):
         """
-        Override function calls,
-        see :py:meth:`~abelian.functions.Function.evaluate`.
+        Compute the inverse discrete fourier transform.
+
+        This is a wrapper around np.fft.ifftn.
+
+        Parameters
+        ----------
+        func_type : str
+            If empty, compute the function values using pure python.
+            If 'ogrid', use a numpy.ogrid (open mesh-grid) to compute the
+            functino values.
+            If 'mgrid', use a numpy.mgrid (dense mesh-grid) to compute the
+            function values.
+
+        Returns
+        -------
+        function : Function
+            The inverse discrete Fourier transformation of the original
+            function.
+
+
+        Examples
+        --------
+        >>> from abelian import LCA, Function
+        >>> # Create a simple linear function on Z_5 + Z_4 + Z_3
+        >>> domain = LCA([5, 4, 3])
+        >>> def linear(list_arg):
+        ...     x, y, z = list_arg
+        ...     return complex(x + y, z - x)
+        >>> func = Function(linear, domain)
+        >>> func([1, 2, 1])
+        (3+0j)
+        >>> func_idft = func.idft()
+        >>> func_idft([0, 0, 0])
+        (3.5-1j)
         """
-        return self.evaluate(list_arg, *args, **kwargs)
+        return self._fft_wrapper(func_to_wrap='ifftn', func_type=func_type)
+
+    def pointwise(self, other, operator):
+        """
+        Apply a binary operator pointwise.
+
+        Parameters
+        ----------
+        other : Function
+            Another Functin on the same domain.
+        operator : function
+            A binary operator.
+
+        Returns
+        -------
+        function : Function
+            The resulting function, new = operator(self, other).
+
+        Examples
+        --------
+        >>> from abelian import LCA
+        >>> domain = LCA([5])
+        >>> function1 = Function(lambda arg: sum(arg), domain)
+        >>> function2 = Function(lambda arg: sum(arg)*2, domain)
+        >>> from operator import add
+        >>> pointwise_add = function1.pointwise(function2, add)
+        >>> function1([2]) + function2([2]) == pointwise_add([2])
+        True
+        >>> from operator import mul
+        >>> sample_points = [0, 1, 2, 3, 4]
+        >>> pointwise_mul = function1.pointwise(function2, mul)
+        >>> pointwise_mul.sample(sample_points) # i * 2*i = 2*i*i
+        [0, 2, 8, 18, 32]
+
+        """
+        if self.domain != other.domain:
+            raise ValueError('Domains must be the same.')
+
+        def new_repr(list_arg, *args, **kwargs):
+            result_self = self.representation(list_arg, *args, **kwargs)
+            result_other = other.representation(list_arg, *args, **kwargs)
+            return operator(result_self, result_other)
+
+        return type(self)(domain = self.domain, representation = new_repr)
 
     def pullback(self, morphism):
         """
@@ -276,7 +384,7 @@ class Function:
         domain = morphism.source
 
 
-        def new_representation(list_arg, *args, **kwargs):
+        def new_repr(list_arg, *args, **kwargs):
             """
             A function which first applies the morphism,
             then applies the function.
@@ -286,11 +394,9 @@ class Function:
             return applied_func
 
         # Update the name
-        new_representation.__name__ = 'pullback'
-        new_representation = self._update_name(new_representation,
-                                                   self.representation)
-
-        return type(self)(representation = new_representation, domain = domain)
+        new_repr.__name__ = 'pullback'
+        new_repr = self._update_name(new_repr, self.representation)
+        return type(self)(representation = new_repr, domain = domain)
 
 
 
@@ -364,146 +470,167 @@ class Function:
         return type(self)(representation=new_representation, domain=domain)
 
 
-    def transversal(self, epimorphism, transversal_rule,
-                    default = 0):
+    def sample(self, list_of_elements, *args, **kwargs):
         """
-        Pushforward along a transversal.
+        Sample the function on a list of elements.
 
         Parameters
         ----------
-        epimorphism
-        transversal_rule
+        list_of_elements : list
+            A list of groups elements, where each element is also a list.
 
         Returns
         -------
+        sampled_vals : list
+            A list of sampled values at the elements.
+
+        Examples
+        --------
+        >>> from abelian import Function, LCA
+        >>> func = Function(lambda x : sum(x), LCA([0, 0]))
+        >>> sample_points = [[0, 0], [1, 2], [2, 1], [3, 3]]
+        >>> func.sample(sample_points)
+        [0, 3, 3, 6]
+        """
+
+        return [self.evaluate(p, *args, **kwargs) for p in list_of_elements]
+
+
+    def shift(self, list_shift):
+        """
+        Shift the function.
+
+
+        Parameters
+        ----------
+        list_shift : list
+            A list of shifts.
+
+        Returns
+        -------
+        function : Function
+            A new function which is shifted.
+
+        Examples
+        --------
+        >>> from abelian import Function, LCA
+        >>> func = Function(lambda x: sum(x), LCA([0]))
+        >>> func.sample([0, 1, 2, 3])
+        [0, 1, 2, 3]
+        >>> func.shift([2]).sample([0, 1, 2, 3])
+        [-2, -1, 0, 1]
+        """
+        new_domain = self.domain
+
+        def new_representation(list_arg, *args, **kwargs):
+            """
+            A function which first applies the morphism,
+            then applies the function.
+            """
+            generator = zip(list_arg, list_shift)
+            shifted_arg = [arg-shift for (arg, shift) in generator]
+            applied_func = self.representation(shifted_arg, *args, **kwargs)
+            return applied_func
+
+        # Update the name
+        new_representation.__name__ = 'shift'
+        new_representation = self._update_name(new_representation,
+                                               self.representation)
+
+        return type(self)(representation = new_representation,
+                          domain = new_domain)
+
+    def to_latex(self):
+        """
+        Return as a :math:`\LaTeX` string.
+
+
+        Returns
+        -------
+        latex_str : str
+            The object as a latex string.
+
+        """
+        latex_str = r'\operatorname{FUNC} \in \mathbb{C}^G, \ G = GRP'
+        latex_str = latex_str.replace('FUNC', self.representation.__name__)
+        latex_str = latex_str.replace('GRP', self.domain.to_latex())
+        return latex_str
+
+    def transversal(self, epimorphism, transversal_rule, default = 0):
+        """
+        Pushforward along a transversal.
+
+        If (transversal * epimorphism)(x) = x, then x is pushed forward
+        using the transversal rule. If not, then the default value is returned.
+
+        Parameters
+        ----------
+        epimorphism : HomLCA
+            An epimorphism.
+        transversal_rule : function
+            A function with signature `func(list_arg, *args, **kwargs)`.
+
+        Returns
+        -------
+        function : Function
+            The pushforward of `self` along the transversal of the epimorphism.
+
+        Examples
+        --------
+        >>> from abelian import LCA, Function, HomLCA
+        >>> n = 5 # Sice of the domain, Z_n
+        >>> f_on_Zn = Function(lambda x: sum(x)**2, LCA([n]))
+        >>> # To move this function to Z, create an epimorphism and a
+        >>> # transversal rule
+        >>> epimorphism = HomLCA([1], source = [0], target = [n])
+        >>> def transversal_rule(x):
+        ...     if sum(x) < n/2:
+        ...         return [sum(x)]
+        ...     elif sum(x) >= n/2:
+        ...         return [sum(x) - n]
+        ...     else:
+        ...         return None
+        >>> # Do the pushforward with the transversal rule
+        >>> f_on_Z = f_on_Zn.transversal(epimorphism, transversal_rule)
+        >>> f_on_Z.sample(list(range(-n, n+1)))
+        [0, 0, 0, 9, 16, 0, 1, 4, 0, 0, 0]
 
         """
         new_domain = epimorphism.source
 
+        # TODO: Should transversals support multifunctions?
+
         def new_representation(list_arg, *args, **kwargs):
-            print('------')
-            print(list_arg)
+            # Compose (section * transversal)(x)
             applied_epi = epimorphism.evaluate(list_arg)
-            print(list_arg)
             composed = transversal_rule(applied_epi)
-            print(composed)
+
+            # If the composition is the identity, apply the epimorphism
+            # and then the function to evaluate the new function at the point
             if composed == list_arg:
-                return self.representation(list_arg, *args, **kwargs)
+                return self.representation(applied_epi, *args, **kwargs)
             else:
                 return default
 
-        return type(self)(representation=new_representation, domain=domain)
+        return type(self)(representation=new_representation, domain=new_domain)
 
-
-    def pointwise(self, func, operator):
+    def _discrete_periodic_domain(self):
         """
-        Pointwise add/mult/etc.
-
-
-        Parameters
-        ----------
-        func
-        operator
+        Whether or not the domain is discrete and periodic with finite periods.
 
         Returns
         -------
-
+        discrete_periodic : bool
+            Whether or not the domain is discrete and periodic.
         """
-
-    def convolve(self, other, norm_cond):
-        """
-        Convolution.
-
-        Parameters
-        ----------
-        other
-
-        Returns
-        -------
-
-        """
-
-    def idft(self, func_type = ''):
-        """
-        Compute the inverse discrete fourier transform.
-
-        This is a wrapper around np.fft.ifftn.
-
-        Parameters
-        ----------
-        func_type : str
-            If empty, compute the function values using pure python.
-            If 'ogrid', use a numpy.ogrid (open mesh-grid) to compute the
-            functino values.
-            If 'mgrid', use a numpy.mgrid (dense mesh-grid) to compute the
-            function values.
-
-        Returns
-        -------
-        function : Function
-            The inverse discrete Fourier transformation of the original
-            function.
+        return self.domain.is_FGA() and all(p > 0 for p in self.domain.periods)
 
 
-        Examples
-        --------
-        >>> from abelian import LCA, Function
-        >>> # Create a simple linear function on Z_5 + Z_4 + Z_3
-        >>> domain = LCA([5, 4, 3])
-        >>> def linear(list_arg):
-        ...     x, y, z = list_arg
-        ...     return complex(x + y, z - x)
-        >>> func = Function(linear, domain)
-        >>> func([1, 2, 1])
-        (3+0j)
-        >>> func_idft = func.idft()
-        >>> func_idft([0, 0, 0])
-        (3.5-1j)
-        """
-        return self._fft_wrapper(func_to_wrap='ifftn', func_type=func_type)
-
-    def dft(self, func_type = ''):
-        """
-        Compute the discrete fourier transform.
-
-        This is a wrapper around np.fft.fftn.
-
-        Parameters
-        ----------
-        func_type : str
-            If empty, compute the function values using pure python.
-            If 'ogrid', use a numpy.ogrid (open mesh-grid) to compute the
-            functino values.
-            If 'mgrid', use a numpy.mgrid (dense mesh-grid) to compute the
-            function values.
-
-        Returns
-        -------
-        function : Function
-            The discrete Fourier transformation of the original function.
-
-
-        Examples
-        --------
-        >>> from abelian import LCA, Function
-        >>> # Create a simple linear function on Z_5 + Z_4 + Z_3
-        >>> domain = LCA([5, 4, 3])
-        >>> def linear(list_arg):
-        ...     return sum(list_arg)
-        >>> func = Function(linear, domain)
-        >>> func([1, 2, 1])
-        4
-        >>> # Take the discrete fourier transform and evaluate
-        >>> func_dft = func.dft()
-        >>> func_dft([0, 0, 0])
-        (270+0j)
-        >>> # Take the inverse discrete fourier transform
-        >>> func_dft_idft = func_dft.idft()
-        >>> # Numerics might not make this equal, but mathematically it is
-        >>> abs(func_dft_idft([1, 2, 1]) - func([1, 2, 1])) < 10e-10
-        True
-        """
-        return self._fft_wrapper(func_to_wrap='fftn', func_type=func_type)
+    @staticmethod
+    def _update_name(new_func, old_func, composition_str = '*'):
+        comp = ' {} '.format(composition_str)
+        new_func.__name__ = old_func.__name__ + comp + new_func.__name__
+        return new_func
 
 
     def _fft_wrapper(self, func_to_wrap = 'fftn', func_type = ''):
@@ -539,7 +666,10 @@ class Function:
         if func_type == '':
             table = np.empty(dims, dtype=complex)
             for element in itertools.product(*[range(k) for k in dims]):
-                table[element] = self.representation(element)
+                #print(element)
+                #print(self.representation)
+                #print(self.representation(list(element)))
+                table[element] = self.representation(list(element))
         else:
             # Here the np.ogrid or np.mgrid can be used, see
             # https://arxiv.org/pdf/1102.1523.pdf
@@ -685,13 +815,72 @@ if __name__ == '__main__':
     f_dft = f.dft()
     print(f_dft([1, 1, 1]), f_dft([0, 0, 0]))
 
+    print('---------------- FOURIER SERIES -----------------------')
+    from sympy import Rational
+
+    print('original function')
+    T = LCA([1], [False])
+    function_on_T = Function(lambda arg: sum(arg), T)
+    print(function_on_T)
 
 
+    print('sampling')
+    n = 20 + 1
+    phi_sample = Homomorphism([Rational(1, n)], source = [n], target = T)
+    print(phi_sample)
+
+    print('sampled function')
+    function_on_Zn = function_on_T.pullback(phi_sample)
+    print(function_on_Zn)
+
+    print('dual function (dft)')
+    dual_function = function_on_Zn.dft()
+    print(dual_function)
+
+    phi_dual = phi_sample.dual()
+
+    print(phi_dual)
+
+    def transversal_rule(x):
+        if sum(x) < n/2:
+            return [sum(x)]
+        elif sum(x) >= n/2:
+            return [sum(x) - n]
+
+    coeffs_on_Z = dual_function.transversal(phi_dual, transversal_rule)
+
+    print(coeffs_on_Z)
+    sample_vals = list(range(-int(n/2) - 2, int(n/2) + 2))
+    sampled = coeffs_on_Z.sample(sample_vals)
+    print(*sampled, sep = '   ')
+
+    import matplotlib.pyplot as plt
+    plt.stem(sample_vals, [abs(i) for i in sampled])
+    plt.show()
 
 
+    f = Function(lambda x : max(3 - abs(sum(x)), 0), LCA([0]))
+    f_arr = np.array(f.sample(list(range(-5, 5))))
 
+    g = f.copy()
+    g_arr = np.array(g.sample(list(range(-5, 5))))
 
+    print(f_arr, f_arr.shape)
+    print(np.convolve(f_arr, g_arr), np.convolve(f_arr, g_arr).shape)
 
+    #print(f.convolve(g).sample(list(range(-15, 15))))
+
+    n = 5
+    f_on_Z3 = Function(lambda x: sum(x) ** 2, LCA([n]))
+    epimorphism = HomLCA([1], source=[0], target=[n])
+    def transversal_rule(x):
+        if sum(x) < n/2:
+            return [sum(x)]
+        elif sum(x) >= n/2:
+            return [sum(x) - 5]
+    f_on_Z = f_on_Z3.transversal(epimorphism, transversal_rule)
+    print(f_on_Z3.sample(list(range(-n, n+1))))
+    print(f_on_Z.sample(list(range(-n, n+1))))
 
 
 
