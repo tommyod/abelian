@@ -4,6 +4,7 @@
 import itertools
 import functools
 import types
+import numpy as np
 
 
 def mod(a, b):
@@ -117,6 +118,31 @@ def call_nested_list(list_of_lists, arg):
     for index in arg:
         answer = answer[index]
     return answer
+
+
+def function_to_table(function, dims, *args, **kwargs):
+    """
+
+    Parameters
+    ----------
+    function : function
+        A function with signature `(list_arg, *args, **kwargs)`.
+    dims : list
+        A list of dimensions such as [8, 6, 3].
+
+    Returns
+    -------
+
+    """
+
+    # Create an empty table using numpy
+    table = np.empty(dims, dtype=complex)
+
+    # Iterate through the domain and evaluate the function
+    for list_arg in itertools.product(*[range(d) for d in dims]):
+        table[list_arg] = function(list(list_arg),  *args, **kwargs)
+
+    return table
 
 
 def arg(min_or_max, iterable, function_of_element):

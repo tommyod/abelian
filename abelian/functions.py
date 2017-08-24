@@ -8,11 +8,13 @@ This module contains ...
 
 from sympy import Matrix
 from abelian.linalg.utils import norm
-from abelian.utils import call_nested_list, verify_dims_list, copy_func
+from abelian.utils import call_nested_list, verify_dims_list, copy_func, function_to_table
 from types import FunctionType
 from abelian.linalg.solvers import solve
 import itertools
 import numpy as np
+import functools
+import operator
 
 
 class Function:
@@ -69,6 +71,10 @@ class Function:
         4
         >>> f([3, 1])
         2
+        >>> import numpy as np
+        >>> f = Function(np.array(table), LCA([3, 2]))
+        >>> f([1, 1])
+        4
         """
 
         self.domain = domain
@@ -77,6 +83,7 @@ class Function:
         if isinstance(representation, FunctionType):
             # A function representation has been passed
             self.representation = representation
+            self.table = None
 
             # A table representation has been passed
         else:
@@ -95,6 +102,29 @@ class Function:
 
             self.representation = list_caller
             self.representation.__name__ = 'table'
+            self.table = representation
+
+
+    def to_table(self, *args, **kwargs):
+        """
+        The table, if it exists.
+        """
+
+        # If the domain is not discrete and periodic, no table exists
+        if not self._discrete_periodic_domain():
+            return None
+
+        # If a table already is computed, return it
+        if self.table is not None:
+            return self.table
+
+        # If a table is not computed, compute it
+        dims = self.domain.periods
+        table = function_to_table(self.representation, dims, *args, **kwargs)
+        self.table = table
+        return table
+
+
 
 
 
@@ -169,16 +199,26 @@ class Function:
 
 
 
-    def dft(self, func_type = ''):
+    def dft(self, func_type = None):
         """
         Compute the discrete fourier transform.
 
-        This is a wrapper around np.fft.fftn.
+        This method uses the n-dimensional Fast Fourier Transform (FFT) to
+        compute the n-dimensional Discrete Fourier Transform. The data is
+        converted to a :py:class:`~numpy.ndarray` object for efficient
+        numerical computation, then the :py:func:`~numpy.fft.fftn` function
+        is used to compute the fast fourier transform.
+
+        This implementation is different from the implementation in
+        :py:func:`~numpy.fft.fftn` by a factor. While the :py:func:`~numpy.fft.fftn`
+        function divides by m*n on the inverse transform, this implementation
+        does it on the forward transform, and vice verca.
+
 
         Parameters
         ----------
         func_type : str
-            If empty, compute the function values using pure python.
+            If None, compute the function values using pure python.
             If 'ogrid', use a numpy.ogrid (open mesh-grid) to compute the
             functino values.
             If 'mgrid', use a numpy.mgrid (dense mesh-grid) to compute the
@@ -203,7 +243,7 @@ class Function:
         >>> # Take the discrete fourier transform and evaluate
         >>> func_dft = func.dft()
         >>> func_dft([0, 0, 0])
-        (270+0j)
+        (4.5+0j)
         >>> # Take the inverse discrete fourier transform
         >>> func_dft_idft = func_dft.idft()
         >>> # Numerics might not make this equal, but mathematically it is
@@ -251,7 +291,7 @@ class Function:
 
 
 
-    def idft(self, func_type = ''):
+    def idft(self, func_type = None):
         """
         Compute the inverse discrete fourier transform.
 
@@ -260,7 +300,7 @@ class Function:
         Parameters
         ----------
         func_type : str
-            If empty, compute the function values using pure python.
+            If None, compute the function values using pure python.
             If 'ogrid', use a numpy.ogrid (open mesh-grid) to compute the
             functino values.
             If 'mgrid', use a numpy.mgrid (dense mesh-grid) to compute the
@@ -286,7 +326,7 @@ class Function:
         (3+0j)
         >>> func_idft = func.idft()
         >>> func_idft([0, 0, 0])
-        (3.5-1j)
+        (210-60j)
         """
         return self._fft_wrapper(func_to_wrap='ifftn', func_type=func_type)
 
@@ -637,6 +677,17 @@ class Function:
         """
         Common wrapper for FFT and IFFT routines.
 
+        The numpy DFT is defined as:
+        :math:`A_{kl} =  \sum_{m=0}^{M-1} \sum_{n=0}^{N-1}
+        a_{mn}\exp\left\{-2\pi i \left({mk\over M}+{nl\over N}\right)\right\}
+        \qquad k = 0, \ldots, M-1;\quad l = 0, \ldots, N-1.`
+
+        And the inverse DFT is defined as:
+        :math:`a_{mn} = \frac{1}{MN} \sum_{k=0}^{M-1} \sum_{l=0}^{N-1}
+        A_{kl}\exp\left\{2\pi i \left({mk\over M}+{nl\over N}\right)\right\}
+        \qquad m = 0, \ldots, M-1;\quad n = 0, \ldots, N-1.`
+
+
         Parameters
         ----------
         func_to_wrap : str
@@ -663,13 +714,16 @@ class Function:
             return ValueError('Domain must be discrete and periodic.')
 
         # Put the function values in a table in preparation for FFT/IFFT
-        if func_type == '':
-            table = np.empty(dims, dtype=complex)
-            for element in itertools.product(*[range(k) for k in dims]):
+        if func_type is None:
+            table = self.to_table()
+
+
+            #table = np.empty(dims, dtype=complex)
+            #for element in itertools.product(*[range(k) for k in dims]):
                 #print(element)
                 #print(self.representation)
                 #print(self.representation(list(element)))
-                table[element] = self.representation(list(element))
+            #table[element] = self.representation(list(element))
         else:
             # Here the np.ogrid or np.mgrid can be used, see
             # https://arxiv.org/pdf/1102.1523.pdf
@@ -680,7 +734,19 @@ class Function:
         function_wrapped = getattr(np.fft, func_to_wrap, None)
         if function_wrapped is None:
             raise ValueError('Could not wrap:', func_to_wrap)
-        table_computed = function_wrapped(table).tolist()
+        table_computed = function_wrapped(table)
+
+        # Scale differently then the Numpy implementation
+        # Numpy divides by prod(dims) when computing the inverse,
+        # but we do it when we compute the forward transform
+        if func_to_wrap == 'fftn':
+            table_computed =  table_computed / (functools.reduce(
+                operator.mul, dims))
+        elif func_to_wrap == 'ifftn':
+            table_computed =  table_computed * (functools.reduce(
+                operator.mul, dims))
+
+        #table_computed = table_computed.tolist()
 
         # Create a new instance and return
         return type(self)(domain = domain, representation = table_computed)
@@ -825,8 +891,9 @@ if __name__ == '__main__':
 
 
     print('sampling')
-    n = 20 + 1
-    phi_sample = Homomorphism([Rational(1, n)], source = [n], target = T)
+    n = 200 + 1
+    phi_sample = Homomorphism([Rational(1, n)], source = [n], target
+    = T)
     print(phi_sample)
 
     print('sampled function')
@@ -855,7 +922,8 @@ if __name__ == '__main__':
     print(*sampled, sep = '   ')
 
     import matplotlib.pyplot as plt
-    plt.stem(sample_vals, [abs(i) for i in sampled])
+    plt.stem(sample_vals, [abs(i)/(n-1) for i in sampled])
+    plt.grid(True)
     plt.show()
 
 

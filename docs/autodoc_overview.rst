@@ -117,5 +117,6 @@ Public classes (detailed)
     ~abelian.functions.Function.sample
     ~abelian.functions.Function.shift
     ~abelian.functions.Function.to_latex
+    ~abelian.functions.Function.to_table
     ~abelian.functions.Function.transversal
   

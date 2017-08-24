@@ -270,7 +270,7 @@ intersphinx_mapping = {
     #'sphinx': ('http://sphinx.pocoo.org', None),
     'python': ('http://docs.python.org/' + python_version, None),
     'sympy': ('http://docs.sympy.org/latest/', None),
-    #'numpy': ('http://docs.scipy.org/doc/numpy', None),
+    'numpy': ('http://docs.scipy.org/doc/numpy', None),
     #'sklearn': ('http://scikit-learn.org/stable', None),
     #'pandas': ('http://pandas.pydata.org/pandas-docs/stable', None),
     #'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
