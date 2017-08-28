@@ -10,8 +10,9 @@ from sympy import Matrix, Integer, diag
 from abelian.utils import mod
 from abelian.linalg.factorizations import smith_normal_form
 from abelian.linalg.utils import nonzero_diag_as_list
+from collections.abc import Sequence
 
-class LCA:
+class LCA(Sequence):
     """
     A locally compact Abelian group (LCA).
     """
@@ -120,6 +121,13 @@ class LCA:
         return self.sum(other)
 
 
+
+    def __contains__(self, other):
+        """
+        Override the 'in' operator,
+        see :py:meth:`~abelian.groups.LCA.subgroup_of`.
+        """
+        return other.subgroup_of(self)
 
     def __eq__(self, other):
         """
@@ -287,6 +295,7 @@ class LCA:
         new_discrete = [d for (p, d) in dual_lists]
         return type(self)(periods = new_periods, discrete = new_discrete)
 
+
     def equal(self, other):
         """
         Whether or not two LCAs are equal.
@@ -371,7 +380,6 @@ class LCA:
         """
         is_FGA = all(self.discrete)
         return is_FGA
-
 
     def isomorphic(self, other):
         """
@@ -505,6 +513,8 @@ class LCA:
         if isinstance(element, Matrix):
             return Matrix(projected)
 
+
+
     def rank(self):
         """
         Return the rank of the LCA.
@@ -531,8 +541,6 @@ class LCA:
 
         removed_trivial = self.remove_trivial()
         return removed_trivial.length()
-
-
 
     def remove_indices(self, indices):
         """
@@ -584,6 +592,62 @@ class LCA:
         new_discrete = [d for (p, d) in purged_lists]
         return type(self)(periods=new_periods, discrete=new_discrete)
 
+    def subgroup_of(self, other):
+        """
+        Whether the LCA is a subgroup of `other`.
+
+        A LCA G is a subgroup of another LCA H iff there exists an injection
+        from the elements of G to H such that every source/target of the
+        mapping is isomorphic. In other words, every group in G must be found
+        in H, and no two groups in G can be identified with the same isomorphic
+        group is H.
+
+        Parameters
+        ----------
+        other : LCA
+            A locally compact Abelian group.
+
+        Returns
+        -------
+        is_subgroup : bool
+            Whether or not `self` is a subgroup of other.
+
+        Examples
+        --------
+        >>> # Simple example
+        >>> G = LCA([2, 2, 3])
+        >>> H = LCA([2, 2, 3, 3])
+        >>> G in H
+        True
+        >>> # Order does not matter
+        >>> G = LCA([2, 3, 2])
+        >>> H = LCA([2, 2, 3, 3])
+        >>> G in H
+        True
+        >>> # Trivial groups are not removed
+        >>> G = LCA([2, 3, 2, 1])
+        >>> H = LCA([2, 2, 3, 3])
+        >>> G in H
+        False
+
+        """
+        if not isinstance(other, type(self)):
+            return TypeError('Must be LCAs.')
+
+        self_as_list = list(self._iterate_tuples())
+        other_as_list = list(other._iterate_tuples())
+
+        for group in self_as_list:
+            # If the group is not found, return False
+            if group not in other_as_list:
+                return False
+
+            # If the group is found, remove it
+            other_as_list.remove(group)
+
+        # Every group in G is found in H, and it's a subgroup
+        return True
+
     def sum(self, other):
         """
         Return the direct sum of two LCAs.
@@ -634,7 +698,7 @@ class LCA:
                 return r'\mathbb{R}'
             if d:
                 return r'\mathbb{Z}_{' + str(p) + '}'
-            return r'T_{' + str(p) + '}'
+            return r'T' #r'T_{' + str(p) + '}'
 
         tuples = self._iterate_tuples()
         return r' \oplus '.join(repr_single(p, d) for (p, d) in tuples)
@@ -673,29 +737,24 @@ class LCA:
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod(verbose = True)
+    doctest.testmod(verbose = False)
 
 
 if __name__ == '__main__':
-    G = LCA([0, 0, 0], [False, True, False])
-    H = LCA([0, 0, 0], [False, False, True])
-    assert G.isomorphic(H)
+    G = LCA([2, 3, 4, 4, 4])
+    H = LCA([2, 3, 4])
+    assert (G in H) is False
+    print('Passed 1')
 
-    G = LCA([0, 0, 0, 1, 1, 3, 1, 4], [False, True, False] + [True] * 5)
-    H = LCA([0, 0, 0, 1, 12, 1, 1, 1], [False, False, True] + [True] * 5)
-    assert G.isomorphic(H)
+    G = LCA([5, 4, 4, 3])
+    H = LCA([4, 5, 4, 2, 3])
 
-    G = LCA([0, 0, 0, 1, 1, 3, 1, 4], [False, True, False] + [True]*5)
-    H = LCA([0, 0, 0, 1, 12, 1, 1], [False, False, True] + [True]*4)
-    assert G.isomorphic(H)
+    for g in G:
+        print(g)
 
-    G = LCA([], [])
-    H = LCA([1])
-    assert G.isomorphic(H)
-
-    G = LCA([])
-    G = G.canonical()
-    print(G.rank())
+    print('---')
+    for g in reversed(G):
+        print(g)
 
 
 

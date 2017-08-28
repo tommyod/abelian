@@ -10,7 +10,8 @@ subclass HomFGA.
 
 
 import types
-from sympy import Matrix, diag, latex
+from collections.abc import Callable
+from sympy import Matrix, diag, latex, Integer
 from abelian.utils import mod
 from abelian.groups import LCA
 from abelian.linalg.utils import remove_zero_columns, nonzero_diag_as_list, \
@@ -20,7 +21,7 @@ from abelian.linalg.factorizations import smith_normal_form, hermite_normal_form
 from abelian.linalg.solvers import solve_epi
 
 
-class HomLCA:
+class HomLCA(Callable):
     """
     A homomorphism between LCAs.
     """
@@ -51,6 +52,7 @@ class HomLCA:
         """
 
         A, target, source = self._verify_init(A, target, source)
+        assert isinstance(A, Matrix)
         assert isinstance(target, LCA)
         assert isinstance(source, LCA)
         self.A = A
@@ -59,8 +61,8 @@ class HomLCA:
 
         # TODO : Should we project to target automatically?
 
-    @staticmethod
-    def _verify_init(A, target, source):
+    @classmethod
+    def _verify_init(cls, A, target, source):
         """
         Verify the inputs.
 
@@ -88,6 +90,9 @@ class HomLCA:
         # If the input matrix is a list of lists, convert to matrix
         if isinstance(A, list):
             A = Matrix(A)
+        elif isinstance(A, cls._A_entry_types):
+            A = Matrix([A])
+
 
         # If no target is given, assume free-to-free morphism
         if (target is None):
@@ -736,7 +741,17 @@ class HomFGA(HomLCA):
     """
 
     # The types allowed as entries in A
-    _A_entry_types = (int,)
+    _A_entry_types = (int, Integer)
+
+    def __init__(self, A, target = None, source = None):
+
+        super().__init__(A, target = target, source = source)
+
+        generator = (isinstance(e, self._A_entry_types) for e in self.A)
+        if not all(generator):
+            raise TypeError('Matrix must be integer')
+
+
 
     def annihilator(self):
         """

@@ -22,11 +22,13 @@ Public classes (detailed)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 :class:`~abelian.groups.LCA`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ (inherits from: :class:`~collections.abc.Sequence` )
 
 .. autosummary::
 
     ~abelian.groups.LCA
     ~abelian.groups.LCA.__add__
+    ~abelian.groups.LCA.__contains__
     ~abelian.groups.LCA.__eq__
     ~abelian.groups.LCA.__getitem__
     ~abelian.groups.LCA.__init__
@@ -46,11 +48,13 @@ Public classes (detailed)
     ~abelian.groups.LCA.rank
     ~abelian.groups.LCA.remove_indices
     ~abelian.groups.LCA.remove_trivial
+    ~abelian.groups.LCA.subgroup_of
     ~abelian.groups.LCA.sum
     ~abelian.groups.LCA.to_latex
   
 :class:`~abelian.morphisms.HomLCA`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ (inherits from: :class:`~collections.abc.Callable` )
 
 .. autosummary::
 
@@ -88,6 +92,7 @@ Public classes (detailed)
 .. autosummary::
 
     ~abelian.morphisms.HomFGA
+    ~abelian.morphisms.HomFGA.__init__
     ~abelian.morphisms.HomFGA.annihilator
     ~abelian.morphisms.HomFGA.coimage
     ~abelian.morphisms.HomFGA.cokernel
