@@ -104,6 +104,7 @@ Public classes (detailed)
   
 :class:`~abelian.functions.Function`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ (inherits from: :class:`~collections.abc.Callable` )
 
 .. autosummary::
 
