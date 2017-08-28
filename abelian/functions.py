@@ -15,9 +15,10 @@ import itertools
 import numpy as np
 import functools
 import operator
+from collections.abc import Callable
 
 
-class Function:
+class Function(Callable):
     """
     A function on a LCA.
     """
