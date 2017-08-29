@@ -120,14 +120,12 @@ class LCA(Sequence):
         """
         return self.sum(other)
 
-
-
     def __contains__(self, other):
         """
         Override the 'in' operator,
-        see :py:meth:`~abelian.groups.LCA.subgroup_of`.
+        see :py:meth:`~abelian.groups.LCA.contained_in`.
         """
-        return other.subgroup_of(self)
+        return other.contained_in(self)
 
     def __eq__(self, other):
         """
@@ -592,11 +590,11 @@ class LCA(Sequence):
         new_discrete = [d for (p, d) in purged_lists]
         return type(self)(periods=new_periods, discrete=new_discrete)
 
-    def subgroup_of(self, other):
+    def contained_in(self, other):
         """
-        Whether the LCA is a subgroup of `other`.
+        Whether the LCA is contained in `other`.
 
-        A LCA G is a subgroup of another LCA H iff there exists an injection
+        A LCA G is contained in another LCA H iff there exists an injection
         from the elements of G to H such that every source/target of the
         mapping is isomorphic. In other words, every group in G must be found
         in H, and no two groups in G can be identified with the same isomorphic
@@ -610,19 +608,19 @@ class LCA(Sequence):
         Returns
         -------
         is_subgroup : bool
-            Whether or not `self` is a subgroup of other.
+            Whether or not `self` is contained in other.
 
         Examples
         --------
         >>> # Simple example
         >>> G = LCA([2, 2, 3])
         >>> H = LCA([2, 2, 3, 3])
-        >>> G in H
+        >>> G.contained_in(H)
         True
         >>> # Order does not matter
         >>> G = LCA([2, 3, 2])
         >>> H = LCA([2, 2, 3, 3])
-        >>> G in H
+        >>> G.contained_in(H)
         True
         >>> # Trivial groups are not removed
         >>> G = LCA([2, 3, 2, 1])

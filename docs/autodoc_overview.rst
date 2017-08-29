@@ -36,6 +36,7 @@ Public classes (detailed)
     ~abelian.groups.LCA.__len__
     ~abelian.groups.LCA.__repr__
     ~abelian.groups.LCA.canonical
+    ~abelian.groups.LCA.contained_in
     ~abelian.groups.LCA.copy
     ~abelian.groups.LCA.dual
     ~abelian.groups.LCA.equal
@@ -48,7 +49,6 @@ Public classes (detailed)
     ~abelian.groups.LCA.rank
     ~abelian.groups.LCA.remove_indices
     ~abelian.groups.LCA.remove_trivial
-    ~abelian.groups.LCA.subgroup_of
     ~abelian.groups.LCA.sum
     ~abelian.groups.LCA.to_latex
   
