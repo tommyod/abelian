@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 """
-This module contains ...
+This module consists of a class for functions on LCAs,
+called Function. Such a function represents a function
+from a LCA G to the complex numbers C.
 """
 
 from sympy import Matrix
@@ -202,7 +203,7 @@ class Function(Callable):
 
     def dft(self, func_type = None):
         """
-        Compute the discrete fourier transform.
+        If the domain allows it, compute DFT.
 
         This method uses the n-dimensional Fast Fourier Transform (FFT) to
         compute the n-dimensional Discrete Fourier Transform. The data is
@@ -294,7 +295,7 @@ class Function(Callable):
 
     def idft(self, func_type = None):
         """
-        Compute the inverse discrete fourier transform.
+        If the domain allows it, compute inv DFT.
 
         This is a wrapper around np.fft.ifftn.
 
@@ -333,7 +334,7 @@ class Function(Callable):
 
     def pointwise(self, other, operator):
         """
-        Apply a binary operator pointwise.
+        Apply pointwise binary operator.
 
         Parameters
         ----------
@@ -513,7 +514,7 @@ class Function(Callable):
 
     def sample(self, list_of_elements, *args, **kwargs):
         """
-        Sample the function on a list of elements.
+        Sample on a list of group elements.
 
         Parameters
         ----------
@@ -599,7 +600,7 @@ class Function(Callable):
 
     def transversal(self, epimorphism, transversal_rule, default = 0):
         """
-        Pushforward along a transversal.
+        Pushforward using transversal rule.
 
         If (transversal * epimorphism)(x) = x, then x is pushed forward
         using the transversal rule. If not, then the default value is returned.

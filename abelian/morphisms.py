@@ -755,14 +755,14 @@ class HomFGA(HomLCA):
 
     def annihilator(self):
         """
-        The annihilator morphism.
+        Compute the annihilator monomorphism.
         """
         # TODO: Write this method.
         return self.cokernel().dual().remove_trivial_groups()
 
     def coimage(self):
         """
-        Compute the coimage homomorphism.
+        Compute the coimage epimorphism.
 
         Returns
         -------
@@ -786,7 +786,7 @@ class HomFGA(HomLCA):
 
     def cokernel(self):
         """
-        Compute the cokernel homomorphism.
+        Compute the cokernel epimorphism.
 
         Returns
         -------
@@ -816,7 +816,7 @@ class HomFGA(HomLCA):
 
     def image(self):
         """
-        Compute the image homomorphism.
+        Compute the image monomorphism.
 
         Returns
         -------
@@ -891,7 +891,7 @@ class HomFGA(HomLCA):
 
     def kernel(self):
         """
-        Compute the kernel homomorphism.
+        Compute the kernel monomorphism.
 
         Returns
         -------
@@ -919,7 +919,7 @@ class HomFGA(HomLCA):
 
     def project_to_source(self):
         """
-        Project columns to source group, calculating periods.
+        Project columns to source group (periods).
 
         Returns
         -------
@@ -970,7 +970,7 @@ class HomFGA(HomLCA):
 
 def Homomorphism(A, target = None, source = None):
     """
-    Initiliazes HomFGA or HomLCA depending on inputs.
+    Initializes HomFGA or HomLCA depending on inputs.
 
     This factory function will initialize a HomFGA if both the source and
     target are FGAs, or None. If the source and targets are explicitly given
@@ -993,7 +993,7 @@ def Homomorphism(A, target = None, source = None):
 
     Examples
     --------
-    >>> # If no source/target is given, the defalt is discrete (FGA)
+    >>> # If no source/target is given, the default is discrete (FGA)
     >>> phi = Homomorphism([1])
     >>> isinstance(phi, HomFGA)
     True

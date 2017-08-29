@@ -13,7 +13,7 @@ from abelian.linalg.utils import remove_zero_columns, remove_cols
 
 def solve(A, b, p = None):
     """
-    Solve the Ax = b mod p over Z.
+    Solve eqn Ax = b mod p over Z.
 
     The data (A, b, p) must be integer. The equation Ax = b mod p is solved,
     if a solution exists. If A is an epimorphism but not a monomorphism (i.e.

@@ -3,8 +3,8 @@
 import pkg_resources
 
 
-__version__ = '0.0.6'
-__author__ = 'TommyOd'
+__version__ = '0.1.0'
+__author__ = 'Tommy Odland'
 __all__ = []
 
 from abelian.linalg.solvers import solve
