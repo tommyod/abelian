@@ -23,6 +23,18 @@ class TestSNF:
         cls.target_vector = target
         cls.phi = HomFGA(A, target = target)
 
+
+    def test_source_projection_two_ways(self):
+        """
+        Test that phi.project to source == phi.coimage.project_to_source
+        """
+        # Project to source
+        phi = self.phi.project_to_source()
+        coimage = self.phi.coimage().project_to_source()
+        assert phi.source == coimage.source
+
+
+
     def test_project_to_source(self):
         """
         Test the periods.
