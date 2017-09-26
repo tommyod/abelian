@@ -30,7 +30,7 @@ def random_LCA(length):
         else:
             periods.append(random.choice([0, 1]))
 
-    return LCA(periods = periods, discrete = discrete)
+    return LCA(orders= periods, discrete = discrete)
 
 
 class TestLCA:

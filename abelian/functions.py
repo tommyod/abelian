@@ -31,10 +31,10 @@ class Function(Callable):
         Parameters
         ----------
         representation : function (or list of lists if domain is discrete
-        and periodic, i.e. Z_p with p_i > 0)
+        and of finite order, i.e. Z_p with p_i > 0)
             A function which takes in a list as a first argument, representing
             the group element. Alternatively a list of lists if the domain is
-            discrete and periodic.
+            discrete and of finite order.
         domain : LCA
             A locally compact Abelian group, which is the domain of the
             function.
@@ -89,13 +89,13 @@ class Function(Callable):
 
             # A table representation has been passed
         else:
-            if not self._discrete_periodic_domain():
+            if not self._discrete_finite_domain():
                 raise TypeError('When the function representation is a table,'
                                 'the domain must be a FGA with finite '
-                                'periods.')
+                                'orders.')
 
             # Verify the dimensions of the data table
-            if not verify_dims_list(representation, self.domain.periods):
+            if not verify_dims_list(representation, self.domain.orders):
                 raise ValueError('Table dimension mismatch.')
 
             # Return a callable data table
@@ -112,8 +112,8 @@ class Function(Callable):
         The table, if it exists.
         """
 
-        # If the domain is not discrete and periodic, no table exists
-        if not self._discrete_periodic_domain():
+        # If the domain is not discrete and of finite order, no table exists
+        if not self._discrete_finite_domain():
             return None
 
         # If a table already is computed, return it
@@ -121,7 +121,7 @@ class Function(Callable):
             return self.table
 
         # If a table is not computed, compute it
-        dims = self.domain.periods
+        dims = self.domain.orders
         table = function_to_table(self.representation, dims, *args, **kwargs)
         self.table = table
         return table
@@ -474,8 +474,8 @@ class Function(Callable):
             """
 
             # Compute a solution to phi(x) = y
-            target_periods = Matrix(morphism.target.periods)
-            base_ans = solve(morphism.A, Matrix(list_arg), target_periods)
+            target_orders = Matrix(morphism.target.orders)
+            base_ans = solve(morphism.A, Matrix(list_arg), target_orders)
 
             # Compute the kernel
             kernel = morphism.kernel()
@@ -656,16 +656,16 @@ class Function(Callable):
 
         return type(self)(representation=new_representation, domain=new_domain)
 
-    def _discrete_periodic_domain(self):
+    def _discrete_finite_domain(self):
         """
-        Whether or not the domain is discrete and periodic with finite periods.
+        Whether or not the domain is discrete and of finite order.
 
         Returns
         -------
-        discrete_periodic : bool
-            Whether or not the domain is discrete and periodic.
+        discrete_finite : bool
+            Whether or not the domain is discrete and finite.
         """
-        return self.domain.is_FGA() and all(p > 0 for p in self.domain.periods)
+        return self.domain.is_FGA() and all(p > 0 for p in self.domain.orders)
 
 
     @staticmethod
@@ -711,9 +711,9 @@ class Function(Callable):
 
         # Verify that the inputs are sensible
         domain = self.domain
-        dims = domain.periods
+        dims = domain.orders
         if not all(p > 0 for p in dims) and domain.is_FGA():
-            return ValueError('Domain must be discrete and periodic.')
+            return ValueError('Domain must be discrete and of finite order.')
 
         # Put the function values in a table in preparation for FFT/IFFT
         if func_type is None:

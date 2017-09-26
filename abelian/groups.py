@@ -23,26 +23,26 @@ class LCA(Sequence):
 
     _integer_types = (int, Integer)
 
-    def __init__(self, periods, discrete = None):
+    def __init__(self, orders, discrete = None):
         """
         Initialize a new LCA.
 
         This class represents locally compact abelian groups, defined by their
-        period and whether or not they are discrete. A period of 0 means
-        infinite period. The possible groups are:
+        orders and whether or not they are discrete. An order of 0 means
+        infinite order. The possible groups are:
 
-        * :math:`\mathbb{Z}_n` : period = `n`, discrete = `True`
-        * :math:`\mathbb{Z}` : period = `0`, discrete = `True`
-        * :math:`T` : period = `1`, discrete = `False`
-        * :math:`\mathbb{R}` : period = `0`, discrete = `False`
+        * :math:`\mathbb{Z}_n` : order = `n`, discrete = `True`
+        * :math:`\mathbb{Z}` : order = `0`, discrete = `True`
+        * :math:`T` : order = `1`, discrete = `False`
+        * :math:`\mathbb{R}` : order = `0`, discrete = `False`
 
         Every locally compact abelian group is isomorphic to a direct sum
         or one or several of the groups above.
 
         Parameters
         ----------
-        periods : list
-            A list of periods, e.g. [6, 8, 11].
+        orders : list
+            A list of orders, e.g. [6, 8, 11].
         discrete : list
             A list of booleans such as [True, False, ...] or alternatively a
             list of letters such as ['d', 'c', ...], where 'd' stands for
@@ -60,47 +60,47 @@ class LCA(Sequence):
         True
 
         >>> # Create G = R + Z
-        >>> G = LCA(periods = [0, 0], discrete = [False, True])
+        >>> G = LCA(orders = [0, 0], discrete = [False, True])
         """
 
-        periods, discrete = self._verify_init(periods, discrete)
-        self.periods = periods
+        orders, discrete = self._verify_init(orders, discrete)
+        self.orders = orders
         self.discrete = discrete
 
 
     @classmethod
-    def _verify_init(cls, periods, discrete):
+    def _verify_init(cls, orders, discrete):
         """
         Verify the user inputs.
 
-        Return `periods` and `discrete` as lists.
+        Return `orders` and `discrete` as lists.
         """
 
         # Forgive if integer types have been passed, or if it's a matrix
-        if isinstance(periods, (Matrix,) + cls._integer_types):
-            periods = list(periods)
+        if isinstance(orders, (Matrix,) + cls._integer_types):
+            orders = list(orders)
 
         # Forgive if boolean True/False og string 'd'/'c' was passed
         if isinstance(discrete, (Matrix, bool, str)):
             discrete = list(discrete)
 
-        # From here on out, assume `periods` and `discrete` are lists
+        # From here on out, assume `orders` and `discrete` are lists
 
-        if len(periods) < 0:
-            raise ValueError('List of periods must have length >=0.')
+        if len(orders) < 0:
+            raise ValueError('List of orders must have length >=0.')
 
-        if any(i < 0 for i in periods):
-            raise ValueError('Every period must be >= 0.')
+        if any(i < 0 for i in orders):
+            raise ValueError('Every order must be >= 0.')
 
         if discrete is None:
-            discrete = [True] * len(periods)
+            discrete = [True] * len(orders)
 
-        if len(periods) != len(discrete):
-            raise ValueError('Periods and list of discrete must match length.')
+        if len(orders) != len(discrete):
+            raise ValueError('Orders and list of discrete must match length.')
 
-        for p, d in zip(periods, discrete):
+        for p, d in zip(orders, discrete):
             if not d and p not in [0, 1]:
-                raise ValueError('Continuous groups must have period 0 or 1.')
+                raise ValueError('Continuous groups must have order 0 or 1.')
 
         def map_to_bool(x):
             try:
@@ -110,7 +110,7 @@ class LCA(Sequence):
 
         discrete = [map_to_bool(i) for i in discrete]
 
-        return periods, discrete
+        return orders, discrete
 
 
     def __add__(self, other):
@@ -183,7 +183,7 @@ class LCA(Sequence):
 
         The canonical form decomposition will:
 
-        (1) Put the torsion (discrete with period >= 1) subgroup in
+        (1) Put the torsion (discrete with order >= 1) subgroup in
             a canonical form using invariant factor decomposition from
             the Smith Normal Form decomposition.
         (2) Sort the non-torsion subgroup.
@@ -203,11 +203,11 @@ class LCA(Sequence):
         True
         """
 
-        def is_t(period, discrete):
+        def is_t(order, discrete):
             """
             Function to determine if a group is torsion or not.
             """
-            if period > 0 and discrete:
+            if order > 0 and discrete:
                 return True
             return False
 
@@ -229,17 +229,17 @@ class LCA(Sequence):
 
         # Sort the non-torsion subgroup
         tuples = list(self_non_tors._iterate_tuples())
-        non_tors_periods = [p for (p, d) in sorted(tuples)]
+        non_tors_orders = [p for (p, d) in sorted(tuples)]
         non_tors_discrete = [d for (p, d) in sorted(tuples)]
 
         # Get canonical decomposition of the torsion subgroup
-        self_SNF = smith_normal_form(diag(*self_tors.periods), False)
+        self_SNF = smith_normal_form(diag(*self_tors.orders), False)
         self_SNF_p = [p for p in nonzero_diag_as_list(self_SNF) if p != 1]
 
         # Construct the new group
-        periods = non_tors_periods + self_SNF_p
+        orders = non_tors_orders + self_SNF_p
         discrete = non_tors_discrete + [True] * len(self_SNF_p)
-        return type(self)(periods = periods, discrete = discrete)
+        return type(self)(orders = orders, discrete = discrete)
 
     def copy(self):
         """
@@ -257,9 +257,9 @@ class LCA(Sequence):
         >>> G == H
         True
         """
-        periods_cp = self.periods.copy()
+        orders_cp = self.orders.copy()
         discrete_cp = self.discrete.copy()
-        return type(self)(periods = periods_cp, discrete = discrete_cp)
+        return type(self)(orders = orders_cp, discrete = discrete_cp)
 
     def dual(self):
         """
@@ -289,16 +289,16 @@ class LCA(Sequence):
 
         single_dual = self._dual_of_single_group
         dual_lists = list(single_dual(p, d) for (p, d) in self._iterate_tuples())
-        new_periods = [p for (p, d) in dual_lists]
+        new_orders = [p for (p, d) in dual_lists]
         new_discrete = [d for (p, d) in dual_lists]
-        return type(self)(periods = new_periods, discrete = new_discrete)
+        return type(self)(orders = new_orders, discrete = new_discrete)
 
 
     def equal(self, other):
         """
         Whether or not two LCAs are equal.
 
-        Two LCAs are equal iff the list of `periods` and the list of `discrete`
+        Two LCAs are equal iff the list of `orders` and the list of `discrete`
         are both equal.
 
         Parameters
@@ -320,9 +320,9 @@ class LCA(Sequence):
         >>> G.equal(H)  # Equality using the method
         True
         """
-        periods_equal = self.periods == other.periods
+        orders_equal = self.orders == other.orders
         discrete_equal = self.discrete ==  other.discrete
-        return periods_equal and discrete_equal
+        return (orders_equal and discrete_equal)
 
 
     def getitem(self, key):
@@ -348,11 +348,11 @@ class LCA(Sequence):
         True
         """
 
-        periods = self.periods[key]
+        orders = self.orders[key]
         discrete = self.discrete[key]
-        periods = periods if isinstance(periods, list) else [periods]
+        orders = orders if isinstance(orders, list) else [orders]
         discrete = discrete if isinstance(discrete, list) else [discrete]
-        return type(self)(periods = periods, discrete = discrete)
+        return type(self)(orders = orders, discrete = discrete)
 
 
     def is_FGA(self):
@@ -437,8 +437,8 @@ class LCA(Sequence):
         True
         True
         """
-        for (period, discrete) in zip(self.periods, self.discrete):
-            yield type(self)([period], [discrete])
+        for (order, discrete) in zip(self.orders, self.discrete):
+            yield type(self)([order], [discrete])
 
     def length(self):
         """
@@ -459,7 +459,7 @@ class LCA(Sequence):
         >>> G.length()
         4
         """
-        return len(self.periods)
+        return len(self.orders)
 
     def project_element(self, element):
         """
@@ -487,20 +487,20 @@ class LCA(Sequence):
         True
         """
 
-        if not (len(element) == len(self.periods) == len(self.discrete)):
+        if not (len(element) == len(self.orders) == len(self.discrete)):
             raise ValueError('Length of element must match groups.')
 
-        def project(element, period, discrete):
+        def project(element, order, discrete):
             if not discrete:
-                return mod(element, period)
+                return mod(element, order)
             if discrete:
                 if isinstance(element, self._integer_types):
-                    return mod(element, period)
+                    return mod(element, order)
 
                 raise ValueError('Non-integer cannot be projected to '
                                  'discrete group.')
 
-        generator = zip(element, self.periods, self.discrete)
+        generator = zip(element, self.orders, self.discrete)
         projected = [project(e, p, d) for (e, p, d) in generator]
 
         # If the input is a list, return a list
@@ -562,9 +562,9 @@ class LCA(Sequence):
 
         """
         enu = enumerate
-        periods = [p for (i, p) in enu(self.periods) if i not in indices]
+        orders = [p for (i, p) in enu(self.orders) if i not in indices]
         discrete = [p for (i, p) in enu(self.discrete) if i not in indices]
-        return type(self)(periods = periods, discrete = discrete)
+        return type(self)(orders = orders, discrete = discrete)
 
     def remove_trivial(self):
         """
@@ -581,14 +581,14 @@ class LCA(Sequence):
         >>> G.remove_trivial() == LCA([5])
         True
         """
-        def trivial(period, discrete):
-            return discrete and (period == 1)
+        def trivial(order, discrete):
+            return discrete and (order == 1)
 
         self_tuples = self._iterate_tuples()
         purged_lists = [(p, d) for (p, d) in self_tuples if not trivial(p, d)]
-        new_periods = [p for (p, d) in purged_lists]
+        new_orders = [p for (p, d) in purged_lists]
         new_discrete = [d for (p, d) in purged_lists]
-        return type(self)(periods=new_periods, discrete=new_discrete)
+        return type(self)(orders=new_orders, discrete=new_discrete)
 
     def contained_in(self, other):
         """
@@ -670,9 +670,9 @@ class LCA(Sequence):
         >>> G + H == G.sum(H)  # Directs sums two ways
         True
         """
-        new_periods = self.periods + other.periods
+        new_orders = self.orders + other.orders
         new_discrete = self.discrete + other.discrete
-        return type(self)(periods=new_periods, discrete=new_discrete)
+        return type(self)(orders=new_orders, discrete=new_discrete)
 
     def to_latex(self):
         """
@@ -703,28 +703,28 @@ class LCA(Sequence):
 
     def _iterate_tuples(self):
         """
-        Yields tuples in the form (`period`, `discrete`).
+        Yields tuples in the form (`order`, `discrete`).
         """
         for group in self:
-            yield (group.periods[0], group.discrete[0])
+            yield (group.orders[0], group.discrete[0])
 
     @staticmethod
-    def _dual_of_single_group(period, discrete):
+    def _dual_of_single_group(order, discrete):
         """
         Compute the dual of a single group.
         """
         if discrete:
         # Discrete
-            if period == 0:
+            if order == 0:
                 # Dual of Z is T
                 return [1, False]  # Return T
             else:
                 # Dual of Z_n is Z_n
-                return [period, True]  # Return Z_n
+                return [order, True]  # Return Z_n
 
         else:
         # Continuous
-            if period == 0:
+            if order == 0:
                 # Dual of R is R
                 return [0, False]  # Return R
             else:

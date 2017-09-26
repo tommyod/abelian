@@ -17,7 +17,7 @@ def free_kernel(A):
     Computes the free-to-free kernel monomorphism of A.
 
     Let :math:`A: \mathbb{Z}^n -> \mathbb{Z}^m` be a homomorphism from
-    a free (non-periodic) finitely generated Abelian group (FGA) to another
+    a free (infinite order) finitely generated Abelian group (FGA) to another
     free FGA. Associated with this homomorphism is the kernel monomorphism.
     The kernel monomorphism has the property that
     :math:`A \circ \operatorname{ker}(A) = \mathbf{0}`, where :math:`\mathbf{0}`
@@ -53,7 +53,7 @@ def free_cokernel(A):
     Computes the free-to-free cokernel epimorphism of A.
 
     Let :math:`A: \mathbb{Z}^n -> \mathbb{Z}^m` be a homomorphism from
-    a free (non-periodic) finitely generated Abelian group (FGA) to another
+    a free (infinite order) finitely generated Abelian group (FGA) to another
     free FGA. Associated with this homomorphism is the cokernel epimorphism.
     The cokernel epimorphism has the property that
     :math:`\operatorname{coker}(A) \circ A = \mathbf{0}`, where
@@ -93,7 +93,7 @@ def free_image(A):
     Computes the free-to-free image monomorphism of A.
 
     Let :math:`A: \mathbb{Z}^n -> \mathbb{Z}^m` be a homomorphism from
-    a free (non-periodic) finitely generated Abelian group (FGA) to another
+    a free (infinite order) finitely generated Abelian group (FGA) to another
     free FGA. Associated with this homomorphism is the image monomorphism.
     The image monomorphism has the property that :math:`A` factors through
     the composition of the coimage and image morphisms, i.e.
@@ -131,7 +131,7 @@ def free_coimage(A):
     Computes the free-to-free coimage epimorphism of A.
 
     Let :math:`A: \mathbb{Z}^n -> \mathbb{Z}^m` be a homomorphism from
-    a free (non-periodic) finitely generated Abelian group (FGA) to another
+    a free (infinite order) finitely generated Abelian group (FGA) to another
     free FGA. Associated with this homomorphism is the coimage epimorphism.
     The coimage epimorphism has the property that :math:`A` factors through
     the composition of the coimage and image morphisms, i.e.
@@ -170,7 +170,7 @@ def free_quotient(A):
     Compute the quotient group Z^m / im(A).
 
     Let :math:`A: \mathbb{Z}^n -> \mathbb{Z}^m` be a homomorphism from
-    a free (non-periodic) finitely generated Abelian group (FGA) to another
+    a free (infinite order) finitely generated Abelian group (FGA) to another
     free FGA. Associated with this homomorphism is the cokernel epimorphism,
     which maps from :math:`A: \mathbb{Z}^n` to
     :math:`A: \mathbb{Z}^m / \operatorname{im}(A)`.

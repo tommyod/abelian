@@ -37,17 +37,17 @@ class TestSNF:
 
     def test_project_to_source(self):
         """
-        Test the periods.
+        Test the orders.
         """
 
         # Project to source
         phi = self.phi.project_to_source()
 
-        # Retrieve the periods as a vector
-        periods = Matrix(phi.source.periods)
+        # Retrieve the orders as a vector
+        orders = Matrix(phi.source.orders)
 
-        # Assert that the columns times the periods are zero
-        assert phi.evaluate(periods) == Matrix(phi.target.periods) * 0
+        # Assert that the columns times the orders are zero
+        assert phi.evaluate(orders) == Matrix(phi.target.orders) * 0
 
 
     def test_image_coimage_factorization(self):

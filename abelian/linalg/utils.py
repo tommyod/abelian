@@ -347,7 +347,7 @@ def order_of_vector(v, mod_vector):
     v : :py:class:`~sympy.matrices.dense.MutableDenseMatrix` or a list
         An iterable object with integers. This is the group element.
     mod_vector : :py:class:`~sympy.matrices.dense.MutableDenseMatrix` or a list
-        An iterable object with integers. This is the periods of the group.
+        An iterable object with integers. This is the orders of the group.
 
     Returns
     -------

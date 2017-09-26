@@ -31,8 +31,8 @@ def solve(A, b, p = None):
 
     p : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
         A sympy column matrix of size m x 1. This column matrix represents
-        the periods of the target group of A. If None, p will be set to the
-        zero vector, i.e. infinite period in all components.
+        the orders of the target group of A. If None, p will be set to the
+        zero vector, i.e. infinite order in all components.
 
     Returns
     -------
@@ -54,8 +54,8 @@ def solve(A, b, p = None):
     True
     """
 
-    # If no periods are supplied by the user, set the periods to zero,
-    # i.e. infinite period or free-to-free.
+    # If no orders are supplied by the user, set the orders to zero,
+    # i.e. infinite order or free-to-free.
     if p is None:
         m, n = b.shape
         p = Matrix(m, n, lambda i, j: 0)
@@ -146,8 +146,8 @@ def solve_epi(A, B, p = None):
 
     p : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
         A sympy column matrix of size m x 1. This column matrix represents
-        the periods of the target group of A. If None, p will be set to the
-        zero vector, i.e. infinite period.
+        the orders of the target group of A. If None, p will be set to the
+        zero vector, i.e. infinite order.
 
     Returns
     -------
@@ -167,7 +167,7 @@ def solve_epi(A, B, p = None):
     >>> X_sol * A == B
     True
     """
-    # If no p (periods) are given, create a vector of zeros
+    # If no p (orders) are given, create a vector of zeros
     m, n = A.shape
     if p is None:
         p = Matrix(m, 1, lambda i, j : 0)

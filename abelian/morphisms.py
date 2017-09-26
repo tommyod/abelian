@@ -40,10 +40,10 @@ class HomLCA(Callable):
             use a list of lists in the form [row1, row2, ...] as input.
         target : LCA or list
             The target of the homomorphism. If None, a discrete target of
-            infinite period is used as the default.
+            infinite order is used as the default.
         source : LCA or list
             The source of the homomorphism. If None, a discrete source of
-            infinite period is used as the default.
+            infinite order is used as the default.
 
         Examples
         ---------
@@ -74,11 +74,11 @@ class HomLCA(Callable):
         target : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`,
         list or LCA
             The target of the homomorphism. If None, a discrete target of
-            infinite period is used as the default.
+            infinite order is used as the default.
         source : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`,
         list or LCA
             The source of the homomorphism. If None, a discrete source of
-            infinite period is used as the default.
+            infinite order is used as the default.
 
         Returns
         -------
@@ -322,7 +322,7 @@ class HomLCA(Callable):
         >>> phi_dual.source == phi_dual.target
         True
 
-        Computing duals by first calculating periods
+        Computing duals by first calculating orders
 
         >>> # Project, then find dual
         >>> phi = HomFGA([2], target = [10])
@@ -340,9 +340,9 @@ class HomLCA(Callable):
         dual_source, dual_target = self.target.dual(), self.source.dual()
 
         # Calculate the matrix representing the dual homomorphism
-        diag_p = Matrix([1 if e == 0 else e for e in self.source.periods])
+        diag_p = Matrix([1 if e == 0 else e for e in self.source.orders])
         diag_q_inv = reciprocal_entrywise(Matrix([1 if e == 0 else e for e
-                                                  in self.target.periods]))
+                                                  in self.target.orders]))
         dual_A = mat_times_diag(diag_times_mat(diag_p, self.A.T), diag_q_inv)
 
         # Create new FGA object and return
@@ -505,13 +505,13 @@ class HomLCA(Callable):
         """
         Remove trivial groups.
 
-        A group is trivial if it is discrete with period 1, i.e. Z_1.
+        A group is trivial if it is discrete with order 1, i.e. Z_1.
         Removing trivial groups from the target group means removing the
         Z_1 groups from the target, along with the corresponding rows of
         the matrix representing the homomorphism.
         Removing trivial groups from the source group means removing the
         groups Z_1 from the source, i.e. removing every column (generator)
-        with period 1.
+        with order 1.
 
         Returns
         -------
@@ -529,8 +529,8 @@ class HomLCA(Callable):
         True
 
         """
-        def trivial(period, discrete):
-            return discrete and (period == 1)
+        def trivial(order, discrete):
+            return discrete and (order == 1)
 
         # Get indices where the value of the source is 1
         generator = enumerate(self.source._iterate_tuples())
@@ -702,10 +702,10 @@ class HomLCA(Callable):
         ----------
         target : LCA or list
             The target of the homomorphism. If None, a discrete target of
-            infinite period is used as the default.
+            infinite order is used as the default.
         source : LCA or list
             The source of the homomorphism. If None, a discrete source of
-            infinite period is used as the default.
+            infinite order is used as the default.
 
         Examples
         ---------
@@ -803,7 +803,7 @@ class HomFGA(HomLCA):
         """
         # Horizontally stack A and ker(pi_2)
         A_ker_pi = self.A.row_join(remove_zero_columns(diag(
-            *self.target.periods)))
+            *self.target.orders)))
         # Compute SNF, get size and the kernel
         U, S, V = smith_normal_form(A_ker_pi)
         diagonal = nonzero_diag_as_list(S)
@@ -835,7 +835,7 @@ class HomFGA(HomLCA):
         """
         # Solve equation for the image
         coim = self.coimage()
-        coim_target = Matrix(coim.target.periods)
+        coim_target = Matrix(coim.target.orders)
         solved_mat = solve_epi(coim.A, self.A, coim_target)
 
         # Initialize morphism and return project onto target
@@ -906,8 +906,8 @@ class HomFGA(HomLCA):
 
         """
         # Horizontally stack A and ker(pi_2)
-        periods = self.target.periods
-        A_ker_pi = self.A.row_join(remove_zero_columns(diag(*periods)))
+        orders = self.target.orders
+        A_ker_pi = self.A.row_join(remove_zero_columns(diag(*orders)))
 
         # Compute SNF, get size and the kernel
         U, S, V = smith_normal_form(A_ker_pi)
@@ -919,12 +919,12 @@ class HomFGA(HomLCA):
 
     def project_to_source(self):
         """
-        Project columns to source group (periods).
+        Project columns to source group (orders).
 
         Returns
         -------
         homomorphism : HomFGA
-            A homomorphism with periods in the source FGA.
+            A homomorphism with orders in the source FGA.
 
         Examples
         --------
@@ -932,7 +932,7 @@ class HomFGA(HomLCA):
         >>> phi = HomFGA([[1, 0],
         ...               [3, 3]], target = target)
         >>> phi = phi.project_to_source()
-        >>> phi.source.periods == [6, 2]
+        >>> phi.source.orders == [6, 2]
         True
         """
 
@@ -940,7 +940,7 @@ class HomFGA(HomLCA):
         m, n = self.A.shape
 
         # Compute orders for all columns of A
-        target_vect = Matrix(self.target.periods)
+        target_vect = Matrix(self.target.orders)
         source = [order_of_vector(self.A[:, i], target_vect) for i in range(n)]
         return type(self)(self.A, self.target, source)
 
@@ -964,7 +964,7 @@ class HomFGA(HomLCA):
         True
         """
 
-        A = matrix_mod_vector(self.A, Matrix(self.target.periods))
+        A = matrix_mod_vector(self.A, Matrix(self.target.orders))
         return type(self)(A, target = self.target, source = self.source)
 
 
@@ -983,10 +983,10 @@ def Homomorphism(A, target = None, source = None):
         use a list of lists in the form [row1, row2, ...] as input.
     target : LCA or list
         The target of the homomorphism. If None, a discrete target of
-        infinite period is used as the default.
+        infinite order is used as the default.
     source : LCA or list
         The source of the homomorphism. If None, a discrete source of
-        infinite period is used as the default.
+        infinite order is used as the default.
 
     Returns
     -------
@@ -998,7 +998,7 @@ def Homomorphism(A, target = None, source = None):
     >>> isinstance(phi, HomFGA)
     True
     >>> # If the target is continuous, a HomLCA instance will be returned
-    >>> target = LCA(periods = [0], discrete = [False])
+    >>> target = LCA(orders = [0], discrete = [False])
     >>> phi = Homomorphism([1], target = target)
     >>> isinstance(phi, HomLCA)
     True
