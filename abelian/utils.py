@@ -7,53 +7,6 @@ import types
 import numpy as np
 
 
-def elements_of_maxnorm(free_rank, maxnorm_value):
-    """
-    Yield every element of Z^r such that max_norm(element) = maxnorm_value.
-
-    Parameters
-    ----------
-    free_rank : int
-        The free rank (like dimension) of Z^r, i.e. free_rank = r.
-    maxnorm_value : int
-        The value of the maximum norm of the elements generated.
-
-    Yields
-    -------
-    tuple
-        Elements in Z^r that satisfy the norm criterion.
-
-    Examples
-    ---------
-    >>> free_rank = 3 # Like dimension
-    >>> maxnorm_value = 4
-    >>> elements = list(elements_of_maxnorm(free_rank, maxnorm_value))
-    >>> # Verify that the max norm is the correct value
-    >>> all(max(abs(k) for k in e) for e in elements)
-    True
-    >>> # Verify the number of elements
-    >>> n = maxnorm_value
-    >>> len(elements) == ((2*n + 1)**free_rank - (2*n - 1)**free_rank)
-    True
-    """
-    # There are two 'walls' per dimension, front and back
-    for wall in range(free_rank):
-
-        # In each wall, the boundaries must shrink, two at a time
-        boundary_reduced = [1] * wall + [0] * (free_rank - wall - 1)
-
-        # The arguments into the cartesian product
-        prod_arg = [range(-maxnorm_value + k, maxnorm_value + 1 - k)\
-                    for k in boundary_reduced]
-
-        # Take cartesian products along the boundaries of the r-dimensional
-        # cube. Yield from opposite sides of the 'box'
-        for boundary_element in itertools.product(*prod_arg):
-            start, end = boundary_element[:wall], boundary_element[wall:]
-            yield start + (maxnorm_value,) + end
-            yield start + (-maxnorm_value,) + end
-
-
 def mod(a, b):
     """
     Returns a % b, with a % 0 = a.
@@ -237,3 +190,6 @@ argmax = functools.partial(arg, min_or_max = max)
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = True)
+
+
+    assert len(list(elements_of_maxnorm([0, 0], 1))) == 8

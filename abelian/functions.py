@@ -9,6 +9,7 @@ from a LCA G to the complex numbers C.
 
 from sympy import Matrix
 from abelian.linalg.utils import norm
+from abelian.linalg.free_to_free import elements_increasing_norm
 from abelian.utils import call_nested_list, verify_dims_list, copy_func, function_to_table
 from types import FunctionType
 from abelian.linalg.solvers import solve
@@ -443,29 +444,41 @@ class Function(Callable):
 
 
 
-    def pushforward(self, morphism, norm_condition = None):
+    def pushforward(self, morphism, terms_in_sum = 50, norm_condition = None):
         """
         Return the pushforward along `morphism`.
 
         Parameters
         ----------
-        morphism
+        morphism : HomLCA
+            A homomorphism between LCAs.
+        terms_in_sum : int
+            The number of terms in the sum to use, i.e. the number of solutions
+            to the equation to iterate over.
+        norm_condition : function
+            If not None, a function can be used to terminate the sum.
+            The norm_condition must be a function of a group element,
+            and when the function is false for every v in the kernel
+            such that maxnorm(v) = C for a given C, then the sum terminates.
+
 
         Returns
         -------
+        pushforward : Function
+            The pushforward of `self` along `morphism`.
 
+        Examples
+        --------
+
+        >>> 1 + 1
+        2
         """
         if not self.domain == morphism.source:
             raise ValueError('Source of morphism must equal domain of '
                              'function.')
 
-        if norm_condition is None:
-            def norm_condition(element):
-                return norm(element, p = 1) <= 10
-
         # Get the domain for the new function
         domain = morphism.target
-
 
         def new_representation(list_arg, *args, **kwargs):
             """
@@ -483,23 +496,22 @@ class Function(Callable):
             # Iterate through the kernel space and compute the sum
             kernel_sum = 0
             dim_ker_source = len(kernel.source)
-            vector = list(range(-8, 8))
-            for p in itertools.product(*([vector]*dim_ker_source)):
+            # For
 
+            generator = elements_increasing_norm(dim_ker_source)
+            for counter, boundary_element in enumerate(generator, 1):
+                # print(counter)
                 # The `base_ans` is in the kernel of the morphism,
                 # we move to all points in the kernel by taking
                 # the `base_ans` + linear combinations of the kernel
-                linear_comb = Matrix(list(p))
+                linear_comb = Matrix(list(boundary_element))
                 kernel_element = base_ans + kernel.evaluate(linear_comb)
-
-                # If the point is not within the norm, continue and
-                # do not add it to the sum
-                if not norm_condition(kernel_element):
-                    continue
 
                 function = self.representation
                 func_in_ker = function(kernel_element, *args, **kwargs)
                 kernel_sum += func_in_ker
+                if counter >= terms_in_sum:
+                    break
 
 
             return kernel_sum
@@ -763,194 +775,21 @@ class Function(Callable):
 
 
 if __name__ == '__main__':
-    print('------------------------------')
-    from sympy import Matrix, diag
+    print('Working with the pushfoward.')
+    from abelian import LCA, Homomorphism
     import math
 
-    from abelian.groups import LCA
-    from abelian.morphisms import Homomorphism
-
-    def func(list_arg):
-        x, y = tuple(list_arg)
-        return 2**(-(x**2 + y**2))
-
-    domain = LCA([0, 0])
-    f = Function(func, domain)
-    phi = Homomorphism([[1, 0], [0, 2]], target = LCA([2, 3]))
-
-    f_push = f.pushforward(phi)
-
-    ans = f_push([1, 1])
-
-    assert round(ans, 5) == 0.56471
-
-    print('------------------------------')
-
-    def gaussian(list_arg):
-        """
-        Exponential.
-        """
-        x = list_arg[0]
-        return math.exp(-x**2/2)
-
-    # The domain is Z
     domain = LCA([0])
+    f = Function(lambda x:math.exp(-sum(k**2 for k in x)), domain)
+    n = 10
+    x_vals = list(range(-n, n+1))
+    print(x_vals)
+    print([round(k,5) for k in f.sample(x_vals)])
 
-    # Put the gaussian function on the domain
-    f = Function(gaussian, domain)
-    print(f)
-
-    plist = list(range(-5, 16))
-    # Print some samples
-    print('Function defined on Z')
-    points = [[k] for k in plist]
-    sampled = [round(i, 3) for i in f.sample(points)]
-    points = [str(k).ljust(5) for k in points]
-    sampled = [str(k).ljust(5) for k in sampled]
-    print(*points, sep = '\t')
-    print(*sampled, sep='\t')
-
-    # Print some samples
-    print('Function defined on Z, shifted')
-    f = f.shift([5])
-    print(f)
-    points = [[k] for k in plist]
-    sampled = [round(i, 3) for i in f.sample(points)]
-    points = [str(k).ljust(5) for k in points]
-    sampled = [str(k).ljust(5) for k in sampled]
-    print(*points, sep='\t')
-    print(*sampled, sep='\t')
-
-
-    print('Function moved to Z_10')
-    phi = Homomorphism([1], target = [10])
-    f = f.pushforward(phi)
-    print(f)
-    points = [[k] for k in plist]
-    sampled = [round(i, 3) for i in f.sample(points)]
-    points = [str(k).ljust(5) for k in points]
-    sampled = [str(k).ljust(5) for k in sampled]
-    print(*points, sep='\t')
-    print(*sampled, sep='\t')
-
-
-
-    print('------------')
-    from abelian import HomLCA
-    phi_s = HomLCA([1], LCA([10], [True]), LCA([0], [True]))
-    print(phi_s)
-    print(phi_s.dual())
-
-    print('------------')
-    table = [i**2 for i in range(10)]
-    f = Function(table, LCA([10]))
-    print(f(11))
-
-    phi = Homomorphism([1], [10])
-    f_pulled_to_Z = f.pullback(phi)
-    print(f_pulled_to_Z(11))
-
-    epi = Homomorphism([1], [10])
-    print(epi)
-
-    def transverse(element):
-        element = element[0]
-        if abs(element) < abs(10 - element):
-            return [element]
-        else:
-            return [(element - 10)]
-
-
-    for element in range(10):
-        print(element, transverse([element]))
-
-    f_transversed_to_Z = f.transversal(epi, transverse)
-    print('transversed')
-    x = list(range(-10, 10))
-    print(*x, sep = '\t')
-    print(*f_transversed_to_Z.sample(x), sep = '\t')
-
-
-
-    print('---------------- DFT -----------------------')
-
-    def linear(list_arg):
-        return sum(abs(i) for i in list_arg)
-
-    f = Function(linear, LCA([5, 4, 3]))
-    print(f)
-
-    f_dft = f.dft()
-    print(f_dft([1, 1, 1]), f_dft([0, 0, 0]))
-
-    print('---------------- FOURIER SERIES -----------------------')
-    from sympy import Rational
-
-    print('original function')
-    T = LCA([1], [False])
-    function_on_T = Function(lambda arg: sum(arg), T)
-    print(function_on_T)
-
-
-    print('sampling')
-    n = 200 + 1
-    phi_sample = Homomorphism([Rational(1, n)], source = [n], target
-    = T)
-    print(phi_sample)
-
-    print('sampled function')
-    function_on_Zn = function_on_T.pullback(phi_sample)
-    print(function_on_Zn)
-
-    print('dual function (dft)')
-    dual_function = function_on_Zn.dft()
-    print(dual_function)
-
-    phi_dual = phi_sample.dual()
-
-    print(phi_dual)
-
-    def transversal_rule(x):
-        if sum(x) < n/2:
-            return [sum(x)]
-        elif sum(x) >= n/2:
-            return [sum(x) - n]
-
-    coeffs_on_Z = dual_function.transversal(phi_dual, transversal_rule)
-
-    print(coeffs_on_Z)
-    sample_vals = list(range(-int(n/2) - 2, int(n/2) + 2))
-    sampled = coeffs_on_Z.sample(sample_vals)
-    print(*sampled, sep = '   ')
-
-    import matplotlib.pyplot as plt
-    plt.stem(sample_vals, [abs(i)/(n-1) for i in sampled])
-    plt.grid(True)
-    plt.show()
-
-
-    f = Function(lambda x : max(3 - abs(sum(x)), 0), LCA([0]))
-    f_arr = np.array(f.sample(list(range(-5, 5))))
-
-    g = f.copy()
-    g_arr = np.array(g.sample(list(range(-5, 5))))
-
-    print(f_arr, f_arr.shape)
-    print(np.convolve(f_arr, g_arr), np.convolve(f_arr, g_arr).shape)
-
-    #print(f.convolve(g).sample(list(range(-15, 15))))
-
-    n = 5
-    f_on_Z3 = Function(lambda x: sum(x) ** 2, LCA([n]))
-    epimorphism = HomLCA([1], source=[0], target=[n])
-    def transversal_rule(x):
-        if sum(x) < n/2:
-            return [sum(x)]
-        elif sum(x) >= n/2:
-            return [sum(x) - 5]
-    f_on_Z = f_on_Z3.transversal(epimorphism, transversal_rule)
-    print(f_on_Z3.sample(list(range(-n, n+1))))
-    print(f_on_Z.sample(list(range(-n, n+1))))
+    phi = Homomorphism([1], source = domain, target = [2])
+    pushed = f.pushforward(phi, terms_in_sum = 3)
+    print(pushed([0]), sum(math.exp(-k**2) for k in range(-100,100, 2)))
+    print(pushed([1]))
 
 
 
