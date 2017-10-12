@@ -3,7 +3,7 @@
 
 """
 This module consists of a class for functions on LCAs,
-called Function. Such a function represents a function
+called LCAFunc. Such a function represents a function
 from a LCA G to the complex numbers C.
 """
 
@@ -20,14 +20,14 @@ import operator
 from collections.abc import Callable
 
 
-class Function(Callable):
+class LCAFunc(Callable):
     """
     A function on a LCA.
     """
 
     def __init__(self, representation, domain):
         """
-        Initialize a function.
+        Initialize a function (G -> C).
 
         Parameters
         ----------
@@ -48,15 +48,15 @@ class Function(Callable):
 
         >>> def power(list_arg, exponent = 2):
         ...     return sum(x**exponent for x in list_arg)
-        >>> from abelian import Function, LCA
+        >>> from abelian import LCAFunc, LCA
         >>> # A function on R/Z = T
-        >>> f = Function(power, LCA([1], [False]))
+        >>> f = LCAFunc(power, LCA([1], [False]))
         >>> f([0.5])
         0.25
         >>> f([1.5], exponent = 3) == 0.5**3
         True
         >>> # A function on Z_p
-        >>> f = Function(power, LCA([5, 10]))
+        >>> f = LCAFunc(power, LCA([5, 10]))
         >>> f([1,1]) == f([6, 11])
         True
         >>> f([2, 2], exponent = 1)
@@ -69,13 +69,13 @@ class Function(Callable):
         >>> table = [[1, 2],
         ...          [3, 4],
         ...          [5, 6]]
-        >>> f = Function(table, LCA([3, 2]))
+        >>> f = LCAFunc(table, LCA([3, 2]))
         >>> f([1, 1])
         4
         >>> f([3, 1])
         2
         >>> import numpy as np
-        >>> f = Function(np.array(table), LCA([3, 2]))
+        >>> f = LCAFunc(np.array(table), LCA([3, 2]))
         >>> f([1, 1])
         4
         """
@@ -135,7 +135,7 @@ class Function(Callable):
     def __call__(self, list_arg, *args, **kwargs):
         """
         Override function calls,
-        see :py:meth:`~abelian.functions.Function.evaluate`.
+        see :py:meth:`~abelian.functions.LCAFunc.evaluate`.
         """
         return self.evaluate(list_arg, *args, **kwargs)
 
@@ -150,7 +150,7 @@ class Function(Callable):
 
         """
         func_name = self.representation.__name__
-        str = r'Function ({}) on domain {}'.format(func_name, self.domain)
+        str = r'LCAFunc ({}) on domain {}'.format(func_name, self.domain)
         return str
 
 
@@ -181,17 +181,17 @@ class Function(Callable):
 
     def copy(self):
         """
-        Return a copy of the function.
+        Return a copy of the LCAfunc.
 
         Returns
         -------
-        function : Function
+        function : LCAFunc
             A copy of `self`.
 
         Examples
         --------
-        >>> from abelian import LCA, Function
-        >>> f = Function(lambda x:sum(x), LCA([0]))
+        >>> from abelian import LCA, LCAFunc
+        >>> f = LCAFunc(lambda x:sum(x), LCA([0]))
         >>> g = f.copy()
         >>> f([1]) == g([1])
         True
@@ -229,18 +229,18 @@ class Function(Callable):
 
         Returns
         -------
-        function : Function
+        function : LCAFunc
             The discrete Fourier transformation of the original function.
 
 
         Examples
         --------
-        >>> from abelian import LCA, Function
+        >>> from abelian import LCA, LCAFunc
         >>> # Create a simple linear function on Z_5 + Z_4 + Z_3
         >>> domain = LCA([5, 4, 3])
         >>> def linear(list_arg):
         ...     return sum(list_arg)
-        >>> func = Function(linear, domain)
+        >>> func = LCAFunc(linear, domain)
         >>> func([1, 2, 1])
         4
         >>> # Take the discrete fourier transform and evaluate
@@ -286,7 +286,7 @@ class Function(Callable):
             list_arg = [list_arg]
 
         if domain_length != len(list_arg):
-            raise ValueError('Function argument does not match domain length.')
+            raise ValueError('LCAFunc argument does not match domain length.')
 
         proj_args = self.domain.project_element(list_arg)
         return self.representation(proj_args, *args, **kwargs)
@@ -311,20 +311,20 @@ class Function(Callable):
 
         Returns
         -------
-        function : Function
+        function : LCAFunc
             The inverse discrete Fourier transformation of the original
             function.
 
 
         Examples
         --------
-        >>> from abelian import LCA, Function
+        >>> from abelian import LCA, LCAFunc
         >>> # Create a simple linear function on Z_5 + Z_4 + Z_3
         >>> domain = LCA([5, 4, 3])
         >>> def linear(list_arg):
         ...     x, y, z = list_arg
         ...     return complex(x + y, z - x)
-        >>> func = Function(linear, domain)
+        >>> func = LCAFunc(linear, domain)
         >>> func([1, 2, 1])
         (3+0j)
         >>> func_idft = func.idft()
@@ -339,22 +339,22 @@ class Function(Callable):
 
         Parameters
         ----------
-        other : Function
+        other : LCAFunc
             Another Functin on the same domain.
         operator : function
             A binary operator.
 
         Returns
         -------
-        function : Function
+        function : LCAFunc
             The resulting function, new = operator(self, other).
 
         Examples
         --------
         >>> from abelian import LCA
         >>> domain = LCA([5])
-        >>> function1 = Function(lambda arg: sum(arg), domain)
-        >>> function2 = Function(lambda arg: sum(arg)*2, domain)
+        >>> function1 = LCAFunc(lambda arg: sum(arg), domain)
+        >>> function2 = LCAFunc(lambda arg: sum(arg)*2, domain)
         >>> from operator import add
         >>> pointwise_add = function1.pointwise(function2, add)
         >>> function1([2]) + function2([2]) == pointwise_add([2])
@@ -387,7 +387,7 @@ class Function(Callable):
 
         Returns
         -------
-        pullback : Function
+        pullback : LCAFunc
             The pullback of `self` along `morphism`.
 
         Examples
@@ -396,7 +396,7 @@ class Function(Callable):
 
         >>> from abelian import Homomorphism, LCA
         >>> # Create a function on Z
-        >>> f = Function(lambda list_arg:list_arg[0]**2, LCA([0]))
+        >>> f = LCAFunc(lambda list_arg:list_arg[0]**2, LCA([0]))
         >>> # Create a homomorphism from Z to Z
         >>> phi = Homomorphism([2])
         >>> # Pull f back along phi
@@ -411,7 +411,7 @@ class Function(Callable):
         ...     x, y = tuple(list_arg)
         ...     return x ** 2 + y ** 2
         >>> domain = LCA([5, 3])
-        >>> f = Function(func, domain)
+        >>> f = LCAFunc(func, domain)
         >>> phi = Homomorphism([1, 1], target=domain)
         >>> f_pullback = f.pullback(phi)
         >>>
@@ -464,7 +464,7 @@ class Function(Callable):
 
         Returns
         -------
-        pushforward : Function
+        pushforward : LCAFunc
             The pushforward of `self` along `morphism`.
 
         Examples
@@ -540,8 +540,8 @@ class Function(Callable):
 
         Examples
         --------
-        >>> from abelian import Function, LCA
-        >>> func = Function(lambda x : sum(x), LCA([0, 0]))
+        >>> from abelian import LCAFunc, LCA
+        >>> func = LCAFunc(lambda x : sum(x), LCA([0, 0]))
         >>> sample_points = [[0, 0], [1, 2], [2, 1], [3, 3]]
         >>> func.sample(sample_points)
         [0, 3, 3, 6]
@@ -562,13 +562,13 @@ class Function(Callable):
 
         Returns
         -------
-        function : Function
+        function : LCAFunc
             A new function which is shifted.
 
         Examples
         --------
-        >>> from abelian import Function, LCA
-        >>> func = Function(lambda x: sum(x), LCA([0]))
+        >>> from abelian import LCAFunc, LCA
+        >>> func = LCAFunc(lambda x: sum(x), LCA([0]))
         >>> func.sample([0, 1, 2, 3])
         [0, 1, 2, 3]
         >>> func.shift([2]).sample([0, 1, 2, 3])
@@ -626,14 +626,14 @@ class Function(Callable):
 
         Returns
         -------
-        function : Function
+        function : LCAFunc
             The pushforward of `self` along the transversal of the epimorphism.
 
         Examples
         --------
-        >>> from abelian import LCA, Function, HomLCA
+        >>> from abelian import LCA, LCAFunc, HomLCA
         >>> n = 5 # Sice of the domain, Z_n
-        >>> f_on_Zn = Function(lambda x: sum(x)**2, LCA([n]))
+        >>> f_on_Zn = LCAFunc(lambda x: sum(x)**2, LCA([n]))
         >>> # To move this function to Z, create an epimorphism and a
         >>> # transversal rule
         >>> epimorphism = HomLCA([1], source = [0], target = [n])
@@ -715,7 +715,7 @@ class Function(Callable):
 
         Returns
         -------
-        function : Function
+        function : LCAFunc
             The function with a numpy routine applied to every element
             in the domain.
 
@@ -780,7 +780,7 @@ if __name__ == '__main__':
     import math
 
     domain = LCA([0])
-    f = Function(lambda x:math.exp(-sum(k**2 for k in x)), domain)
+    f = LCAFunc(lambda x:math.exp(-sum(k ** 2 for k in x)), domain)
     n = 10
     x_vals = list(range(-n, n+1))
     print(x_vals)

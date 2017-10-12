@@ -3,10 +3,10 @@ Public classes
 
 .. autosummary::
 
-    ~abelian.functions.Function
     ~abelian.morphisms.HomFGA
     ~abelian.morphisms.HomLCA
     ~abelian.groups.LCA
+    ~abelian.functions.LCAFunc
 
 Public functions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -20,6 +20,30 @@ Public functions
 
 Public classes (detailed)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+:class:`~abelian.functions.LCAFunc`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ (inherits from: :class:`~collections.abc.Callable` )
+
+.. autosummary::
+
+    ~abelian.functions.LCAFunc
+    ~abelian.functions.LCAFunc.__call__
+    ~abelian.functions.LCAFunc.__init__
+    ~abelian.functions.LCAFunc.__repr__
+    ~abelian.functions.LCAFunc.convolve
+    ~abelian.functions.LCAFunc.copy
+    ~abelian.functions.LCAFunc.dft
+    ~abelian.functions.LCAFunc.evaluate
+    ~abelian.functions.LCAFunc.idft
+    ~abelian.functions.LCAFunc.pointwise
+    ~abelian.functions.LCAFunc.pullback
+    ~abelian.functions.LCAFunc.pushforward
+    ~abelian.functions.LCAFunc.sample
+    ~abelian.functions.LCAFunc.shift
+    ~abelian.functions.LCAFunc.to_latex
+    ~abelian.functions.LCAFunc.to_table
+    ~abelian.functions.LCAFunc.transversal
+  
 :class:`~abelian.groups.LCA`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
  (inherits from: :class:`~collections.abc.Sequence` )
@@ -101,28 +125,4 @@ Public classes (detailed)
     ~abelian.morphisms.HomFGA.kernel
     ~abelian.morphisms.HomFGA.project_to_source
     ~abelian.morphisms.HomFGA.project_to_target
-  
-:class:`~abelian.functions.Function`
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- (inherits from: :class:`~collections.abc.Callable` )
-
-.. autosummary::
-
-    ~abelian.functions.Function
-    ~abelian.functions.Function.__call__
-    ~abelian.functions.Function.__init__
-    ~abelian.functions.Function.__repr__
-    ~abelian.functions.Function.convolve
-    ~abelian.functions.Function.copy
-    ~abelian.functions.Function.dft
-    ~abelian.functions.Function.evaluate
-    ~abelian.functions.Function.idft
-    ~abelian.functions.Function.pointwise
-    ~abelian.functions.Function.pullback
-    ~abelian.functions.Function.pushforward
-    ~abelian.functions.Function.sample
-    ~abelian.functions.Function.shift
-    ~abelian.functions.Function.to_latex
-    ~abelian.functions.Function.to_table
-    ~abelian.functions.Function.transversal
   
