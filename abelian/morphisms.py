@@ -11,7 +11,7 @@ subclass HomFGA.
 
 import types
 from collections.abc import Callable
-from sympy import Matrix, diag, latex, Integer
+from sympy import Matrix, diag, latex, Integer, gcd, pprint
 from abelian.utils import mod
 from abelian.groups import LCA
 from abelian.linalg.utils import remove_zero_columns, nonzero_diag_as_list, \
@@ -61,6 +61,97 @@ class HomLCA(Callable):
 
         # TODO : Should we project to target automatically?
 
+    @staticmethod
+    def _is_scalar_homomorphism(scalar, target, source):
+        """
+        Check if the source, target and scalar value is a homomorphism.
+
+        Parameters
+        ----------
+        scalar : float
+            A scalar value.
+        target : LCA
+            An LCA of length 1: either R, T, Z or Z_n.
+        source : LCA
+            An LCA of length 1: either R, T, Z or Z_n.
+
+        Examples
+        ---------
+        >>> from abelian import LCA
+        >>> Z = LCA([0])
+        >>> # This defines a homomorphism
+        >>> HomLCA._is_scalar_homomorphism(2, Z, Z)
+        True
+        >>> # This does not
+        >>> HomLCA._is_scalar_homomorphism(2.5, Z, Z)
+        False
+        >>> # Two examples with FGAs with finite order
+        >>> Z_n = LCA([3])
+        >>> Z_m = LCA([4])
+        >>> HomLCA._is_scalar_homomorphism(4, target = Z_m, source = Z_n)
+        True
+        >>> HomLCA._is_scalar_homomorphism(3, target = Z_m, source = Z_n)
+        False
+        """
+
+        # Verify that both groups are of length 1
+        if len(source) != 1 or len(target) != 1:
+            raise ValueError('Groups must have length 1.')
+
+        # Set up groups here for readability later
+        R = LCA([0], [False])
+        T = LCA([1], [False])
+        Z = LCA([0], [True])
+
+        # Trivial homomorphism is always valid
+        if scalar == 0:
+            return True
+
+        # Defined for readability
+        def integer_value(arg):
+            return arg % 1 == 0
+
+        # The source group is R
+        if source == R:
+            if target == R or target == T:
+                return True
+            else:
+                return False
+
+        # The source group is T
+        if source == T:
+            if target == T and integer_value(scalar):
+                return True
+            else:
+                return False
+
+        # The source group is Z
+        if source == Z:
+            if target == R or target == T:
+                return True
+            if integer_value(scalar):
+                return True
+            return False
+
+        # The source group is Z_n
+        n = source.orders[0]
+        if source.discrete[0] is True and n > 0:
+            if target == R or target == Z:
+                return False
+
+            if target == T and integer_value(scalar * n):
+                return True
+
+            m = target.orders[0]
+            if target.discrete[0] is True and m > 0:
+                if integer_value((scalar * gcd(m, n) / m)):
+                    return True
+                else:
+                    return False
+
+        return False
+
+
     @classmethod
     def _verify_init(cls, A, target, source):
         """
@@ -109,6 +200,15 @@ class HomLCA(Callable):
 
         if isinstance(source, (list, Matrix)):
             source = LCA(list(source))
+
+        # Verify that the input is actually a homomorphism
+        for j, s in enumerate(source):
+            for i, t in enumerate(target):
+                if not cls._is_scalar_homomorphism(A[i, j], t, s):
+                    data = A[i, j], s, t
+                    err = "{}: {} -> {} is not homomorphism".format(*data)
+                    raise ValueError(err)
+
 
         return A, target, source
 
@@ -1015,22 +1115,14 @@ def Homomorphism(A, target = None, source = None):
 
 
 
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = False)
 
 
-if __name__ == '__main__':
-    from sympy import pprint, diag, Matrix
 
-    phi = HomFGA([[4, 4], [2, 8]], target=[16, 16])
-    print('projected')
-    print(phi.project_to_source())
-    print('coimage')
-    print(phi.coimage())
-    print('image')
-    print(phi.image())
 
-    print(phi.image() * phi.coimage())
 
 
