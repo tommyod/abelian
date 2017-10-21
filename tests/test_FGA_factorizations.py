@@ -4,7 +4,7 @@
 import random
 from sympy import Matrix
 from random import randint as ri
-from abelian.morphisms import HomFGA
+from abelian.morphisms import HomLCA
 
 def random_zero_heavy(low, high):
     """
@@ -21,7 +21,7 @@ class TestSNF:
         target = Matrix(m, 1, lambda i, j: random_zero_heavy(5, 50))
 
         cls.target_vector = target
-        cls.phi = HomFGA(A, target = target)
+        cls.phi = HomLCA(A, target = target)
 
 
     def test_source_projection_two_ways(self):
@@ -71,7 +71,7 @@ class TestSNF:
         # Compute the kernel
         kernel = self.phi.kernel()
         phi_ker = (self.phi * kernel).project_to_target()
-        zero_morphism = HomFGA.zero(target = self.phi.target,
+        zero_morphism = HomLCA.zero(target = self.phi.target,
                                     source = kernel.source)
         assert phi_ker == zero_morphism
 
@@ -81,6 +81,6 @@ class TestSNF:
         """
         cokernel = self.phi.cokernel()
         coker_phi = (cokernel * self.phi).project_to_target()
-        zero_morphism = HomFGA.zero(source = self.phi.source,
+        zero_morphism = HomLCA.zero(source = self.phi.source,
                                     target = cokernel.target)
         assert coker_phi == zero_morphism

@@ -4,7 +4,7 @@
 import random
 from sympy import Matrix, diag
 from random import randint as ri
-from abelian.morphisms import HomFGA
+from abelian import HomLCA
 from abelian.utils import mod
 from abelian.linalg.utils import order_of_vector, remove_zero_columns, \
     nonzero_diag_as_list, vector_mod_vector

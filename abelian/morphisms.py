@@ -19,6 +19,7 @@ from abelian.linalg.utils import remove_zero_columns, nonzero_diag_as_list, \
     columns_as_list, reciprocal_entrywise, diag_times_mat, mat_times_diag
 from abelian.linalg.factorizations import smith_normal_form, hermite_normal_form
 from abelian.linalg.solvers import solve_epi
+from abelian.functions import LCAFunc
 
 
 class HomLCA(Callable):
@@ -27,7 +28,8 @@ class HomLCA(Callable):
     """
 
     # The types allowed as entries in A
-    _A_entry_types = (int, float, complex)
+    _A_all_entry_types = (int, float, complex)
+    _A_integer_entry_types = (int, Integer)
 
     def __init__(self, A, target = None, source = None):
         """
@@ -47,10 +49,29 @@ class HomLCA(Callable):
 
         Examples
         ---------
+        >>> # If no source/target is given, a free discrete group is assumed
         >>> phi = HomLCA([[1,2],
         ...               [3,4]])
-        """
+        >>> phi.source.is_FGA() and phi.target.is_FGA()
+        True
 
+        >>> # If no source is given, a free discrete group is assumed
+        >>> phi = HomLCA([[1,2],
+        ...               [3,4]], target = [5, 5])
+        >>> phi.source.is_FGA()
+        True
+
+        >>> # The homomorphism must be valid
+        >>> from abelian import LCA, HomLCA
+        >>> T = LCA(orders = [1], discrete = [False])
+        >>> R = LCA(orders = [0], discrete = [False])
+        >>> phi = HomLCA([1], target = R, source = T)
+        Traceback (most recent call last):
+            ...
+        ValueError: 1: [T] -> [R] is not homomorphism
+
+
+        """
         A, target, source = self._verify_init(A, target, source)
         assert isinstance(A, Matrix)
         assert isinstance(target, LCA)
@@ -181,7 +202,7 @@ class HomLCA(Callable):
         # If the input matrix is a list of lists, convert to matrix
         if isinstance(A, list):
             A = Matrix(A)
-        elif isinstance(A, cls._A_entry_types):
+        elif isinstance(A, cls._A_all_entry_types):
             A = Matrix([A])
 
 
@@ -301,7 +322,7 @@ class HomLCA(Callable):
 
         """
         # If the `other` argument is a numeric type
-        if isinstance(other, self._A_entry_types):
+        if isinstance(other, self._A_all_entry_types):
             m, n = self.A.shape
             new_A = self.A + Matrix(m, n, lambda i,j : other)
             return type(self)(new_A, target=self.target, source=self.source)
@@ -336,17 +357,17 @@ class HomLCA(Callable):
 
         Examples
         --------
-        >>> phi = HomFGA([[1, 0, 1],
+        >>> phi = HomLCA([[1, 0, 1],
         ...               [0, 1, 1]])
-        >>> ker_phi = HomFGA([1, 1, -1])
-        >>> (phi * ker_phi) == HomFGA([0, 0])
+        >>> ker_phi = HomLCA([1, 1, -1])
+        >>> (phi * ker_phi) == HomLCA([0, 0])
         True
-        >>> phi.compose(ker_phi) == HomFGA([0, 0])
+        >>> phi.compose(ker_phi) == HomLCA([0, 0])
         True
         """
 
         # If the `other` argument is a numeric type
-        if isinstance(other, self._A_entry_types):
+        if isinstance(other, self._A_all_entry_types):
             new_A = self.A * other
             return type(self)(new_A, target=self.target, source=self.source)
 
@@ -356,6 +377,12 @@ class HomLCA(Callable):
 
             new_A = self.A * other.A
             return type(self)(new_A, target=self.target, source=other.source)
+
+        # If the composition is an HomLCA, then a LCAFunc,
+        # it's valid if the domain matches
+        if isinstance(other, LCAFunc):
+            if other.domain.equal(self.target):
+                return other.pullback(self)
 
         format_args = type(self), type(other)
         raise ValueError('Cannot compose/add {} and {}'.format(*format_args))
@@ -417,7 +444,7 @@ class HomLCA(Callable):
 
         Examples
         ---------
-        >>> phi = HomFGA([2])
+        >>> phi = HomLCA([2])
         >>> phi_dual = phi.dual()
         >>> phi_dual.source == phi_dual.target
         True
@@ -425,14 +452,14 @@ class HomLCA(Callable):
         Computing duals by first calculating orders
 
         >>> # Project, then find dual
-        >>> phi = HomFGA([2], target = [10])
+        >>> phi = HomLCA([2], target = [10])
         >>> phi_proj = phi.project_to_source()
         >>> phi_project_dual = phi_proj.dual()
-        >>> phi_project_dual == Homomorphism([1], [5], [10])
+        >>> phi_project_dual == HomLCA([1], [5], [10])
         True
         >>> # Do not project
         >>> phi_dual = phi.dual()
-        >>> phi_dual == Homomorphism([1/5], LCA([1], [False]), [10])
+        >>> phi_dual == HomLCA([1/5], LCA([1], [False]), [10])
         True
         """
 
@@ -446,7 +473,7 @@ class HomLCA(Callable):
         dual_A = mat_times_diag(diag_times_mat(diag_p, self.A.T), diag_q_inv)
 
         # Create new FGA object and return
-        return Homomorphism(dual_A, target = dual_target, source = dual_source)
+        return HomLCA(dual_A, target = dual_target, source = dual_source)
 
     def equal(self, other):
         """
@@ -468,7 +495,7 @@ class HomLCA(Callable):
 
         Examples
         ---------
-        >>> phi = HomFGA([1], target=[0], source = [0]) # Explicit
+        >>> phi = HomLCA([1], target=[0], source = [0]) # Explicit
         >>> psi = HomLCA([1])   # Shorter, defaults to the above
         >>> phi == psi
         True
@@ -493,7 +520,7 @@ class HomLCA(Callable):
         Examples
         ---------
         >>> from sympy import diag
-        >>> phi = HomFGA(diag(3, 4), target = [5, 6])
+        >>> phi = HomLCA(diag(3, 4), target = [5, 6])
         >>> phi.evaluate([2, 3])
         [1, 0]
         >>> phi.evaluate(Matrix([2, 3]))
@@ -548,16 +575,16 @@ class HomLCA(Callable):
         The homomorphism is sliced using two input arguments.
 
         >>> from sympy import diag
-        >>> phi = HomFGA(diag(4,5,6))
-        >>> phi[0,:] == HomFGA([[4, 0, 0]])
+        >>> phi = HomLCA(diag(4,5,6))
+        >>> phi[0,:] == HomLCA([[4, 0, 0]])
         True
-        >>> phi[:,1] == HomFGA([0, 5, 0])
+        >>> phi[:,1] == HomLCA([0, 5, 0])
         True
 
         If the homomorphism is represented by a row or column, one arg will do.
 
-        >>> phi = HomFGA([1,2,3])
-        >>> phi[0:2] == HomFGA([1,2])
+        >>> phi = HomLCA([1,2,3])
+        >>> phi[0:2] == HomLCA([1,2])
         True
         """
         # Two arguments passed, slice row and column of A
@@ -615,7 +642,7 @@ class HomLCA(Callable):
 
         Returns
         -------
-        homomorphism : HomFGA
+        homomorphism : HomLCA
             A homomorphism where the trivial groups have been removed from
             the source and the target. The corresponding rows and columns of
             the matrix representing the homomorphism are also removed.
@@ -623,8 +650,8 @@ class HomLCA(Callable):
         Examples
         --------
         >>> target = [1, 7]
-        >>> phi = HomFGA([[2, 1], [7, 2]], target=target)
-        >>> projected = HomFGA([[2]], target=[7], source = [7])
+        >>> phi = HomLCA([[2, 1], [7, 2]], target=target)
+        >>> projected = HomLCA([[2]], target=[7], source = [7])
         >>> phi.project_to_source().remove_trivial_groups() == projected
         True
 
@@ -664,9 +691,9 @@ class HomLCA(Callable):
 
         Examples
         --------
-        >>> phi = HomFGA([1])
-        >>> psi = HomFGA([2])
-        >>> phi.stack_diag(psi) == HomFGA([[1, 0], [0, 2]])
+        >>> phi = HomLCA([1])
+        >>> psi = HomLCA([2])
+        >>> phi.stack_diag(psi) == HomLCA([[1, 0], [0, 2]])
         True
 
         """
@@ -696,9 +723,9 @@ class HomLCA(Callable):
 
         Examples
         --------
-        >>> phi = HomFGA([1])
-        >>> psi = HomFGA([2])
-        >>> phi.stack_horiz(psi) == HomFGA([[1, 2]])
+        >>> phi = HomLCA([1])
+        >>> psi = HomLCA([2])
+        >>> phi.stack_horiz(psi) == HomLCA([[1, 2]])
         True
 
         """
@@ -730,9 +757,9 @@ class HomLCA(Callable):
 
         Examples
         --------
-        >>> phi = HomFGA([1])
-        >>> psi = HomFGA([2])
-        >>> phi.stack_vert(psi) == HomFGA([1, 2])
+        >>> phi = HomLCA([1])
+        >>> psi = HomLCA([2])
+        >>> phi.stack_vert(psi) == HomLCA([1, 2])
         True
 
         """
@@ -743,30 +770,27 @@ class HomLCA(Callable):
         new_A = self.A.col_join(other.A)
         return type(self)(new_A, target = new_target, source = new_source)
 
-    def to_HomFGA(self):
+    def _is_homFGA(self):
         """
-        Convert object to HomFGA if possible.
+        Whether or not is a homomorphism between FGAs.
 
         Returns
         -------
-        homomorphism : HomFGA
-            The homomorphism converted to a HomFGA instance, if possible.
+        homFGA : bool
+            Whether or not it's a homFGA.
 
         Examples
         ---------
         >>> phi = HomLCA([1], source = [1], target = [1])
-        >>> isinstance(phi, HomFGA)
-        False
-        >>> phi = phi.to_HomFGA()
-        >>> isinstance(phi, HomFGA)
+        >>> phi._is_homFGA()
         True
 
         """
         integer_entries = all([i % 1 == 0 for i in self.A])
         if self.source.is_FGA() and self.target.is_FGA() and integer_entries:
-            return HomFGA(self.A, self.target, self.source)
+            return True
         else:
-            return self
+            return False
 
     def to_latex(self):
         """
@@ -809,7 +833,7 @@ class HomLCA(Callable):
 
         Examples
         ---------
-        >>> zero = HomFGA.zero([0]*3, [0]*3)
+        >>> zero = HomLCA.zero([0]*3, [0]*3)
         >>> zero([1, 5, 7]) == [0, 0, 0]
         True
         """
@@ -833,26 +857,6 @@ class HomLCA(Callable):
         return self.A.shape
 
 
-
-
-class HomFGA(HomLCA):
-    """
-    A homomorphism between FGAs.
-    """
-
-    # The types allowed as entries in A
-    _A_entry_types = (int, Integer)
-
-    def __init__(self, A, target = None, source = None):
-
-        super().__init__(A, target = target, source = source)
-
-        generator = (isinstance(e, self._A_entry_types) for e in self.A)
-        if not all(generator):
-            raise TypeError('Matrix must be integer')
-
-
-
     def annihilator(self):
         """
         Compute the annihilator monomorphism.
@@ -866,12 +870,104 @@ class HomFGA(HomLCA):
 
         Returns
         -------
-        homomorphism : HomFGA
+        homomorphism : HomLCA
             The coimage homomorphism.
 
         Examples
         --------
-        >>> phi = HomFGA([[4, 4],
+        >>> phi = HomLCA([[4, 4],
+        ...               [2, 8]], target = [16, 16])
+        >>> im = phi.image().remove_trivial_groups()
+        >>> coim = phi.coimage().remove_trivial_groups()
+        >>> phi == (im * coim).project_to_target()
+        True
+
+        """
+        if self._is_homFGA():
+            return self._FGA_coimage()
+        else:
+            raise NotImplementedError('Not implemented for non-FGA.')
+
+    def cokernel(self):
+        """
+        Compute the cokernel epimorphism.
+
+        Returns
+        -------
+        homomorphism : HomLCA
+            The cokernel homomorphism.
+
+        Examples
+        --------
+        >>> phi = HomLCA([[1, 0], [0, 1], [1, 1]])
+        >>> coker = phi.cokernel()
+        >>> coker.target.isomorphic(LCA([1, 1, 0]))
+        True
+
+        """
+        if self._is_homFGA():
+            return self._FGA_cokernel()
+        else:
+            raise NotImplementedError('Not implemented for non-FGA.')
+
+    def image(self):
+        """
+        Compute the image monomorphism.
+
+        Returns
+        -------
+        homomorphism : HomLCA
+            The image homomorphism.
+
+        Examples
+        --------
+        >>> phi = HomLCA([[4, 4],
+        ...               [2, 8]], target = [64, 32])
+        >>> im = phi.image().remove_trivial_groups()
+        >>> coim = phi.coimage().remove_trivial_groups()
+        >>> phi == (im * coim).project_to_target()
+        True
+
+        """
+        if self._is_homFGA():
+            return self._FGA_image()
+        else:
+            raise NotImplementedError('Not implemented for non-FGA.')
+
+
+    def kernel(self):
+        """
+        Compute the kernel monomorphism.
+
+        Returns
+        -------
+        homomorphism : HomLCA
+            The kernel homomorphism.
+
+        Examples
+        --------
+        >>> phi = HomLCA([[1, 0, 1], [0, 1, 1]])
+        >>> phi.kernel() == HomLCA([-1, -1, 1])
+        True
+
+        """
+        if self._is_homFGA():
+            return self._FGA_kernel()
+        else:
+            raise NotImplementedError('Not implemented for non-FGA.')
+
+    def _FGA_coimage(self):
+        """
+        Compute the coimage epimorphism.
+
+        Returns
+        -------
+        homomorphism : HomLCA
+            The coimage homomorphism.
+
+        Examples
+        --------
+        >>> phi = HomLCA([[4, 4],
         ...               [2, 8]], target = [16, 16])
         >>> im = phi.image().remove_trivial_groups()
         >>> coim = phi.coimage().remove_trivial_groups()
@@ -884,18 +980,18 @@ class HomFGA(HomLCA):
         coimage = kernel.cokernel()
         return coimage
 
-    def cokernel(self):
+    def _FGA_cokernel(self):
         """
         Compute the cokernel epimorphism.
 
         Returns
         -------
-        homomorphism : HomFGA
+        homomorphism : HomLCA
             The cokernel homomorphism.
 
         Examples
         --------
-        >>> phi = HomFGA([[1, 0], [0, 1], [1, 1]])
+        >>> phi = HomLCA([[1, 0], [0, 1], [1, 1]])
         >>> coker = phi.cokernel()
         >>> coker.target.isomorphic(LCA([1, 1, 0]))
         True
@@ -914,18 +1010,18 @@ class HomFGA(HomLCA):
         coker = type(self)(U, target = quotient, source=self.target)
         return coker.project_to_target()
 
-    def image(self):
+    def _FGA_image(self):
         """
         Compute the image monomorphism.
 
         Returns
         -------
-        homomorphism : HomFGA
+        homomorphism : HomLCA
             The image homomorphism.
 
         Examples
         --------
-        >>> phi = HomFGA([[4, 4],
+        >>> phi = HomLCA([[4, 4],
         ...               [2, 8]], target = [64, 32])
         >>> im = phi.image().remove_trivial_groups()
         >>> coim = phi.coimage().remove_trivial_groups()
@@ -942,15 +1038,15 @@ class HomFGA(HomLCA):
         image = type(self)(solved_mat, self.target, source=coim.target)
         return image.project_to_target()
 
-    def isomorphic(self, other):
+    def _FGA_isomorphic(self, other):
         """
-        Whether or not two HomFGAs are isomorphic.
+        Whether or not two HomLCAs are isomorphic.
 
         Two homomorphisms are isomorphic iff they generate the same group.
 
         Parameters
         ----------
-        other : HomFGA
+        other : HomLCA
             The homomorphism to compare with.
 
         Returns
@@ -962,21 +1058,21 @@ class HomFGA(HomLCA):
         --------
         >>> from sympy import diag
         >>> # The order does not matter
-        >>> phi = HomFGA(diag(2, 3))
-        >>> psi = HomFGA(diag(3, 2))
-        >>> phi.isomorphic(psi)
+        >>> phi = HomLCA(diag(2, 3))
+        >>> psi = HomLCA(diag(3, 2))
+        >>> phi._FGA_isomorphic(psi)
         True
         >>> # These homomorphisms both generate Z_2 + Z
-        >>> phi = HomFGA([[2, 0],
+        >>> phi = HomLCA([[2, 0],
         ...               [0, 1]], target=[4, 0])
-        >>> psi = HomFGA([[1, 0],
+        >>> psi = HomLCA([[1, 0],
         ...               [0, 1]], target=[2, 0])
-        >>> phi.isomorphic(psi)
+        >>> phi._FGA_isomorphic(psi)
         True
         >>> # They both generate a group isomorphic to Z_6
-        >>> phi = HomFGA([[2, 0], [0, 1]], target=[4, 3])
-        >>> psi = HomFGA([2, 2], target=[4, 3])
-        >>> phi.isomorphic(psi)
+        >>> phi = HomLCA([[2, 0], [0, 1]], target=[4, 3])
+        >>> psi = HomLCA([2, 2], target=[4, 3])
+        >>> phi._FGA_isomorphic(psi)
         True
         """
         # TODO: Is this correct?
@@ -989,19 +1085,19 @@ class HomFGA(HomLCA):
 
         return isomorphic
 
-    def kernel(self):
+    def _FGA_kernel(self):
         """
         Compute the kernel monomorphism.
 
         Returns
         -------
-        homomorphism : HomFGA
+        homomorphism : HomLCA
             The kernel homomorphism.
 
         Examples
         --------
-        >>> phi = HomFGA([[1, 0, 1], [0, 1, 1]])
-        >>> phi.kernel() == HomFGA([-1, -1, 1])
+        >>> phi = HomLCA([[1, 0, 1], [0, 1, 1]])
+        >>> phi.kernel() == HomLCA([-1, -1, 1])
         True
 
         """
@@ -1023,26 +1119,28 @@ class HomFGA(HomLCA):
 
         Returns
         -------
-        homomorphism : HomFGA
+        homomorphism : HomLCA
             A homomorphism with orders in the source FGA.
 
         Examples
         --------
         >>> target = [3, 6]
-        >>> phi = HomFGA([[1, 0],
+        >>> phi = HomLCA([[1, 0],
         ...               [3, 3]], target = target)
         >>> phi = phi.project_to_source()
         >>> phi.source.orders == [6, 2]
         True
         """
+        if self._is_homFGA():
+            # Find dimensions
+            m, n = self.A.shape
 
-        # Find dimensions
-        m, n = self.A.shape
-
-        # Compute orders for all columns of A
-        target_vect = Matrix(self.target.orders)
-        source = [order_of_vector(self.A[:, i], target_vect) for i in range(n)]
-        return type(self)(self.A, self.target, source)
+            # Compute orders for all columns of A
+            target_vect = Matrix(self.target.orders)
+            source = [order_of_vector(self.A[:, i], target_vect) for i in range(n)]
+            return type(self)(self.A, self.target, source)
+        else:
+            raise NotImplementedError('Not implemented: projection to target.')
 
     def project_to_target(self):
         """
@@ -1050,72 +1148,24 @@ class HomFGA(HomLCA):
 
         Returns
         -------
-        homomorphism : HomFGA
+        homomorphism : HomLCA
             A homomorphism with columns projected to the target FGA.
 
         Examples
         --------
         >>> target = [7, 12]
-        >>> phi = HomFGA([[15, 12],
+        >>> phi = HomLCA([[15, 12],
         ...               [9,  17]], target = target)
-        >>> phi_proj = HomFGA([[1, 5],
+        >>> phi_proj = HomLCA([[1, 5],
         ...                    [9, 5]], target = target)
         >>> phi.project_to_target() == phi_proj
         True
         """
-
-        A = matrix_mod_vector(self.A, Matrix(self.target.orders))
-        return type(self)(A, target = self.target, source = self.source)
-
-
-def Homomorphism(A, target = None, source = None):
-    """
-    Initializes HomFGA or HomLCA depending on inputs.
-
-    This factory function will initialize a HomFGA if both the source and
-    target are FGAs, or None. If the source and targets are explicitly given
-    as non-discrete LCAs then a HomLCA will be initialized.
-
-    Parameters
-    ----------
-    A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix` or list
-        A sympy matrix representing the homomorphism. The user may also
-        use a list of lists in the form [row1, row2, ...] as input.
-    target : LCA or list
-        The target of the homomorphism. If None, a discrete target of
-        infinite order is used as the default.
-    source : LCA or list
-        The source of the homomorphism. If None, a discrete source of
-        infinite order is used as the default.
-
-    Returns
-    -------
-
-    Examples
-    --------
-    >>> # If no source/target is given, the default is discrete (FGA)
-    >>> phi = Homomorphism([1])
-    >>> isinstance(phi, HomFGA)
-    True
-    >>> # If the target is continuous, a HomLCA instance will be returned
-    >>> target = LCA(orders = [0], discrete = [False])
-    >>> phi = Homomorphism([1], target = target)
-    >>> isinstance(phi, HomLCA)
-    True
-
-    """
-    A, target, source = HomLCA._verify_init(A, target, source)
-    integer_entries = all([i % 1 == 0 for i in A])
-    if target.is_FGA() and source.is_FGA() and integer_entries:
-        return HomFGA(A, target=target, source=source)
-    else:
-        return HomLCA(A, target=target, source=source)
-
-
-
-
-
-
+        if self._is_homFGA():
+            A = matrix_mod_vector(self.A, Matrix(self.target.orders))
+            return type(self)(A, target = self.target, source = self.source)
+        else:
+            raise NotImplementedError('Not implemented: projection to target.')
 
 if __name__ == "__main__":
     import doctest

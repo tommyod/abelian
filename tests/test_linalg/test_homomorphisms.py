@@ -4,7 +4,7 @@
 import random
 from sympy import Matrix
 from random import randint as ri
-from abelian.morphisms import HomFGA, HomLCA
+from abelian.morphisms import HomLCA
 
 def random_zero_heavy(low, high):
     """

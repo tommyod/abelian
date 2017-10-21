@@ -394,11 +394,11 @@ class LCAFunc(Callable):
         --------
         Using a simple function and homomorphism.
 
-        >>> from abelian import Homomorphism, LCA
+        >>> from abelian import HomLCA, LCA
         >>> # Create a function on Z
         >>> f = LCAFunc(lambda list_arg:list_arg[0]**2, LCA([0]))
         >>> # Create a homomorphism from Z to Z
-        >>> phi = Homomorphism([2])
+        >>> phi = HomLCA([2])
         >>> # Pull f back along phi
         >>> f_pullback = f.pullback(phi)
         >>> f_pullback([4]) == 64 # (2*4)**2 == 64
@@ -406,13 +406,13 @@ class LCAFunc(Callable):
 
         Using a simple function and homomorphism represented as matrix.
 
-        >>> from abelian import Homomorphism, LCA
+        >>> from abelian import HomLCA, LCA
         >>> def func(list_arg):
         ...     x, y = tuple(list_arg)
         ...     return x ** 2 + y ** 2
         >>> domain = LCA([5, 3])
         >>> f = LCAFunc(func, domain)
-        >>> phi = Homomorphism([1, 1], target=domain)
+        >>> phi = HomLCA([1, 1], target=domain)
         >>> f_pullback = f.pullback(phi)
         >>>
         >>> f_pullback([8]) == 13
