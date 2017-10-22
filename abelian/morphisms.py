@@ -770,6 +770,24 @@ class HomLCA(Callable):
         new_A = self.A.col_join(other.A)
         return type(self)(new_A, target = new_target, source = new_source)
 
+    def update_source(self, new_source):
+        """
+        Update the source of the homomorphism.
+
+        :param new_source:
+        :return:
+        """
+        return type(self)(self.A, target=self.target, source=new_source)
+
+    def update_target(self, new_target):
+        """
+        Update the source of the homomorphism.
+
+        :param new_source:
+        :return:
+        """
+        return type(self)(self.A, target=new_target, source=self.source)
+
     def _is_homFGA(self):
         """
         Whether or not is a homomorphism between FGAs.
@@ -883,6 +901,15 @@ class HomLCA(Callable):
         True
 
         """
+        R = LCA([0], [False])
+        target_real_noncompact = all(g == R for g in self.target)
+        A_is_integer = all(isinstance(a, self._A_integer_entry_types) for a
+                           in self.A)
+
+
+        if self.source.is_FGA() and target_real_noncompact and A_is_integer:
+            return self._FGA_coimage()
+
         if self._is_homFGA():
             return self._FGA_coimage()
         else:
@@ -905,8 +932,21 @@ class HomLCA(Callable):
         True
 
         """
+
+
         if self._is_homFGA():
             return self._FGA_cokernel()
+
+        # If it's a map Z^m -> R^n, then return inverse matrix
+        Z = LCA(orders = [0], discrete = [True])
+        R = LCA(orders=[0], discrete=[False])
+        T = LCA(orders=[1], discrete=[False])
+        m, n = self.shape
+        #print(m, n, self.source, self.target)
+        if (m == n) and self.source == Z**m and self.target == R**m:
+            inverse_A = self.A.inv()
+            return type(self)(inverse_A, target = T**m, source = self.target)
+
         else:
             raise NotImplementedError('Not implemented for non-FGA.')
 
@@ -928,7 +968,23 @@ class HomLCA(Callable):
         >>> phi == (im * coim).project_to_target()
         True
 
+        >>> # Image computations are also allowed when target is R
+        >>> R = LCA(orders = [0], discrete = [False])
+        >>> sample_matrix = [[1, 2, 3], [2, 3, 5]]
+        >>> phi_sample = HomLCA(sample_matrix, target = R + R)
+        >>> phi_sample_im = phi_sample.image().remove_trivial_groups()
+        >>> phi_sample_im == phi_sample[:, 1:]
+        True
+
         """
+        R = LCA([0], [False])
+        target_real_noncompact = all(g == R for g in self.target)
+        A_is_integer = all(isinstance(a, self._A_integer_entry_types) for a
+                           in self.A)
+
+
+        if self.source.is_FGA() and target_real_noncompact and A_is_integer:
+            return self._FGA_image()
         if self._is_homFGA():
             return self._FGA_image()
         else:
@@ -951,6 +1007,15 @@ class HomLCA(Callable):
         True
 
         """
+        R = LCA([0], [False])
+        target_real_noncompact = all(g == R for g in self.target)
+        A_is_integer = all(isinstance(a, self._A_integer_entry_types) for a
+                           in self.A)
+
+
+        if self.source.is_FGA() and target_real_noncompact and A_is_integer:
+            return self._FGA_kernel()
+
         if self._is_homFGA():
             return self._FGA_kernel()
         else:
@@ -1131,7 +1196,10 @@ class HomLCA(Callable):
         >>> phi.source.orders == [6, 2]
         True
         """
-        if self._is_homFGA():
+        A_is_integer = all(isinstance(a, self._A_integer_entry_types) for a
+                           in self.A)
+
+        if A_is_integer and self.source.is_FGA():
             # Find dimensions
             m, n = self.A.shape
 
@@ -1161,11 +1229,9 @@ class HomLCA(Callable):
         >>> phi.project_to_target() == phi_proj
         True
         """
-        if self._is_homFGA():
-            A = matrix_mod_vector(self.A, Matrix(self.target.orders))
-            return type(self)(A, target = self.target, source = self.source)
-        else:
-            raise NotImplementedError('Not implemented: projection to target.')
+
+        A = matrix_mod_vector(self.A, Matrix(self.target.orders))
+        return type(self)(A, target = self.target, source = self.source)
 
 if __name__ == "__main__":
     import doctest

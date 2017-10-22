@@ -8,7 +8,7 @@ free-to-free homomorphisms. All the inputs and outputs are of type
 """
 
 import itertools
-from sympy import Matrix
+from sympy import Matrix, Integer
 from abelian.linalg.factorizations import smith_normal_form
 from abelian.linalg.utils import nonzero_diag_as_list
 
@@ -36,10 +36,12 @@ def mod(a, b):
     >>> mod((5, 8), (4, 4))
     (1, 0)
     """
-    if isinstance(a, int) and isinstance(b, int):
+    integer_types = (int, Integer)
+    if isinstance(a, integer_types) and isinstance(b, integer_types):
         if b == 0:
             return a
         return a % b
+
     return type(a)([mod(i, j) for i, j in zip(a, b)])
 
 def elements_increasing_norm(free_rank):

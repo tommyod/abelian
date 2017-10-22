@@ -496,7 +496,6 @@ class LCAFunc(Callable):
             # Iterate through the kernel space and compute the sum
             kernel_sum = 0
             dim_ker_source = len(kernel.source)
-            # For
 
             generator = elements_increasing_norm(dim_ker_source)
             for counter, boundary_element in enumerate(generator, 1):
@@ -509,6 +508,7 @@ class LCAFunc(Callable):
 
                 function = self.representation
                 func_in_ker = function(kernel_element, *args, **kwargs)
+                #print('Kernel element', kernel_element, '->', func_in_ker)
                 kernel_sum += func_in_ker
                 if counter >= terms_in_sum:
                     break

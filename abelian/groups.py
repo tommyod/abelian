@@ -71,6 +71,26 @@ class LCA(Sequence):
 
 
     @classmethod
+    def trivial(cls):
+        """
+        Return a trivial LCA.
+
+        Returns
+        --------
+        group : LCA
+            A trivial LCA.
+
+        Examples
+        ---------
+        >>> trivial = LCA.trivial()
+        >>> Z = LCA([0])
+        >>> (Z + trivial).isomorphic(Z)
+        True
+        """
+        return cls(orders = [1], discrete = [True])
+
+
+    @classmethod
     def _verify_init(cls, orders, discrete):
         """
         Verify the user inputs.
@@ -156,6 +176,13 @@ class LCA(Sequence):
         see :py:meth:`~abelian.groups.LCA.length`.
         """
         return self.length()
+
+    def __pow__(self, power, modulo=None):
+        """
+        Override the pow (`**`) operator,
+        see :py:meth:`~abelian.groups.LCA.compose_self`.
+        """
+        return self.compose_self(power)
 
     def __repr__(self):
         """
@@ -286,8 +313,6 @@ class LCA(Sequence):
         >>> self_dual.dual() == self_dual
         True
         """
-
-        # TODO : Is only allowing T, and not T_{n}, sensible?
 
         single_dual = self._dual_of_single_group
         dual_lists = list(single_dual(p, d) for (p, d) in self._iterate_tuples())
@@ -523,6 +548,39 @@ class LCA(Sequence):
         4
         """
         return len(self.orders)
+
+    def compose_self(self, power):
+        """
+        Repeated direct summation.
+
+        Returns
+        -------
+        group : LCA
+            A new group.
+
+        Examples
+        --------
+        >>> R = LCA([0], [False])
+        >>> (R + R) == R**2
+        True
+        >>> R**0 == LCA.trivial()
+        True
+        >>> Z = LCA([0])
+        >>> (Z + R)**2 == Z + R + Z + R
+        True
+
+        """
+        if not isinstance(power, int):
+            raise ValueError('Power must be an integer.')
+        if power <= 0:
+            return self.trivial()
+        if power == 1:
+            return self
+        if power > 1:
+            direct_sum = self.copy()
+            for prod in range(power - 1):
+                direct_sum = direct_sum.sum(self)
+            return direct_sum
 
     def project_element(self, element):
         """

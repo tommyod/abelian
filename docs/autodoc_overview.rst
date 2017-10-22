@@ -56,8 +56,10 @@ Public classes (detailed)
     ~abelian.groups.LCA.__init__
     ~abelian.groups.LCA.__iter__
     ~abelian.groups.LCA.__len__
+    ~abelian.groups.LCA.__pow__
     ~abelian.groups.LCA.__repr__
     ~abelian.groups.LCA.canonical
+    ~abelian.groups.LCA.compose_self
     ~abelian.groups.LCA.contained_in
     ~abelian.groups.LCA.copy
     ~abelian.groups.LCA.dual
@@ -74,6 +76,7 @@ Public classes (detailed)
     ~abelian.groups.LCA.remove_trivial
     ~abelian.groups.LCA.sum
     ~abelian.groups.LCA.to_latex
+    ~abelian.groups.LCA.trivial
   
 :class:`~abelian.morphisms.HomLCA`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -112,5 +115,7 @@ Public classes (detailed)
     ~abelian.morphisms.HomLCA.stack_horiz
     ~abelian.morphisms.HomLCA.stack_vert
     ~abelian.morphisms.HomLCA.to_latex
+    ~abelian.morphisms.HomLCA.update_source
+    ~abelian.morphisms.HomLCA.update_target
     ~abelian.morphisms.HomLCA.zero
   
