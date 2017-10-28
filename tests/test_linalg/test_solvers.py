@@ -3,13 +3,17 @@
 
 from random import randint as ri
 import random
-from sympy import Matrix, pprint
+from sympy import Matrix
 from abelian.linalg.utils import vector_mod_vector, remove_cols
 from abelian.linalg.solvers import solve, solve_epi
 from abelian.linalg.factorizations import hermite_normal_form
 
 
 class TestSolveEpi():
+    """
+    Test the solver for the unknown epimorphism.
+    This is used for the coimage.
+    """
 
     @classmethod
     def setup_class(cls):
@@ -54,11 +58,14 @@ class TestSolveEpi():
 
 
 class TestSolve():
+    """
+    Test the general solver.
+    """
 
     @classmethod
     def setup_class(cls):
         # Set up the sizes for the tests
-        cls.n = 3
+        cls.n = ri(3, 5)
         cls.r = cls.n - 2
 
 
@@ -146,5 +153,3 @@ class TestSolve():
         # Solve the equation and verify
         x_sol = solve(A, b, p)
         assert (vector_mod_vector(A * x_sol, p) == b)
-
-

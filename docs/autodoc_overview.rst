@@ -15,6 +15,7 @@ Public functions
     ~abelian.linalg.factorizations.hermite_normal_form
     ~abelian.linalg.factorizations.smith_normal_form
     ~abelian.linalg.solvers.solve
+    ~abelian.functions.voronoi
 
 Public classes (detailed)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -28,7 +29,6 @@ Public classes (detailed)
     ~abelian.functions.LCAFunc.__call__
     ~abelian.functions.LCAFunc.__init__
     ~abelian.functions.LCAFunc.__repr__
-    ~abelian.functions.LCAFunc.convolve
     ~abelian.functions.LCAFunc.copy
     ~abelian.functions.LCAFunc.dft
     ~abelian.functions.LCAFunc.evaluate

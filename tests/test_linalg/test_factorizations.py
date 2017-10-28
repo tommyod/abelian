@@ -1,6 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+
+"""
+This module contains stochastic tests for the SNF and HNF.
+The tests are based on the mathematical definitions of the
+decompositions, and run on random matrices of size 3-5.
+"""
+
 from random import randint as ri
 from sympy import Matrix
 from abelian.linalg.factorizations import hermite_normal_form, \
@@ -11,6 +18,9 @@ class TestSNF:
 
     @classmethod
     def setup_class(cls):
+        """
+        Setup random matrices for the Smith normal form.
+        """
         m, n = ri(3, 5), ri(3, 5)
         A = Matrix(m, n, lambda i, j: ri(-9, 9))
 
@@ -70,10 +80,11 @@ class TestSNF:
 
 
 class TestHNF:
+
     @classmethod
     def setup_class(cls):
         """
-        Setup state specific to execution of class, which contains tests.
+        Create matrices for testing the Hermite Normal form.
         """
         m, n = ri(3, 5), ri(3, 5)
         A = Matrix(m, n, lambda i, j: ri(-9, 9))

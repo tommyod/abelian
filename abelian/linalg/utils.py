@@ -9,7 +9,8 @@ computations.
 """
 
 import functools
-from sympy import Matrix, pprint, gcd, lcm
+from functools import partial
+from sympy import Matrix, gcd, lcm
 from abelian.utils import mod
 
 
@@ -169,6 +170,7 @@ def remove_zero_columns(M):
 
     # STEP 1: Find the columns to remove
     cols_to_remove = []
+
     # Iterate over columns
     for j in range(0, n):
         all_zero = True
@@ -176,6 +178,7 @@ def remove_zero_columns(M):
             if A[i, j] != 0:
                 all_zero = False
                 break
+
         # If the column has all zeros, we delete it later
         if all_zero:
             cols_to_remove.append(j)
@@ -316,10 +319,8 @@ def matrix_mod_vector(A, mod_col):
     True
     """
     m, n = A.shape
-
     if m != len(mod_col):
         raise ValueError('Dimension mismatch.')
-
 
     new_A = A.copy()
 
@@ -338,9 +339,6 @@ def matrix_mod_vector(A, mod_col):
 def order_of_vector(v, mod_vector):
     """
     Returns the order of the element `v` in a FGA like `mod_vector`.
-
-
-    Returns a copy of `A` with every column modded by `mod_col`.
 
     Parameters
     ----------
@@ -372,18 +370,22 @@ def order_of_vector(v, mod_vector):
 
     """
 
+    # Arguments must have the same length
     if len(v) != len(mod_vector):
         raise ValueError('The arguments must have the same length.')
 
     def div(top, bottom):
+        # Division, but if we divide by zero we define it as unity
         try:
             return top // bottom
         except:
             return 1
 
+    # Create the generate and iterate through it
     gen = zip(v, mod_vector)
-    gcd_list = [div(order, gcd(element, order)) for(element, order) in gen]
+    gcd_list = (div(order, gcd(element, order)) for(element, order) in gen)
 
+    # Reduce over the iterator with the least common multiple
     return functools.reduce(lcm, gcd_list)
 
 
@@ -453,15 +455,7 @@ def diag_times_mat(diagonal, A):
     True
     """
 
-    #m, n = A.shape
-    #new_A = A.copy()
-    #for row in range(0, m):
-    #    new_A[row, :] *= diagonal[row]
-    #return new_A
-
     return mat_times_diag(A.T, diagonal).T
-
-
 
 
 def reciprocal_entrywise(A):
@@ -498,8 +492,6 @@ def reciprocal_entrywise(A):
             return x
         return 1/x
 
-
-
     return Matrix(m, n, [recip(e) for e in A])
 
 
@@ -524,6 +516,10 @@ def norm(vector, p = 2):
     >>> vector = [1, 2, 3]
     >>> norm(vector, 1)
     6.0
+    >>> norm(tuple(vector), None)
+    3.0
+    >>> norm(iter(vector), None)
+    3.0
     >>> norm(vector, None)
     3.0
     >>> norm(vector, 2)
@@ -541,11 +537,51 @@ def norm(vector, p = 2):
 
     # If no p is given, assume the infinity norm and return the max value
     if p == None:
-        return float(max(list(vector)))
+        return float(max(abs(j) for j in list(vector)))
+
+    # P should not be smaller than 1.
+    if p < 1:
+        raise ValueError('p must be >= 1 for the p-norm.')
 
     # Return the p-norm
     norm = sum(abs(i)**p for i in vector)**(1/p)
     return float(norm)
+
+
+def difference(iterable1, iterable2, p = None):
+    """
+    Compute the difference with a p-norm.
+
+    Parameters
+    ----------
+    iterable1 : :py:class:`~sympy.matrices.dense.MutableDenseMatrix` or list
+        The iterable to compute the norm over.
+    iterable2 : :py:class:`~sympy.matrices.dense.MutableDenseMatrix` or list
+        The iterable to compute the norm over.
+    p : float
+        The p-value in the p-norm. Should be between 1 and infinity (None).
+
+    Returns
+    -------
+    norm : float
+        The computed norm of the difference.
+
+    Examples
+    --------
+    >>> 2 + 2
+    4
+
+    """
+    vector1 = Matrix(iterable1)
+    vector2 = Matrix(iterable2)
+    diff = vector1 - vector2
+    return norm(diff, p = p)
+
+
+# Use partial functions to define common norms
+euc_norm = partial(norm, p = 2)
+max_norm = partial(norm, p = None)
+one_norm = partial(norm, p = 1)
 
 
 if __name__ == "__main__":

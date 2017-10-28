@@ -17,7 +17,9 @@ from abelian.groups import LCA
 from abelian.linalg.utils import remove_zero_columns, nonzero_diag_as_list, \
     matrix_mod_vector, order_of_vector, remove_cols, remove_rows, \
     columns_as_list, reciprocal_entrywise, diag_times_mat, mat_times_diag
-from abelian.linalg.factorizations import smith_normal_form, hermite_normal_form
+from abelian.linalg.factorizations import smith_normal_form
+from abelian.linalg.factorizations_reals import real_image, real_coimage, \
+    real_cokernel, real_kernel
 from abelian.linalg.solvers import solve_epi
 from abelian.functions import LCAFunc
 
@@ -221,6 +223,15 @@ class HomLCA(Callable):
 
         if isinstance(source, (list, Matrix)):
             source = LCA(list(source))
+
+        # If the matrix is empty on either side, replace the LCA
+        m, n = A.shape
+        if m == 0:
+            return A, LCA([]), source
+        if n == 0:
+            return A, target, LCA([])
+
+
 
         # Verify that the input is actually a homomorphism
         for j, s in enumerate(source):
@@ -532,9 +543,13 @@ class HomLCA(Callable):
         # Project the element to the source LCA of the homomorphism
         source_element = self.source.project_element(source_element)
 
+        m, n = self.A.shape
+        if n == 0:
+            evaluated = [0]
+
         # Apply the homomorphism using matrix multiplication, depending
         # on the type of the input
-        if isinstance(source_element, Matrix):
+        elif isinstance(source_element, Matrix):
             evaluated = self.A * source_element
         else:
             evaluated = self.A * Matrix(source_element)
@@ -624,7 +639,6 @@ class HomLCA(Callable):
             return type(self)(new_A, target=new_target, source=new_source)
 
         else:
-            print(args)
             raise ValueError('slice() takes 1 or 2 arguments.')
 
 
@@ -1008,9 +1022,26 @@ class HomLCA(Callable):
 
         """
         R = LCA([0], [False])
+        T = LCA([1], [False])
         target_real_noncompact = all(g == R for g in self.target)
         A_is_integer = all(isinstance(a, self._A_integer_entry_types) for a
                            in self.A)
+
+        # If the mapping is R^d -> T^d, the kernel is the inverse
+        m, n = self.shape
+        if m == n:
+            if self.source == R**m and self.target == T**m:
+                kernel_source = LCA([0], [True])**m
+                A_inv = self.A.inv()
+                return type(self)(A_inv, source = kernel_source, target =
+                self.source)
+
+        # If the mapping is R^d -> R^d, the kernel is found with the SVD
+        if all(g == R for g in self.source) and \
+            all(g == R for g in self.target):
+            kernel_A = real_kernel(self.A)
+            m, n = kernel_A.shape
+            return type(self)(kernel_A, source=R**n, target=R**m)
 
 
         if self.source.is_FGA() and target_real_noncompact and A_is_integer:

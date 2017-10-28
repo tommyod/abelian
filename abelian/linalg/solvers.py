@@ -199,7 +199,6 @@ def solve_epi(A, B, p = None):
 
     # Step 2: Multiply the inverse of A and B to form the solution
     # to the problem, the matrix X.
-    # assert A * A_inv = I
     X = B * A_inv
 
     return X
@@ -208,6 +207,3 @@ def solve_epi(A, B, p = None):
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = True)
-
-
-

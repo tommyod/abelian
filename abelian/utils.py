@@ -173,7 +173,6 @@ def arg(min_or_max, iterable, function_of_element):
     return min_or_max(iterable, key=function_of_element)
 
 
-
 def copy_func(f):
     """Based on http://stackoverflow.com/a/6528148/190597 (Glenn Maynard)"""
     g = types.FunctionType(f.__code__, f.__globals__, name=f.__name__,

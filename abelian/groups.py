@@ -63,6 +63,10 @@ class LCA(Sequence):
 
         >>> # Create G = R + Z
         >>> G = LCA(orders = [0, 0], discrete = [False, True])
+
+        >>> G = LCA([], [])
+        >>> G
+        []
         """
 
         orders, discrete = self._verify_init(orders, discrete)
@@ -500,6 +504,9 @@ class LCA(Sequence):
         >>> H = LCA([0, 0, 3, 4], [True, False, True, True])
         >>> G.isomorphic(H)
         True
+
+        >>> LCA([]).isomorphic(LCA.trivial())
+        True
         """
         isomorphic = self.canonical().equal(other.canonical())
         return isomorphic
@@ -607,6 +614,8 @@ class LCA(Sequence):
         >>> G.project_element(g) == Matrix([3, 4])
         True
         """
+        if len(element) in [0, 1] and self.isomorphic(self.trivial()):
+            return [0]
 
         if not (len(element) == len(self.orders) == len(self.discrete)):
             raise ValueError('Length of element must match groups.')
@@ -615,6 +624,7 @@ class LCA(Sequence):
             if not discrete:
                 return mod(element, order)
             if discrete:
+                #if mod(element, 1) == 0:
                 if isinstance(element, self._integer_types):
                     return mod(element, order)
 

@@ -6,14 +6,17 @@ This module consists of a class for functions on LCAs,
 called LCAFunc. Such a function represents a function
 from a LCA G to the complex numbers C.
 """
+from operator import itemgetter
 
-from sympy import Matrix
-from abelian.linalg.utils import norm
+from sympy import Matrix, Float, Integer, Add, Rational
+
+from abelian.linalg import solvers, free_to_free
+from abelian.linalg.utils import norm, difference
 from abelian.linalg.free_to_free import elements_increasing_norm
 from abelian.utils import call_nested_list, verify_dims_list, copy_func, function_to_table
+from abelian.groups import LCA
 from types import FunctionType
 from abelian.linalg.solvers import solve
-import itertools
 import numpy as np
 import functools
 import operator
@@ -27,12 +30,12 @@ class LCAFunc(Callable):
 
     def __init__(self, representation, domain):
         """
-        Initialize a function (G -> C).
+        Initialize a function G -> C.
 
         Parameters
         ----------
         representation : function (or list of lists if domain is discrete
-        and of finite order, i.e. Z_p with p_i > 0)
+        and compact, i.e. Z_p with p_i > 0)
             A function which takes in a list as a first argument, representing
             the group element. Alternatively a list of lists if the domain is
             discrete and of finite order.
@@ -80,6 +83,10 @@ class LCAFunc(Callable):
         4
         """
 
+        # Verify that the domain is an LCA
+        if not isinstance(domain, LCA):
+            raise TypeError('Domain must be an LCA instance.')
+
         self.domain = domain
 
         # A function representation has been passed
@@ -121,16 +128,11 @@ class LCAFunc(Callable):
         if self.table is not None:
             return self.table
 
-        # If a table is not computed, compute it
+        # If a table is not computed, compute it and return
         dims = self.domain.orders
         table = function_to_table(self.representation, dims, *args, **kwargs)
         self.table = table
         return table
-
-
-
-
-
 
     def __call__(self, list_arg, *args, **kwargs):
         """
@@ -152,32 +154,6 @@ class LCAFunc(Callable):
         func_name = self.representation.__name__
         str = r'LCAFunc ({}) on domain {}'.format(func_name, self.domain)
         return str
-
-
-
-    def convolve(self, other, norm_cond = None):
-        """
-        TODO: implement convolutions on some/all domains?
-
-        Parameters
-        ----------
-        other
-
-        Returns
-        -------
-
-        """
-        if not self.domain.is_FGA() and other.domain.is_FGA():
-            return ValueError('Both domains must be FGAs.')
-
-        if norm_cond is None:
-            def norm_cond(arg):
-                return norm(arg, p = 2) < 10
-
-        # Do the convolution
-
-        return None
-
 
     def copy(self):
         """
@@ -257,7 +233,7 @@ class LCAFunc(Callable):
 
     def evaluate(self, list_arg, *args, **kwargs):
         """
-        Evaluate at a point.
+        Evaluate function on a group element.
 
         Parameters
         ----------
@@ -270,9 +246,29 @@ class LCAFunc(Callable):
 
         Returns
         -------
-        value : complex
+        value : complex, float or int
             A complex number (could be real or integer).
 
+        Examples
+        --------
+        >>> from abelian import LCA, LCAFunc
+        >>> R = LCA([0], [False])
+        >>> function = LCAFunc(lambda x: 1, domain = R**2)
+        >>> function([1, 2])
+        1
+
+        Some subtle conceps are shown below.
+
+        >>> function(1)
+        Traceback (most recent call last):
+        ...
+        ValueError: Argument to function must be list.
+        >>> function([1])
+        Traceback (most recent call last):
+        ...
+        ValueError: LCAFunc argument does not match domain length.
+        >>> type(function([1, 1])) in (int, float, complex)
+        True
         """
 
         # If the domain consists of more than one group in the direct sum,
@@ -289,7 +285,16 @@ class LCAFunc(Callable):
             raise ValueError('LCAFunc argument does not match domain length.')
 
         proj_args = self.domain.project_element(list_arg)
-        return self.representation(proj_args, *args, **kwargs)
+        answer = self.representation(proj_args, *args, **kwargs)
+
+        # Cast to Python data type
+        if isinstance(answer, Add):
+            return complex(answer)
+        if isinstance(answer, (Float, Rational)):
+            return float(answer)
+        if isinstance(answer, Integer):
+            return int(answer)
+        return answer
 
 
 
@@ -367,8 +372,9 @@ class LCAFunc(Callable):
 
         """
         if self.domain != other.domain:
-            raise ValueError('Domains must be the same.')
+            raise ValueError('Domains must be equal.')
 
+        # Perform both function and apply the operator
         def new_repr(list_arg, *args, **kwargs):
             result_self = self.representation(list_arg, *args, **kwargs)
             result_other = other.representation(list_arg, *args, **kwargs)
@@ -379,6 +385,9 @@ class LCAFunc(Callable):
     def pullback(self, morphism):
         """
         Return the pullback along `morphism`.
+
+        The pullback is the composition `morphism`, then `self`.
+        The domain of `self` must match the target of the morphism.
 
         Parameters
         ----------
@@ -442,11 +451,14 @@ class LCAFunc(Callable):
         return type(self)(representation = new_repr, domain = domain)
 
 
-
-
-    def pushforward(self, morphism, terms_in_sum = 50, norm_condition = None):
+    def pushforward(self, morphism, terms_in_sum = 50):
         """
         Return the pushforward along `morphism`.
+
+        The pushforward is computed by solving an equation, finding the
+        kernel, and iterating through the kernel. The pushfoward
+        approximates a possibly infinite sum by `terms_in_sum` terms.
+
 
         Parameters
         ----------
@@ -470,12 +482,53 @@ class LCAFunc(Callable):
         Examples
         --------
 
-        >>> 1 + 1
-        2
+        The first example is a homomorphism R -> T.
+
+        >>> from abelian import LCA, LCAFunc, HomLCA
+        >>> R = LCA([0], [False])
+        >>> T = LCA([1], [False])
+        >>> epimorphism = HomLCA([1], source = R, target = T)
+        >>> func_expr = lambda x: 2**-sum(x_j**2 for x_j in x)
+        >>> func = LCAFunc(func_expr, domain = R)
+        >>> func.pushforward(epimorphism, 1)([0]) # 1 term in the sum
+        1.0
+        >>> func.pushforward(epimorphism, 3)([0]) # 1 + 0.5*2
+        2.0
+        >>> func.pushforward(epimorphism, 5)([0]) # 1 + 0.5*2 + 0.0625*2
+        2.125
+
+        The first example is a homomorphism Z -> Z_2.
+
+        >>> from abelian import LCA, LCAFunc, HomLCA
+        >>> Z = LCA([0], [True])
+        >>> Z_2 = LCA([2], [True])
+        >>> epimorphism = HomLCA([1], source = Z, target = Z_2)
+        >>> func_expr = lambda x: 2**-sum(x_j**2 for x_j in x)
+        >>> func = LCAFunc(func_expr, domain = Z)
+        >>> func.pushforward(epimorphism, 1)([0]) # 1 term in the sum
+        1.0
+        >>> func.pushforward(epimorphism, 3)([0]) # 1 + 0.5*2 + 0.0625*2
+        1.125
+
+        The third example is a homomorphism R -> R.
+
+        >>> from abelian import LCA, LCAFunc, HomLCA
+        >>> R = LCA([0], [False])
+        >>> epimorphism = HomLCA([1], source = R, target = R)
+        >>> func_expr = lambda x: 2**-sum(x_j**2 for x_j in x)
+        >>> func = LCAFunc(func_expr, domain = R)
+        >>> func.pushforward(epimorphism, 3)([0]) # 1 term in the sum
+        1.0
+
+
         """
         if not self.domain == morphism.source:
             raise ValueError('Source of morphism must equal domain of '
                              'function.')
+
+        # Compute the kernel
+        kernel = morphism.kernel()
+        kernel_m, kernel_n = kernel.A.shape
 
         # Get the domain for the new function
         domain = morphism.target
@@ -490,8 +543,9 @@ class LCAFunc(Callable):
             target_orders = Matrix(morphism.target.orders)
             base_ans = solve(morphism.A, Matrix(list_arg), target_orders)
 
-            # Compute the kernel
-            kernel = morphism.kernel()
+            # The kernel is empty, do not start summing, just return
+            if kernel_n == 0:
+                return self.representation(base_ans, *args, **kwargs)
 
             # Iterate through the kernel space and compute the sum
             kernel_sum = 0
@@ -610,7 +664,7 @@ class LCAFunc(Callable):
         latex_str = latex_str.replace('GRP', self.domain.to_latex())
         return latex_str
 
-    def transversal(self, epimorphism, transversal_rule, default = 0):
+    def transversal(self, epimorphism, transversal_rule = None, default = 0):
         """
         Pushforward using transversal rule.
 
@@ -647,12 +701,13 @@ class LCAFunc(Callable):
         >>> # Do the pushforward with the transversal rule
         >>> f_on_Z = f_on_Zn.transversal(epimorphism, transversal_rule)
         >>> f_on_Z.sample(list(range(-n, n+1)))
-        [0, 0, 0, 9, 16, 0, 1, 4, 0, 0, 0]
+        [0, 0, 0, 9.0, 16.0, 0.0, 1.0, 4.0, 0, 0, 0]
 
         """
         new_domain = epimorphism.source
 
-        # TODO: Should transversals support multifunctions?
+        if not transversal_rule:
+            transversal_rule = voronoi(epimorphism, norm_p = 2)
 
         def new_representation(list_arg, *args, **kwargs):
             # Compose (section * transversal)(x)
@@ -661,7 +716,9 @@ class LCAFunc(Callable):
 
             # If the composition is the identity, apply the epimorphism
             # and then the function to evaluate the new function at the point
-            if composed == list_arg:
+            #print(composed, list_arg, composed == list_arg)
+            epsilon = 10e-10
+            if difference(composed,list_arg) < epsilon:#composed == list_arg:
                 return self.representation(applied_epi, *args, **kwargs)
             else:
                 return default
@@ -774,32 +831,88 @@ class LCAFunc(Callable):
 
 
 
-if __name__ == '__main__':
-    print('Working with the pushfoward.')
-    from abelian import LCA, Homomorphism
-    import math
-
-    domain = LCA([0])
-    f = LCAFunc(lambda x:math.exp(-sum(k ** 2 for k in x)), domain)
-    n = 10
-    x_vals = list(range(-n, n+1))
-    print(x_vals)
-    print([round(k,5) for k in f.sample(x_vals)])
-
-    phi = Homomorphism([1], source = domain, target = [2])
-    pushed = f.pushforward(phi, terms_in_sum = 3)
-    print(pushed([0]), sum(math.exp(-k**2) for k in range(-100,100, 2)))
-    print(pushed([1]))
 
 
+def voronoi(epimorphism, norm_p=2):
+    """
+    Return a transversal mapping to low-freqency.
 
+    This higher-order function returns a quotient transversal
+    which maps x to the y which is cloest to the low-frequency
+    fourier mode.
+
+    Parameters
+    ----------
+    epimorphism_kernel : HomLCA
+        The kernel of the epimorphism that we want to find a section for.
+    norm : function or None
+        A norm function, if None, the max-norm is used.
+
+    Returns
+    -------
+    sigma : function
+        A function x -> y.
+
+    Examples
+    ---------
+    >>> # An orthogonal example
+    >>> from abelian import LCAFunc, HomLCA, LCA
+    >>> Z_10 = LCA([10])
+    >>> epimorphism = HomLCA([1], target = Z_10)
+    """
+
+    # Verify that the epimorphism is R^n -> T^n or Z^n -> Z_n
+    if not all(o == 0 for o in epimorphism.source.orders):
+        raise ValueError('Epimorphism must be R^n -> T^n or Z^n -> Z_n')
+    if not all(o >= 1 for o in epimorphism.target.orders):
+        raise ValueError('Epimorphism must be R^n -> T^n or Z^n -> Z_n')
+
+    # Solve for the kernel of the epimorphism
+    epimorphism_kernel = epimorphism.kernel()
+
+    def sigma(x):
+        """
+        A section used for quotient transversal.
+        """
+        # Initialize variables
+        x = Matrix(x)
+        kernel_A = epimorphism_kernel.A
+        m, m = kernel_A.shape
+
+        # STEP 1: Solve the equation phi(y) = x for the y
+        # If the epimorphism is Z^n -> Z_n
+        if epimorphism._is_homFGA():
+            # Use the solver for FGAs
+            p = Matrix(epimorphism.target.orders)
+            y = solvers.solve(epimorphism.A, x, p = p)
+
+        # If R^n -> T^n
+        if (all(d == False for d in epimorphism.source.discrete) and
+            all(d == False for d in epimorphism.target.discrete)):
+            # Normal linear algebra, user sympy solver
+            y = epimorphism.A.solve(x)
+
+        # STEP 2: Find the points with max-norm <= 1
+        points = free_to_free.elements_increasing_norm(m, end_value = 2)
+        #points = list(itertools.product(*([range(-1,2,2)]*m)))
+        #points.append(tuple([0]*m))
+        #print(points)
+        points = (Matrix(p) for p in points)
+
+        # STEP 3: Find the corner that minimizes ||y - ker(epi) * points||
+        funcvals_vals = ((y - kernel_A*p, p) for p in points)
+
+        normvals_vals = ((norm(list(val), norm_p), p) for (val, p) in funcvals_vals)
+        min_value, minimizer = min(normvals_vals, key=itemgetter(0))
+        #print(x, min_value, minimizer)
+
+        y = y - kernel_A*minimizer
+
+        return list(y)
+
+    return sigma
 
 
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = False)
-
-
-
-
-

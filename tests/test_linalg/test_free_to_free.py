@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+This module tests free-to-free kernels, cokernels images and coimages.
+It also test generation of elements by increasing max norm.
+All tese are stochastics, of dimensions/rank 3-5 typically.
+"""
+
 import itertools
 from random import randint as ri
 from random import choice
@@ -13,6 +19,10 @@ from abelian.linalg.utils import vector_mod_vector
 from abelian.linalg.free_to_free import mod
 
 class TestElementsGeneratorFree:
+    """
+    Test the free elements generator,
+    which generates elements of Z^r with increasing max-norm.
+    """
 
     def test_elements_of_maxnorm_num_elements(self):
         """
@@ -88,8 +98,8 @@ class TestElementsGeneratorFGA:
         """
 
         # Random parameter values
-        dim = ri(1, 5)
-        normvalue = ri(3, 5)
+        dim = ri(1, 4)
+        normvalue = ri(2, 4)
 
         # Generate with free
         ret1 = list(elements_of_maxnorm(dim, normvalue))
@@ -103,6 +113,7 @@ class TestElementsGeneratorFGA:
     def test_VS_naive_generator(self):
         """
         Test vs the naive generator.
+        Make sure the returned values are equal.
         """
         normvalue = ri(0, 4)
         choices = [0]*5 + [4,5,12,13]

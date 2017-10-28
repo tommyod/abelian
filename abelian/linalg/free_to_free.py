@@ -8,21 +8,23 @@ free-to-free homomorphisms. All the inputs and outputs are of type
 """
 
 import itertools
-from sympy import Matrix, Integer
+from sympy import Matrix, Integer, Float, Rational
 from abelian.linalg.factorizations import smith_normal_form
 from abelian.linalg.utils import nonzero_diag_as_list
+from collections.abc import Iterable
+
 
 
 def mod(a, b):
     """
-    Mod and return same type.
+    Mod for integers, tuples and lists.
 
     Parameters
     ----------
     a : int, tuple or list
         The argument.
     b : int, tuple or list
-        The period.
+        The order.
 
     Returns
     -------
@@ -31,22 +33,30 @@ def mod(a, b):
 
     Examples
     ---------
-    >>> mod(7, 5)
+    >>> mod(7, 5) # Integer data
     2
-    >>> mod((5, 8), (4, 4))
+    >>> mod((5, 8), (4, 4)) # Tuple data
     (1, 0)
+    >>> mod([5, 8], [4, 4]) # List data
+    [1, 0]
     """
-    integer_types = (int, Integer)
+    integer_types = (int, Integer, float, Float, Rational)
+
+    # It's a numeric, non-iterable data type
     if isinstance(a, integer_types) and isinstance(b, integer_types):
         if b == 0:
             return a
         return a % b
 
-    return type(a)([mod(i, j) for i, j in zip(a, b)])
+    # It's an iterable data type
+    if isinstance(a, Iterable) and isinstance(b, Iterable):
+        return type(a)([mod(i, j) for i, j in zip(a, b)])
 
-def elements_increasing_norm(free_rank):
+    raise TypeError('Did not recognize data type for modulus.')
+
+def elements_increasing_norm(free_rank, end_value = None):
     """
-    Continually yield every element in Z^r of increasing maxnorm.
+    Continually yield every element in Z^r of increasing max-norm.
 
     Parameters
     ----------
@@ -76,16 +86,20 @@ def elements_increasing_norm(free_rank):
     8 (0, -1) 1
     """
     for maxnorm_value in itertools.count(start = 0, step = 1):
+        if end_value is not None:
+            if maxnorm_value == end_value:
+                break
         yield from elements_of_maxnorm(free_rank, maxnorm_value)
 
 def elements_of_maxnorm_FGA(orders, maxnorm_value):
     """
-    Yield every element of Z_orders such that max_norm(element) = maxnorm_value.
+    Yield every element of Z_`orders` such that max_norm(element) = maxnorm_value.
 
     Parameters
     ----------
     orders : list
-        Orders in Z_orders, where 0 means infinite order, i.e. [2, 0].
+        Orders in Z_orders, where 0 means infinite order,
+        i.e. [2, 0] is Z_2 + Z.
     maxnorm_value : int
         The value of the maximum norm of the elements generated.
 
@@ -113,7 +127,7 @@ def elements_of_maxnorm_FGA(orders, maxnorm_value):
     (-2, 1)
     """
 
-    # The zeroth layer is just (0,0,...), yield this and return to stop
+    # The zeroth layer is just (0,0,...), yield this and return to terminate
     if maxnorm_value == 0:
         yield tuple([0] * len(orders))
         return
@@ -153,7 +167,7 @@ def elements_of_maxnorm_FGA(orders, maxnorm_value):
                 prod_arg[i] = range(max(-order // 2 + 1, old_start),
                                     min(order // 2 + 1, old_stop))
 
-        # Go through the Cartesian product
+        # Go through the Cartesian product / hypercube
         for prod in itertools.product(*prod_arg):
 
             # The first and last part of the element
@@ -195,24 +209,25 @@ def elements_of_maxnorm(free_rank, maxnorm_value):
     True
     """
     if maxnorm_value == 0:
-        yield tuple([0]*free_rank)
-    else:
-        # There are two 'walls' per dimension, front and back
-        for wall in range(free_rank):
+        yield tuple([0] * free_rank)
+        return
 
-            # In each wall, the boundaries must shrink, two at a time
-            boundary_reduced = [1] * wall + [0] * (free_rank - wall - 1)
+    # There are two 'walls' per dimension, front and back
+    for wall in range(free_rank):
 
-            # The arguments into the cartesian product
-            prod_arg = [range(-maxnorm_value + k, maxnorm_value + 1 - k)\
-                        for k in boundary_reduced]
+        # In each wall, the boundaries must shrink, two at a time
+        boundary_reduced = [1] * wall + [0] * (free_rank - wall - 1)
 
-            # Take cartesian products along the boundaries of the r-dimensional
-            # cube. Yield from opposite sides of the 'box'
-            for boundary_element in itertools.product(*prod_arg):
-                start, end = boundary_element[:wall], boundary_element[wall:]
-                yield start + (maxnorm_value,) + end
-                yield start + (-maxnorm_value,) + end
+        # The arguments into the cartesian product
+        prod_arg = [range(-maxnorm_value + k, maxnorm_value + 1 - k)\
+                    for k in boundary_reduced]
+
+        # Take cartesian products along the boundaries of the r-dimensional
+        # cube. Yield from opposite sides of the hypercube
+        for boundary_element in itertools.product(*prod_arg):
+            start, end = boundary_element[:wall], boundary_element[wall:]
+            yield start + (maxnorm_value,) + end
+            yield start + (-maxnorm_value,) + end
 
 
 def free_kernel(A):

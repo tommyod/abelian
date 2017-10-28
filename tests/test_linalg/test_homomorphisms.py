@@ -16,6 +16,8 @@ class TestHomLCA:
 
     @classmethod
     def setup_class(cls):
+        """Setup two random homomorphisms phi and psi.
+        """
         cls.m, cls.n = 3, 3
         cls.phi = HomLCA(Matrix(cls.m, cls.n, lambda i, j: ri(-5, 5)))
         cls.psi = HomLCA(Matrix(cls.m, cls.n, lambda i, j: ri(-5, 5)))
@@ -24,7 +26,6 @@ class TestHomLCA:
         """
         Test the horizontal stacking property.
         """
-
         # Create random group elements (inputs)
         x = Matrix([ri(-5, 5) for i in range(self.n)])
         y = Matrix([ri(-5, 5) for i in range(self.n)])
@@ -62,19 +63,7 @@ class TestHomLCA:
         """
         Test that (a \circ b)(x) == a (b(x)).
         """
-
         # Create random group elements (inputs)
         x = Matrix([ri(-5, 5) for i in range(self.n)])
         composed = (self.phi * self.psi)
         assert composed(x) == self.phi(self.psi(x))
-
-
-
-
-if __name__ == '__main__':
-    t = TestHomLCA()
-    t.setup_class()
-    t.test_stack_horizonally()
-    t.test_stack_vertically()
-    t.test_stack_diagonally()
-    t.test_call_order()

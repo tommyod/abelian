@@ -8,16 +8,13 @@ All the inputs and outputs are of type
 :py:class:`~sympy.matrices.dense.MutableDenseMatrix`.
 """
 
-import itertools
 from sympy import Matrix, diag
-from abelian.linalg.factorizations import smith_normal_form
 from abelian.linalg.utils import columns_as_list
-from sympy import pprint
 import numpy as np
 
 def numerical_SVD(A):
     """
-    Compute U, S, V such that USV = A.
+    Compute U,S,V such that U*S*V = A.
 
     The input is converted to numerical data, the SVD is computed using
     the np.linalg.svd routine, which wraps the LAPACK routine _gesdd.
@@ -95,7 +92,7 @@ def real_kernel(A):
 
     Converts the matrix to a numerical input, computes the SVD,
     finds the kernel monomorphism (null space of A), converts back
-    to a numpy-matrix and returns.
+    to a sympy-matrix and returns.
 
     Parameters
     ----------
@@ -131,6 +128,7 @@ def real_kernel(A):
     if (n-r) != 0:
         return V[:, -(n-r):]
     else:
+        # Return an empty matrix along one dimension
         return V[:, :0]
 
 def real_cokernel(A):
@@ -139,7 +137,7 @@ def real_cokernel(A):
 
     Converts the matrix to a numerical input, computes the SVD,
     finds the cokernel epimorphism (null space of A^T), converts back
-    to a numpy-matrix and returns.
+    to a sympy-matrix and returns.
 
     Parameters
     ----------
@@ -168,6 +166,7 @@ def real_cokernel(A):
     r = numerical_rank(A)
     U, S, V = numerical_SVD(A)
 
+    # Take the transpose/inverse
     U = U.T
 
     # Return the last (m-r) rows of A
@@ -182,7 +181,7 @@ def real_image(A):
 
     Converts the matrix to a numerical input, computes the SVD,
     finds the image monomorphism (column space), converts back
-    to a numpy-matrix and returns.
+    to a sympy-matrix and returns.
 
     Parameters
     ----------
@@ -219,7 +218,7 @@ def real_coimage(A):
 
     Converts the matrix to a numerical input, computes the SVD,
     finds the coimage epimorphism (row space of A), converts back
-    to a numpy-matrix and returns.
+    to a sympy-matrix and returns.
 
     Parameters
     ----------
@@ -242,6 +241,7 @@ def real_coimage(A):
     >>> sum(abs(k) for k in (A - im * coim)) < 10e-15
     True
     """
+
     # Get rank, decompose A and return the first r rows of V
     r = numerical_rank(A)
     U, S, V = numerical_SVD(A)

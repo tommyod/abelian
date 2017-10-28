@@ -8,38 +8,30 @@ integers. All the inputs and outputs are of type
 """
 
 
-from sympy import Matrix, gcdex, pprint
+from sympy import Matrix, gcdex
 from abelian.utils import mod
 
 def hermite_normal_form(A):
     """
     Compute U and H such that A*U = H.
 
-    This algorithm computes the column version of the
-    Hermite normal form [1]_, and returns a tuple of matrices (U, H)
-    such that A*U = H. The matrix U is an unimodular transformation
-    matrix and H is the result of the transformation, i.e. H is in Hermite
-    normal form.
+    This algorithm computes the column version of the Hermite normal form, and
+    returns a tuple of matrices (U, H) such that A*U = H. The matrix U is an
+    unimodular transformation matrix and H is the result of the transformation,
+    i.e. H is in Hermite normal form.
 
     Parameters
     ----------
     A : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        The matrix to factor.
+        The matrix to decompose.
 
     Returns
     -------
     U : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        An unimodular matrix.
+        An unimodular matrix, i.e. integer matrix with determinant +/- 1.
 
     H : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
         A matrix in Hermite normal form.
-
-
-    References
-    ----------
-    .. [1] Derek F. Holt. Handbook of Computational Group Theory.
-          Discrete Mathematics and Its Applications. Boca Raton,
-          Fla: Chapman & Hall/CRC, 2005.
 
     Examples
     ---------
@@ -115,18 +107,17 @@ def hermite_normal_form(A):
             # j is out of dimension, break
             break
 
-    # assert A * U == H
     return U, H
 
 def smith_normal_form(A, compute_unimod = True):
     """
     Compute U,S,V such that U*A*V = S.
 
-    This algorithm computes the Smith normal form [1]_ of an integer matrix.
-    If `compute_transformation` is True, it returns matrices (U, S, V) such
+    This algorithm computes the Smith normal form of an integer matrix.
+    If `compute_unimod` is True, it returns matrices (U, S, V) such
     that U*A*V = S, where U and V are unimodular and S is in Smith normal
-    form. If `compute_transformation` is False, it returns S and does not
-    compute U and V.
+    form. If `compute_unimod` is False, it returns S and does not compute U
+    and V.
 
     Parameters
     ----------
@@ -138,13 +129,13 @@ def smith_normal_form(A, compute_unimod = True):
     Returns
     -------
     U : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        An unimodular matrix.
+        An unimodular matrix, i.e. integer matrix with determinant +/- 1.
 
     S : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
         A matrix in Smith normal form.
 
     V : :py:class:`~sympy.matrices.dense.MutableDenseMatrix`
-        An unimodular matrix.
+        An unimodular matrix, i.e. integer matrix with determinant +/- 1.
 
     Examples
     ---------
@@ -167,7 +158,7 @@ def smith_normal_form(A, compute_unimod = True):
     # Get size and set up the unimodular matrices U and V
     m, n = A.shape
     min_m_n = min(m, n)
-    S = A[:, :]
+    S = A.copy()
     if compute_unimod:
         U, V = Matrix.eye(m), Matrix.eye(n)
 
@@ -215,6 +206,7 @@ def smith_normal_form(A, compute_unimod = True):
             for k in range(f + 1, n):
                 if S[f, k] == 0:
                     continue
+
                 # Subtract a times column f from column k
                 a = S[f, k] // S[f, f]
                 S[f:, k] = S[f:, k] - a * S[f:, f]
@@ -225,6 +217,7 @@ def smith_normal_form(A, compute_unimod = True):
             for k in range(f + 1, m):
                 if S[k, f] == 0:
                     continue
+
                 # Subtract a times row f from row k
                 a = S[k, f] // S[f, f]
                 S[k, f:] = S[k, f:] - a * S[f, f:]
@@ -258,8 +251,6 @@ def smith_normal_form(A, compute_unimod = True):
         return S
 
 
-
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = True)
-

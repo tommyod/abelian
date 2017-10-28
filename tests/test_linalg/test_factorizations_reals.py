@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""
+This module contains stochastic tests kernel, cokernel,
+image and coimage algorithms based on the SVD for maps
+between vector spaces over R.
+"""
+
 from sympy import Matrix
 from random import choice, random
 from abelian.linalg.factorizations_reals import real_kernel, real_cokernel, \
@@ -11,16 +17,16 @@ class TestFactorizationsReals:
     @classmethod
     def setup_class(cls):
         """
-        Set of a matrix.
+        Set up a random matrix.
         """
-
+        # Add more zero entries to cover edge cases with higher probability
         numbers = [0] * 10 + list(range(-5, 5)) + [random() for i in range(8)]
         cls.m, cls.n = choice([1,2,3,4]), choice([1,2,3,4])
         cls.A = Matrix(cls.m, cls.n, lambda i, j: choice(numbers))
 
     def test_kernel(self):
         """
-        Test the kernel.
+        Test the factorization.
         """
 
         # Take the kernel
@@ -37,7 +43,7 @@ class TestFactorizationsReals:
 
     def test_cokernel(self):
         """
-        Test the kernel.
+        Test the kernel factorization.
         """
 
         # Take the kernel
@@ -54,9 +60,8 @@ class TestFactorizationsReals:
 
     def test_image_coimage(self):
         """
-        Test the image/coimage.
+        Test the image/coimage factorization.
         """
-
         # Take the kernel
         A = self.A
         im = real_image(A)
