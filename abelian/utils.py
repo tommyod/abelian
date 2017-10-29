@@ -189,6 +189,3 @@ argmax = functools.partial(arg, min_or_max = max)
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = True)
-
-
-    assert len(list(elements_of_maxnorm([0, 0], 1))) == 8

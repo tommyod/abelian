@@ -4,15 +4,11 @@
 
 """
 This module consists of classes representing homomorphisms between
-finitely generated Abelian groups, namely the HomLCA class and the
-subclass HomFGA.
+elementary LCAs, the HomLCA class.
 """
 
-
-import types
 from collections.abc import Callable
-from sympy import Matrix, diag, latex, Integer, gcd, pprint
-from abelian.utils import mod
+from sympy import Matrix, diag, latex, Integer, gcd
 from abelian.groups import LCA
 from abelian.linalg.utils import remove_zero_columns, nonzero_diag_as_list, \
     matrix_mod_vector, order_of_vector, remove_cols, remove_rows, \
@@ -26,7 +22,7 @@ from abelian.functions import LCAFunc
 
 class HomLCA(Callable):
     """
-    A homomorphism between LCAs.
+    A homomorphism between elementary LCAs.
     """
 
     # The types allowed as entries in A
@@ -84,6 +80,28 @@ class HomLCA(Callable):
 
         # TODO : Should we project to target automatically?
 
+    @classmethod
+    def identity(cls, group):
+        """
+        Return the identity morphism.
+
+        Examples
+        ---------
+        >>> from abelian import LCA, HomLCA
+        >>> H = LCA([5, 6, 7])
+        >>> G = LCA([0, 0])
+        >>> phi = HomLCA([[1,2], [3,4], [5,6]], source = G, target = H)
+        >>> Id_H = HomLCA.identity(H)
+        >>> Id_G = HomLCA.identity(G)
+        >>> # Verify the properties of the identity morphism
+        >>> Id_H * phi == phi
+        True
+        >>> phi * Id_G == phi
+        True
+        """
+        m = group.length()
+        return cls(Matrix.eye(m), source = group, target = group)
+
     @staticmethod
     def _is_scalar_homomorphism(scalar, target, source):
         """
@@ -125,9 +143,10 @@ class HomLCA(Callable):
         R = LCA([0], [False])
         T = LCA([1], [False])
         Z = LCA([0], [True])
+        Z_1 = LCA([1], [True])
 
         # Trivial homomorphism is always valid
-        if scalar == 0:
+        if scalar == 0 or source == Z_1:
             return True
 
         # Defined for readability
@@ -382,6 +401,7 @@ class HomLCA(Callable):
             new_A = self.A * other
             return type(self)(new_A, target=self.target, source=self.source)
 
+        # If the `other` argument is a HomLCA
         if isinstance(other, type(self)):
             if not other.target == self.source:
                 raise ValueError('Target of other must equal source of self.')
@@ -784,23 +804,20 @@ class HomLCA(Callable):
         new_A = self.A.col_join(other.A)
         return type(self)(new_A, target = new_target, source = new_source)
 
-    def update_source(self, new_source):
+    def update(self, new_A = None, new_target = None, new_source = None):
         """
-        Update the source of the homomorphism.
+        Return a new homomorphism with updated properties.
+        """
 
-        :param new_source:
-        :return:
-        """
-        return type(self)(self.A, target=self.target, source=new_source)
+        if new_A is None:
+            new_A = self.A
+        if new_target is None:
+            new_target = self.target
+        if new_source is None:
+            new_source = self.source
 
-    def update_target(self, new_target):
-        """
-        Update the source of the homomorphism.
+        return type(self)(new_A, target=new_target, source=new_source)
 
-        :param new_source:
-        :return:
-        """
-        return type(self)(self.A, target=new_target, source=self.source)
 
     def _is_homFGA(self):
         """
@@ -921,13 +938,20 @@ class HomLCA(Callable):
                            in self.A)
 
 
+        # If the mapping is R^d -> R^d, the coimage is found with the SVD
+        if all(g == R for g in self.source) and \
+            all(g == R for g in self.target):
+            coimage_A = real_coimage(self.A)
+            m, n = coimage_A.shape
+            return type(self)(coimage_A, source=R**n, target=R**m)
+
         if self.source.is_FGA() and target_real_noncompact and A_is_integer:
             return self._FGA_coimage()
 
         if self._is_homFGA():
             return self._FGA_coimage()
         else:
-            raise NotImplementedError('Not implemented for non-FGA.')
+            raise NotImplementedError('Not implemented.')
 
     def cokernel(self):
         """
@@ -956,13 +980,21 @@ class HomLCA(Callable):
         R = LCA(orders=[0], discrete=[False])
         T = LCA(orders=[1], discrete=[False])
         m, n = self.shape
-        #print(m, n, self.source, self.target)
+
+        # If the mapping is R^d -> R^d, the kernel is found with the SVD
+        if all(g == R for g in self.source) and \
+            all(g == R for g in self.target):
+            cokernel_A = real_cokernel(self.A)
+            m, n = cokernel_A.shape
+            return type(self)(cokernel_A, source=R**n, target=R**m)
+
+
         if (m == n) and self.source == Z**m and self.target == R**m:
             inverse_A = self.A.inv()
             return type(self)(inverse_A, target = T**m, source = self.target)
 
         else:
-            raise NotImplementedError('Not implemented for non-FGA.')
+            raise NotImplementedError('Not implemented.')
 
     def image(self):
         """
@@ -997,12 +1029,20 @@ class HomLCA(Callable):
                            in self.A)
 
 
+        # If the mapping is R^d -> R^d, the image is found with the SVD
+        if all(g == R for g in self.source) and \
+            all(g == R for g in self.target):
+            image_A = real_image(self.A)
+            m, n = image_A.shape
+            return type(self)(image_A, source=R**n, target=R**m)
+
+
         if self.source.is_FGA() and target_real_noncompact and A_is_integer:
             return self._FGA_image()
         if self._is_homFGA():
             return self._FGA_image()
         else:
-            raise NotImplementedError('Not implemented for non-FGA.')
+            raise NotImplementedError('Not implemented.')
 
 
     def kernel(self):
@@ -1050,7 +1090,7 @@ class HomLCA(Callable):
         if self._is_homFGA():
             return self._FGA_kernel()
         else:
-            raise NotImplementedError('Not implemented for non-FGA.')
+            raise NotImplementedError('Not implemented.')
 
     def _FGA_coimage(self):
         """
@@ -1267,9 +1307,3 @@ class HomLCA(Callable):
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = False)
-
-
-
-
-
-

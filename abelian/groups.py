@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This module consists of a class for locally compact Abelian groups,
+This module consists of a class for elementary locally compact abelian groups,
 the LCA class.
 """
 
@@ -10,13 +10,13 @@ from sympy import Matrix, Integer, diag
 from abelian.utils import mod
 from abelian.linalg.factorizations import smith_normal_form
 from abelian.linalg.utils import nonzero_diag_as_list
-from collections.abc import Sequence
+from collections.abc import Sequence, Callable
 from abelian.linalg.free_to_free import elements_of_maxnorm_FGA
 import itertools
 
-class LCA(Sequence):
+class LCA(Sequence, Callable):
     """
-    A locally compact Abelian group (LCA).
+    An elementary locally compact abelian group (LCA).
     """
 
     # These dictionaries lets the user initialize using
@@ -111,7 +111,6 @@ class LCA(Sequence):
             discrete = list(discrete)
 
         # From here on out, assume `orders` and `discrete` are lists
-
         if len(orders) < 0:
             raise ValueError('List of orders must have length >=0.')
 
@@ -125,7 +124,7 @@ class LCA(Sequence):
             raise ValueError('Orders and list of discrete must match length.')
 
         for p, d in zip(orders, discrete):
-            if not d and p not in [0, 1]:
+            if (not d) and (p not in [0, 1]):
                 raise ValueError('Continuous groups must have order 0 or 1.')
 
         def map_to_bool(x):
@@ -145,6 +144,13 @@ class LCA(Sequence):
         see :py:meth:`~abelian.groups.LCA.sum`.
         """
         return self.sum(other)
+
+    def __call__(self, element):
+        """
+        Override function calls,
+        see :py:meth:`~abelian.groups.LCA.project_element`.
+        """
+        return self.project_element(element)
 
     def __contains__(self, other):
         """
@@ -255,10 +261,8 @@ class LCA(Sequence):
             non_torsion = LCA.remove_indices(torsion_i)
             return torsion, non_torsion
 
-
         # Get information pertaining to self
         self_tors, self_non_tors = split_torsion(self)
-
 
         # Sort the non-torsion subgroup
         tuples = list(self_non_tors._iterate_tuples())
@@ -451,8 +455,8 @@ class LCA(Sequence):
         """
         Whether or not the LCA is a FGA.
 
-        A locally compact Abelian group (LCA) is a finitely generated
-        Abelian group (FGA) iff all the groups in the direct sum are discrete.
+        A locally compact abelian group (LCA) is a finitely generated
+        abelian group (FGA) iff all the groups in the direct sum are discrete.
 
         Returns
         -------
@@ -643,7 +647,6 @@ class LCA(Sequence):
             return Matrix(projected)
 
 
-
     def rank(self):
         """
         Return the rank of the LCA.
@@ -734,7 +737,7 @@ class LCA(Sequence):
         Parameters
         ----------
         other : LCA
-            A locally compact Abelian group.
+            A locally compact abelian group.
 
         Returns
         -------
@@ -867,25 +870,4 @@ class LCA(Sequence):
 if __name__ == "__main__":
     import doctest
     doctest.testmod(verbose = False)
-
-
-if __name__ == '__main__':
-    G = LCA([2, 3, 4, 4, 4])
-    H = LCA([2, 3, 4])
-    assert (G in H) is False
-    print('Passed 1')
-
-    G = LCA([5, 4, 4, 3])
-    H = LCA([4, 5, 4, 2, 3])
-
-    for g in G:
-        print(g)
-
-    print('---')
-    for g in reversed(G):
-        print(g)
-
-
-
-
 

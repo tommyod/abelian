@@ -77,12 +77,12 @@ class TestThesisExamples:
         assert close(func_dual([0, 0]), 0.9)
 
     def test_example_3_Hexagonal(self):
-        from math import exp, sqrt
+        from math import exp, sqrt, pi
 
         # Import objects, create function on R^n
         from abelian import HomLCA, LCA, LCAFunc, voronoi
         R = LCA(orders=[0], discrete=[False])
-        k = 0.33  # Decay of exponential
+        k = 0.5  # Decay of exponential
         func_expr = lambda x: exp(-k * sum(x_j ** 2 for x_j in x))
         func = LCAFunc(func_expr, domain=R ** 2)
 
@@ -91,7 +91,7 @@ class TestThesisExamples:
         phi_sample = HomLCA(hexagonal_generators, target=R ** 2)
 
         # Create a homomorphism to periodize
-        n = 2
+        n = 3
         phi_periodize = HomLCA([[n, 0], [0, n]])
         coker_phi_p = phi_periodize.cokernel()
 
@@ -109,3 +109,14 @@ class TestThesisExamples:
             value = func_dual(element)
             coords_on_R = sigma(phi_periodize_ann(element))
 
+        approx, true = func_dual([0, 0])*n*n, sqrt((2*pi)**2)
+        print(approx, true, true/approx)
+
+        print(phi_sample.A.det()*2)
+
+        print(approx*phi_sample.A.det()*2, true/k)
+
+
+if __name__ == '__main__':
+    t = TestThesisExamples()
+    t.test_example_3_Hexagonal()

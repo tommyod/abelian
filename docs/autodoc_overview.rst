@@ -44,12 +44,13 @@ Public classes (detailed)
   
 :class:`~abelian.groups.LCA`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- (inherits from: :class:`~collections.abc.Sequence` )
+ (inherits from: :class:`~collections.abc.Sequence`, :class:`~collections.abc.Callable` )
 
 .. autosummary::
 
     ~abelian.groups.LCA
     ~abelian.groups.LCA.__add__
+    ~abelian.groups.LCA.__call__
     ~abelian.groups.LCA.__contains__
     ~abelian.groups.LCA.__eq__
     ~abelian.groups.LCA.__getitem__
@@ -106,6 +107,7 @@ Public classes (detailed)
     ~abelian.morphisms.HomLCA.equal
     ~abelian.morphisms.HomLCA.evaluate
     ~abelian.morphisms.HomLCA.getitem
+    ~abelian.morphisms.HomLCA.identity
     ~abelian.morphisms.HomLCA.image
     ~abelian.morphisms.HomLCA.kernel
     ~abelian.morphisms.HomLCA.project_to_source
@@ -115,7 +117,6 @@ Public classes (detailed)
     ~abelian.morphisms.HomLCA.stack_horiz
     ~abelian.morphisms.HomLCA.stack_vert
     ~abelian.morphisms.HomLCA.to_latex
-    ~abelian.morphisms.HomLCA.update_source
-    ~abelian.morphisms.HomLCA.update_target
+    ~abelian.morphisms.HomLCA.update
     ~abelian.morphisms.HomLCA.zero
   

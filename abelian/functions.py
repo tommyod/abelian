@@ -7,25 +7,23 @@ called LCAFunc. Such a function represents a function
 from a LCA G to the complex numbers C.
 """
 from operator import itemgetter
-
 from sympy import Matrix, Float, Integer, Add, Rational
-
 from abelian.linalg import solvers, free_to_free
 from abelian.linalg.utils import norm, difference
 from abelian.linalg.free_to_free import elements_increasing_norm
+from abelian.linalg.solvers import solve
 from abelian.utils import call_nested_list, verify_dims_list, copy_func, function_to_table
 from abelian.groups import LCA
 from types import FunctionType
-from abelian.linalg.solvers import solve
+from collections.abc import Callable
 import numpy as np
 import functools
 import operator
-from collections.abc import Callable
 
 
 class LCAFunc(Callable):
     """
-    A function on a LCA.
+    A function from an LCA to a complex number.
     """
 
     def __init__(self, representation, domain):
@@ -34,14 +32,13 @@ class LCAFunc(Callable):
 
         Parameters
         ----------
-        representation : function (or list of lists if domain is discrete
-        and compact, i.e. Z_p with p_i > 0)
+        representation : function or n-dimensional list of domain allows it
             A function which takes in a list as a first argument, representing
             the group element. Alternatively a list of lists if the domain is
             discrete and of finite order.
         domain : LCA
-            A locally compact Abelian group, which is the domain of the
-            function.
+            An elementary locally compact abelian group, which is the domain
+            of the function.
 
         Examples
         ---------
@@ -95,7 +92,7 @@ class LCAFunc(Callable):
             self.representation = representation
             self.table = None
 
-            # A table representation has been passed
+        # A table representation has been passed
         else:
             if not self._discrete_finite_domain():
                 raise TypeError('When the function representation is a table,'
@@ -111,28 +108,8 @@ class LCAFunc(Callable):
                 return call_nested_list(representation, list_of_points)
 
             self.representation = list_caller
-            self.representation.__name__ = 'table'
             self.table = representation
 
-
-    def to_table(self, *args, **kwargs):
-        """
-        The table, if it exists.
-        """
-
-        # If the domain is not discrete and of finite order, no table exists
-        if not self._discrete_finite_domain():
-            return None
-
-        # If a table already is computed, return it
-        if self.table is not None:
-            return self.table
-
-        # If a table is not computed, compute it and return
-        dims = self.domain.orders
-        table = function_to_table(self.representation, dims, *args, **kwargs)
-        self.table = table
-        return table
 
     def __call__(self, list_arg, *args, **kwargs):
         """
@@ -151,13 +128,12 @@ class LCAFunc(Callable):
             A representation of the instance.
 
         """
-        func_name = self.representation.__name__
-        str = r'LCAFunc ({}) on domain {}'.format(func_name, self.domain)
+        str = r'LCAFunc on domain {}'.format(self.domain)
         return str
 
     def copy(self):
         """
-        Return a copy of the LCAfunc.
+        Return a copy of the instance.
 
         Returns
         -------
@@ -175,8 +151,6 @@ class LCAFunc(Callable):
         repr = copy_func(self.representation)
         domain = self.domain.copy()
         return type(self)(representation = repr, domain = domain)
-
-
 
     def dft(self, func_type = None):
         """
@@ -231,6 +205,8 @@ class LCAFunc(Callable):
         """
         return self._fft_wrapper(func_to_wrap='fftn', func_type=func_type)
 
+
+
     def evaluate(self, list_arg, *args, **kwargs):
         """
         Evaluate function on a group element.
@@ -257,7 +233,7 @@ class LCAFunc(Callable):
         >>> function([1, 2])
         1
 
-        Some subtle conceps are shown below.
+        Some subtle concepts are shown below.
 
         >>> function(1)
         Traceback (most recent call last):
@@ -275,29 +251,30 @@ class LCAFunc(Callable):
         # the argument must have the same length. If the direct sum consists
         # of one group only and the argument is numeric, we forgive the user
         domain_length = self.domain.length()
+
+        # Verify the inputs
         if domain_length > 1:
             if isinstance(list_arg, (int, float, complex)):
                 raise ValueError('Argument to function must be list.')
         elif domain_length and isinstance(list_arg, (int, float, complex)):
             list_arg = [list_arg]
 
+        # Verify the length
         if domain_length != len(list_arg):
             raise ValueError('LCAFunc argument does not match domain length.')
 
+        # Project and compute
         proj_args = self.domain.project_element(list_arg)
         answer = self.representation(proj_args, *args, **kwargs)
 
         # Cast to Python data type
-        if isinstance(answer, Add):
-            return complex(answer)
         if isinstance(answer, (Float, Rational)):
             return float(answer)
         if isinstance(answer, Integer):
             return int(answer)
+        if isinstance(answer, Add):
+            return complex(answer)
         return answer
-
-
-
 
     def idft(self, func_type = None):
         """
@@ -337,6 +314,7 @@ class LCAFunc(Callable):
         (210-60j)
         """
         return self._fft_wrapper(func_to_wrap='ifftn', func_type=func_type)
+
 
     def pointwise(self, other, operator):
         """
@@ -435,7 +413,6 @@ class LCAFunc(Callable):
         # Get the domain for the new function
         domain = morphism.source
 
-
         def new_repr(list_arg, *args, **kwargs):
             """
             A function which first applies the morphism,
@@ -445,11 +422,7 @@ class LCAFunc(Callable):
             applied_func = self.representation(applied_morph, *args, **kwargs)
             return applied_func
 
-        # Update the name
-        new_repr.__name__ = 'pullback'
-        new_repr = self._update_name(new_repr, self.representation)
         return type(self)(representation = new_repr, domain = domain)
-
 
     def pushforward(self, morphism, terms_in_sum = 50):
         """
@@ -538,7 +511,6 @@ class LCAFunc(Callable):
             A function which first applies the morphism,
             then applies the function.
             """
-
             # Compute a solution to phi(x) = y
             target_orders = Matrix(morphism.target.orders)
             base_ans = solve(morphism.A, Matrix(list_arg), target_orders)
@@ -553,7 +525,6 @@ class LCAFunc(Callable):
 
             generator = elements_increasing_norm(dim_ker_source)
             for counter, boundary_element in enumerate(generator, 1):
-                # print(counter)
                 # The `base_ans` is in the kernel of the morphism,
                 # we move to all points in the kernel by taking
                 # the `base_ans` + linear combinations of the kernel
@@ -562,18 +533,11 @@ class LCAFunc(Callable):
 
                 function = self.representation
                 func_in_ker = function(kernel_element, *args, **kwargs)
-                #print('Kernel element', kernel_element, '->', func_in_ker)
                 kernel_sum += func_in_ker
                 if counter >= terms_in_sum:
                     break
 
-
             return kernel_sum
-
-        # Update the name
-        new_representation.__name__ = 'pushforward'
-        new_representation = self._update_name(new_representation,
-                                               self.representation)
 
         return type(self)(representation=new_representation, domain=domain)
 
@@ -640,13 +604,10 @@ class LCAFunc(Callable):
             applied_func = self.representation(shifted_arg, *args, **kwargs)
             return applied_func
 
-        # Update the name
-        new_representation.__name__ = 'shift'
-        new_representation = self._update_name(new_representation,
-                                               self.representation)
 
         return type(self)(representation = new_representation,
                           domain = new_domain)
+
 
     def to_latex(self):
         """
@@ -659,17 +620,66 @@ class LCAFunc(Callable):
             The object as a latex string.
 
         """
-        latex_str = r'\operatorname{FUNC} \in \mathbb{C}^G, \ G = GRP'
-        latex_str = latex_str.replace('FUNC', self.representation.__name__)
+        latex_str = r'\operatorname{function} \in \mathbb{C}^G, \ G = GRP'
         latex_str = latex_str.replace('GRP', self.domain.to_latex())
         return latex_str
 
-    def transversal(self, epimorphism, transversal_rule = None, default = 0):
+    def to_table(self, *args, **kwargs):
+        """
+        Return a n-dimensional table.
+
+        Returns
+        -------
+        table : n-dimensional list
+            The table representation.
+
+        Examples
+        --------
+        >>> from abelian import LCA, LCAFunc
+        >>> domain = LCA([5, 5])
+        >>> f = LCAFunc(lambda x: sum(x), domain)
+        >>> table = f.to_table()
+        >>> table[1][1]
+        (2+0j)
+
+        Using a table from the start.
+
+        >>> from abelian import LCA, LCAFunc
+        >>> import numpy as np
+        >>> domain = LCA([5, 5])
+        >>> f = LCAFunc(np.eye(5), domain)
+        >>> table = f.to_table()
+        >>> table[1][1]
+        1.0
+        >>> type(table)
+        <class 'numpy.ndarray'>
+        >>> f = LCAFunc([[1, 2], [2, 4]], LCA([2, 2]))
+        >>> f.to_table()
+        [[1, 2], [2, 4]]
+        """
+
+        # If the domain is not discrete and of finite order, no table exists
+        if not self._discrete_finite_domain():
+            raise TypeError('No table. Domain must be discrete and finite.')
+
+        # If a table already is computed, return it
+        if self.table is not None:
+            return self.table
+
+        # If a table is not computed, compute it and return
+        dims = self.domain.orders
+        table = function_to_table(self.representation, dims, *args, **kwargs)
+        self.table = table
+        return table
+
+    def transversal(self, epimorphism, transversal_rule = None,
+                    default_value = 0):
         """
         Pushforward using transversal rule.
 
         If (transversal * epimorphism)(x) = x, then x is pushed forward
-        using the transversal rule. If not, then the default value is returned.
+        using the transversal rule. If not, then the default_value value is
+        returned.
 
         Parameters
         ----------
@@ -716,12 +726,11 @@ class LCAFunc(Callable):
 
             # If the composition is the identity, apply the epimorphism
             # and then the function to evaluate the new function at the point
-            #print(composed, list_arg, composed == list_arg)
             epsilon = 10e-10
             if difference(composed,list_arg) < epsilon:#composed == list_arg:
                 return self.representation(applied_epi, *args, **kwargs)
             else:
-                return default
+                return default_value
 
         return type(self)(representation=new_representation, domain=new_domain)
 
@@ -735,13 +744,6 @@ class LCAFunc(Callable):
             Whether or not the domain is discrete and finite.
         """
         return self.domain.is_FGA() and all(p > 0 for p in self.domain.orders)
-
-
-    @staticmethod
-    def _update_name(new_func, old_func, composition_str = '*'):
-        comp = ' {} '.format(composition_str)
-        new_func.__name__ = old_func.__name__ + comp + new_func.__name__
-        return new_func
 
 
     def _fft_wrapper(self, func_to_wrap = 'fftn', func_type = ''):
@@ -787,19 +789,11 @@ class LCAFunc(Callable):
         # Put the function values in a table in preparation for FFT/IFFT
         if func_type is None:
             table = self.to_table()
-
-
-            #table = np.empty(dims, dtype=complex)
-            #for element in itertools.product(*[range(k) for k in dims]):
-                #print(element)
-                #print(self.representation)
-                #print(self.representation(list(element)))
-            #table[element] = self.representation(list(element))
         else:
             # Here the np.ogrid or np.mgrid can be used, see
             # https://arxiv.org/pdf/1102.1523.pdf
-            funtion = getattr(np, func_type)
-            table = func(funtion[tuple([slice(k) for k in dims])])
+            function = getattr(np, func_type)
+            table = function([tuple([slice(k) for k in dims])])
 
         # Take fft and convert to list of lists
         function_wrapped = getattr(np.fft, func_to_wrap, None)
@@ -817,25 +811,13 @@ class LCAFunc(Callable):
             table_computed =  table_computed * (functools.reduce(
                 operator.mul, dims))
 
-        #table_computed = table_computed.tolist()
-
         # Create a new instance and return
         return type(self)(domain = domain, representation = table_computed)
 
 
-
-
-
-
-
-
-
-
-
-
 def voronoi(epimorphism, norm_p=2):
     """
-    Return a transversal mapping to low-freqency.
+    Return the Voronoi transversal function.
 
     This higher-order function returns a quotient transversal
     which maps x to the y which is cloest to the low-frequency
@@ -894,9 +876,6 @@ def voronoi(epimorphism, norm_p=2):
 
         # STEP 2: Find the points with max-norm <= 1
         points = free_to_free.elements_increasing_norm(m, end_value = 2)
-        #points = list(itertools.product(*([range(-1,2,2)]*m)))
-        #points.append(tuple([0]*m))
-        #print(points)
         points = (Matrix(p) for p in points)
 
         # STEP 3: Find the corner that minimizes ||y - ker(epi) * points||
@@ -904,7 +883,6 @@ def voronoi(epimorphism, norm_p=2):
 
         normvals_vals = ((norm(list(val), norm_p), p) for (val, p) in funcvals_vals)
         min_value, minimizer = min(normvals_vals, key=itemgetter(0))
-        #print(x, min_value, minimizer)
 
         y = y - kernel_A*minimizer
 

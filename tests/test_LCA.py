@@ -3,7 +3,10 @@
 
 import random
 from random import randint as ri
+from random import shuffle
 from abelian.groups import LCA
+from functools import reduce
+from operator import add
 
 def random_zero_heavy(low, high):
     """
@@ -39,6 +42,40 @@ class TestLCA:
     def setup_class(cls):
         cls.G = random_LCA(10)
         cls.H = random_LCA(10)
+
+    def test_border_cases(self):
+        """
+        Border cases when initializing.
+        """
+        Id = LCA.trivial()
+
+        assert Id.isomorphic(LCA([]))
+
+    def test_canonical(self):
+        """
+        Test that canonical is invariant under shuffling.
+        """
+        G = self.G
+
+        G_split = [grp for grp in G]
+        shuffle(G_split)
+        G_shuffled = reduce(add, G_split)
+
+        assert G.canonical() == G_shuffled.canonical()
+
+    def test_trivial_group(self):
+        """
+        Test the property of the trivial group.
+        """
+        Id = LCA.trivial()
+        G = self.G
+        H = self.H
+        assert (G + Id).isomorphic(G)
+        assert (Id + G).isomorphic(G)
+        assert (H + Id).isomorphic(H)
+        assert (Id + H).isomorphic(H)
+        assert (Id + Id).isomorphic(Id)
+
 
     def test_rank(self):
         """

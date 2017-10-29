@@ -16,6 +16,9 @@ class TestSNF:
 
     @classmethod
     def setup_class(cls):
+        """
+        Setup a homomorphism.
+        """
         m, n = ri(2, 4), ri(2, 4)
         A = Matrix(m, n, lambda i, j: random_zero_heavy(-9, 9))
         target = Matrix(m, 1, lambda i, j: random_zero_heavy(5, 50))
@@ -32,7 +35,6 @@ class TestSNF:
         phi = self.phi.project_to_source()
         coimage = self.phi.coimage().project_to_source()
         assert phi.source == coimage.source
-
 
 
     def test_project_to_source(self):
@@ -64,6 +66,7 @@ class TestSNF:
         original = (self.phi).project_to_target()
         assert factorization == original
 
+
     def test_kernel(self):
         """
         The that the kernel and the morphism is zero.
@@ -74,6 +77,7 @@ class TestSNF:
         zero_morphism = HomLCA.zero(target = self.phi.target,
                                     source = kernel.source)
         assert phi_ker == zero_morphism
+
 
     def test_cokernel(self):
         """
