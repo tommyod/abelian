@@ -15,18 +15,20 @@ class TestSolveEpi():
     This is used for the coimage.
     """
 
-    @classmethod
-    def setup_class(cls):
+    @staticmethod
+    def setup():
         # Set up the sizes for the tests
-        cls.m = 3
-        cls.k = 2
+        m = ri(3, 6)
+        k = ri(2,3)
+        return m, k
 
 
     def test_bijective_free_to_free(self):
         """
         Solve X*A = B when A is a bijective, free-to-free morphism.
         """
-        m, k = self.m, self.k
+        m, k = self.setup()
+
         A = Matrix(m, m, lambda i, j : ri(-9, 9))
         A, H = hermite_normal_form(A)
         X = Matrix(k, m, lambda i, j : ri(-9, 9))
@@ -40,7 +42,7 @@ class TestSolveEpi():
         """
         Solve X*A = B when A is overdetermined, free-to-free morphism.
         """
-        m, k = self.m, self.k
+        m, k = self.setup()
 
         # Create a matrix A
         A = Matrix(m, m, lambda i, j : ri(-9, 9))
@@ -62,20 +64,22 @@ class TestSolve():
     Test the general solver.
     """
 
-    @classmethod
-    def setup_class(cls):
+    @staticmethod
+    def setup():
         # Set up the sizes for the tests
-        cls.n = ri(3, 5)
-        cls.r = cls.n - 2
+        n = ri(3, 5)
+        r = n - 2
+
+        return n, r
 
 
     def test_bijective(self):
         """
         Test the equation solver when A is n x n and of full rank.
         """
+        n, r = self.setup()
 
         # Set up the equation
-        n = self.n
         A = Matrix(n, n, lambda i,j : ri(-9,9))
         A, H = hermite_normal_form(A)
         x = Matrix(n, 1, lambda i, j : ri(-5,5))
@@ -91,9 +95,9 @@ class TestSolve():
         Test the equation solver when A is surjective,
         i.e. maps onto (epimorphism).
         """
+        n, r = self.setup()
 
         # Create a matrix A
-        n = self.n
         A = Matrix(n, n, lambda i, j: ri(-9, 9))
         A, H = hermite_normal_form(A)
         m, m = A.shape
@@ -113,9 +117,9 @@ class TestSolve():
         Test the equation solver when a is surjective,
         i.e. maps one-to-one (monomorphism).
         """
+        n, r = self.setup()
 
         # Create a unimodular matrix A
-        n = self.n
         A = Matrix(n, n, lambda i, j: ri(-9, 9))
         A, H = hermite_normal_form(A)
         m, m = A.shape
@@ -140,8 +144,7 @@ class TestSolve():
         which is neither surjective nor injective.
         """
         # Create a matrix of lower rank
-        n = self.n
-        r = self.r
+        n, r = self.setup()
         g = Matrix(r, n, lambda i, j : ri(-9, 9))
         A = g.T * g
 

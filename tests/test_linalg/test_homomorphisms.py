@@ -14,56 +14,65 @@ def random_zero_heavy(low, high):
 
 class TestHomLCA:
 
-    @classmethod
-    def setup_class(cls):
+    @staticmethod
+    def setup():
         """Setup two random homomorphisms phi and psi.
         """
-        cls.m, cls.n = 3, 3
-        cls.phi = HomLCA(Matrix(cls.m, cls.n, lambda i, j: ri(-5, 5)))
-        cls.psi = HomLCA(Matrix(cls.m, cls.n, lambda i, j: ri(-5, 5)))
+        m, n = 3, 3
+        phi = HomLCA(Matrix(m, n, lambda i, j: ri(-5, 5)))
+        psi = HomLCA(Matrix(m, n, lambda i, j: ri(-5, 5)))
+        return m, n, phi, psi
 
     def test_stack_horizonally(self):
         """
         Test the horizontal stacking property.
         """
+        m, n, phi, psi = self.setup()
+
         # Create random group elements (inputs)
-        x = Matrix([ri(-5, 5) for i in range(self.n)])
-        y = Matrix([ri(-5, 5) for i in range(self.n)])
+        x = Matrix([ri(-5, 5) for i in range(n)])
+        y = Matrix([ri(-5, 5) for i in range(n)])
 
         x_over_y = x.col_join(y)
-        stacked = self.phi.stack_horiz(self.psi)
-        assert stacked(x_over_y) == self.phi(x) + self.psi(y)
+        stacked = phi.stack_horiz(psi)
+        assert stacked(x_over_y) == phi(x) + psi(y)
 
     def test_stack_vertically(self):
         """
         Test the vertical stacking property.
         """
+        m, n, phi, psi = self.setup()
+
 
         # Create random group elements (inputs)
-        x = Matrix([ri(-5, 5) for i in range(self.n)])
+        x = Matrix([ri(-5, 5) for i in range(n)])
 
-        stacked = self.phi.stack_vert(self.psi)
-        assert stacked(x) == self.phi(x).col_join(self.psi(x))
+        stacked = phi.stack_vert(psi)
+        assert stacked(x) == phi(x).col_join(psi(x))
 
     def test_stack_diagonally(self):
         """
         Test the diagonal stacking property.
         """
+        m, n, phi, psi = self.setup()
+
 
         # Create random group elements (inputs)
-        x = Matrix([ri(-5, 5) for i in range(self.n)])
-        y = Matrix([ri(-5, 5) for i in range(self.n)])
+        x = Matrix([ri(-5, 5) for i in range(n)])
+        y = Matrix([ri(-5, 5) for i in range(n)])
 
         x_over_y = x.col_join(y)
-        stacked = self.phi.stack_diag(self.psi)
+        stacked = phi.stack_diag(psi)
 
-        assert stacked(x_over_y) == self.phi(x).col_join(self.psi(y))
+        assert stacked(x_over_y) == phi(x).col_join(psi(y))
 
     def test_call_order(self):
         """
         Test that (a \circ b)(x) == a (b(x)).
         """
+        m, n, phi, psi = self.setup()
+
         # Create random group elements (inputs)
-        x = Matrix([ri(-5, 5) for i in range(self.n)])
-        composed = (self.phi * self.psi)
-        assert composed(x) == self.phi(self.psi(x))
+        x = Matrix([ri(-5, 5) for i in range(n)])
+        composed = (phi * psi)
+        assert composed(x) == phi(psi(x))

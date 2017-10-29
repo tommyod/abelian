@@ -16,7 +16,8 @@ analysis on elementary LCAs using homomorphisms between groups.
 
 Classes and methods
 ^^^^^^^^^^^^^^^^^^^^^
-* The ``LCA`` class represents elementary LCAs, i.e. R, Z, T = R/Z, Z_n and direct sums.
+* The ``LCA`` class represents elementary LCAs, i.e. R, Z, T = R/Z, Z_n and
+  direct sums of these groups.
    * Fundamental methods: identity LCA, direct sums, equality, isomorphic, element projection, Pontryagin dual.
 
 * The ``HomLCA`` class represents homomorphisms between LCAs.

@@ -23,9 +23,13 @@ def random_zero_heavy(low, high):
 
 class TestFGAFactorizationsNaively:
 
-    @classmethod
-    def setup_class(cls):
-        max_size = 15
+
+    def test_cokernel_target(self):
+        """
+        Test the quotient group.
+        """
+        # ----------- START SETUP ----------------
+        max_size = 10
         m, n = ri(1, max_size), ri(2, max_size)
         print(m, n)
         num_generators = ri(1, 2)
@@ -35,14 +39,10 @@ class TestFGAFactorizationsNaively:
         periods = [order_of_vector(g, [m, n]) for g in generators]
         print(periods)
 
-        cls.generators = generators
-        cls.periods = periods
-        cls.m, cls.n = m, n
-
-    def test_cokernel_target(self):
-        """
-        Test the quotient group.
-        """
+        self.generators = generators
+        self.periods = periods
+        self.m, self.n = m, n
+        # ----------- END SETUP ----------------
 
         # According to proof, this is true
         A = Matrix(self.generators).T
@@ -66,6 +66,8 @@ class TestFGAFactorizationsNaively:
         assert naive_quotient % 1 == 0
 
         assert naive_quotient == functools.reduce(operator.mul, quotient)
+
+
 
 
 

@@ -14,20 +14,22 @@ from abelian.linalg.factorizations_reals import real_kernel, real_cokernel, \
 
 class TestFactorizationsReals:
 
-    @classmethod
-    def setup_class(cls):
+    @staticmethod
+    def setup():
         """
         Set up a random matrix.
         """
         # Add more zero entries to cover edge cases with higher probability
         numbers = [0] * 10 + list(range(-5, 5)) + [random() for i in range(8)]
-        cls.m, cls.n = choice([1,2,3,4]), choice([1,2,3,4])
-        cls.A = Matrix(cls.m, cls.n, lambda i, j: choice(numbers))
+        m, n = choice([1,2,3,4]), choice([1,2,3,4])
+        A = Matrix(m, n, lambda i, j: choice(numbers))
+        return A, m, n
 
     def test_kernel(self):
         """
         Test the factorization.
         """
+        self.A, self.m, self.n = self.setup()
 
         # Take the kernel
         A = self.A
@@ -45,6 +47,7 @@ class TestFactorizationsReals:
         """
         Test the kernel factorization.
         """
+        self.A, self.m, self.n = self.setup()
 
         # Take the kernel
         A = self.A
@@ -62,6 +65,8 @@ class TestFactorizationsReals:
         """
         Test the image/coimage factorization.
         """
+        self.A, self.m, self.n = self.setup()
+
         # Take the kernel
         A = self.A
         im = real_image(A)

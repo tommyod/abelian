@@ -14,23 +14,28 @@ def random_zero_heavy(low, high):
 
 class TestSNF:
 
-    @classmethod
-    def setup_class(cls):
+    @staticmethod
+    def setup_data():
         """
         Setup a homomorphism.
         """
-        m, n = ri(2, 4), ri(2, 4)
+
+        # --------- START SETUP ---------
+        m, n = ri(2, 5), ri(2, 5)
         A = Matrix(m, n, lambda i, j: random_zero_heavy(-9, 9))
         target = Matrix(m, 1, lambda i, j: random_zero_heavy(5, 50))
-
-        cls.target_vector = target
-        cls.phi = HomLCA(A, target = target)
+        target_vector = target
+        phi = HomLCA(A, target = target)
+        # --------- END SETUP ---------
+        return phi, target_vector
 
 
     def test_source_projection_two_ways(self):
         """
         Test that phi.project to source == phi.coimage.project_to_source
         """
+        self.phi, self.target_vector = self.setup_data()
+
         # Project to source
         phi = self.phi.project_to_source()
         coimage = self.phi.coimage().project_to_source()
@@ -41,6 +46,7 @@ class TestSNF:
         """
         Test the orders.
         """
+        self.phi, self.target_vector = self.setup_data()
 
         # Project to source
         phi = self.phi.project_to_source()
@@ -56,6 +62,7 @@ class TestSNF:
         """
         Test the image/coimage factorization.
         """
+        self.phi, self.target_vector = self.setup_data()
 
         # Compute the image morphism and the coimage morphism
         image = self.phi.image().remove_trivial_groups()
@@ -71,6 +78,8 @@ class TestSNF:
         """
         The that the kernel and the morphism is zero.
         """
+        self.phi, self.target_vector = self.setup_data()
+
         # Compute the kernel
         kernel = self.phi.kernel()
         phi_ker = (self.phi * kernel).project_to_target()
@@ -83,6 +92,8 @@ class TestSNF:
         """
         Test that the composition of the cokernel and the morphism is zero.
         """
+        self.phi, self.target_vector = self.setup_data()
+
         cokernel = self.phi.cokernel()
         coker_phi = (cokernel * self.phi).project_to_target()
         zero_morphism = HomLCA.zero(source = self.phi.source,

@@ -17,8 +17,8 @@ def frob_norm(A, B):
 
 class TestSNF:
 
-    @classmethod
-    def setup_class(cls):
+    @staticmethod
+    def setup():
         m, n = ri(2, 4), ri(2, 4)
         A = Matrix(m, n, lambda i, j: random())
 
@@ -31,13 +31,15 @@ class TestSNF:
         A = A.col_join(new_row)
 
         R = LCA([0], [False])
-        cls.phi = HomLCA(A, source = R**(n+1), target = R**(m+1))
+        return HomLCA(A, source = R**(n+1), target = R**(m+1))
 
 
     def test_real_kernel(self):
         """
         Test the real kernel.
         """
+        self.phi = self.setup()
+
         phi = self.phi
         phi_ker = phi.kernel()
 
@@ -50,6 +52,8 @@ class TestSNF:
         """
         Test the real cokernel.
         """
+        self.phi = self.setup()
+
         phi = self.phi
         phi_coker = phi.cokernel()
 
@@ -62,6 +66,8 @@ class TestSNF:
         """
         Test the real image/coimage.
         """
+        self.phi = self.setup()
+
         phi = self.phi
         phi_image = phi.image()
         phi_coimage = phi.coimage()

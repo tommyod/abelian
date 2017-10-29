@@ -16,8 +16,8 @@ from abelian.linalg.factorizations import hermite_normal_form, \
 
 class TestSNF:
 
-    @classmethod
-    def setup_class(cls):
+    @staticmethod
+    def setup():
         """
         Setup random matrices for the Smith normal form.
         """
@@ -25,10 +25,7 @@ class TestSNF:
         A = Matrix(m, n, lambda i, j: ri(-9, 9))
 
         U, S, V = smith_normal_form(A)
-        cls.A = A
-        cls.U = U
-        cls.S = S
-        cls.V = V
+        return A, U, S, V
 
     def zeros_off_diagonal(self, S):
         """
@@ -64,25 +61,31 @@ class TestSNF:
         return True
 
     def test_zeros_off_diagonal(self):
+        self.A, self.U, self.S, self.V = self.setup()
+
         assert (self.zeros_off_diagonal(self.S))
 
     def test_positive_diag(self):
+        self.A, self.U, self.S, self.V = self.setup()
         assert (self.positive_diag(self.S))
 
     def test_divisibility_diag(self):
+        self.A, self.U, self.S, self.V = self.setup()
         assert (self.divisibility_diag(self.S))
 
     def test_hermite_normal_form(self):
+        self.A, self.U, self.S, self.V = self.setup()
         assert (self.U * self.A * self.V == self.S)
 
     def test_unimodularity(self):
+        self.A, self.U, self.S, self.V = self.setup()
         assert (self.V.det() in [1, -1]) and (self.U.det() in [1, -1])
 
 
 class TestHNF:
 
-    @classmethod
-    def setup_class(cls):
+    @staticmethod
+    def setup():
         """
         Create matrices for testing the Hermite Normal form.
         """
@@ -90,9 +93,7 @@ class TestHNF:
         A = Matrix(m, n, lambda i, j: ri(-9, 9))
 
         U, H = hermite_normal_form(A)
-        cls.A = A
-        cls.U = U
-        cls.H = H
+        return A, U, H
 
     def positive_pivots(self, H):
         """
@@ -125,13 +126,17 @@ class TestHNF:
         return True
 
     def test_positive_pivots(self):
+        self.A, self.U, self.H = self.setup()
         assert self.positive_pivots(self.H)
 
     def test_smaller_than_pivot(self):
+        self.A, self.U, self.H = self.setup()
         assert self.left_smaller_than_pivot(self.H)
 
     def test_hermite_normal_form(self):
+        self.A, self.U, self.H = self.setup()
         assert self.A * self.U == self.H
 
     def test_unimodularity(self):
+        self.A, self.U, self.H = self.setup()
         assert self.U.det() in [1, -1]

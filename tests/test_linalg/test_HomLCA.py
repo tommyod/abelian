@@ -14,24 +14,23 @@ def random_from_list(number, list_to_take_from):
 
 class TestHomLCA:
 
-    @classmethod
-    def setup_class(cls):
+    @staticmethod
+    def setup():
         """
         Setup a random phi:H -> G:
         """
         m, n = ri(2, 5), ri(2, 5)
-        cls.H = LCA(random_from_list(n, [0,0,0,0,0,0]))
-        cls.G = LCA(random_from_list(m, [0, 0, 0, 5, 8, 9, 10]))
+        H = LCA(random_from_list(n, [0,0,0,0,0,0]))
+        G = LCA(random_from_list(m, [0, 0, 0, 5, 8, 9, 10]))
         A = Matrix(m, n, lambda i,j : ri(-5,5))
-        cls.phi = HomLCA(A, source = cls.H, target = cls.G)
+        phi = HomLCA(A, source = H, target = G)
+        return phi, H, G
 
     def test_homomorphism_property(self):
         """
         Test the homomorphism property.
         """
-        H = self.H
-        G = self.G
-        phi = self.phi
+        phi, H, G = self.setup()
 
         x = Matrix([ri(-9, 9) for i in range(len(H))])
         y = Matrix([ri(-9, 9) for i in range(len(H))])
@@ -42,9 +41,10 @@ class TestHomLCA:
         """
         Test a homomorphism from Z_1.
         """
+        phi, H, G = self.setup()
+
         k = ri(1, 3)
         trivial_source = LCA(random_from_list(k, [1, 1, 1, 1]))
-        G = self.G
 
         A = Matrix(len(G), k, lambda i,j : ri(-5, 5))
         phi_triv = HomLCA(A, source = trivial_source, target = G)
@@ -53,9 +53,7 @@ class TestHomLCA:
         """
         Test identity property of a morphism.
         """
-        H = self.H
-        G = self.G
-        phi = self.phi
+        phi, H, G = self.setup()
 
         Id_G = HomLCA.identity(G)
         Id_H = HomLCA.identity(H)
@@ -67,11 +65,9 @@ class TestHomLCA:
         """
         Test identity property of a morphism.
         """
-        H = self.H
-        G = self.G
-        zero = HomLCA.zero(source = H, target = G)
+        phi, H, G = self.setup()
 
-        H_len = len(H)
+        zero = HomLCA.zero(source = H, target = G)
         row_vector = Matrix(1, len(H), lambda i, j: 0)
         first = HomLCA(row_vector, source = H, target = LCA.trivial())
 

@@ -136,38 +136,46 @@ class TestElementsGeneratorFGA:
 
 
 class TestFreeToFree:
-    @classmethod
-    def setup_class(cls):
+
+    @staticmethod
+    def setup():
         m, n = ri(3, 5), ri(3, 5)
         A = Matrix(m, n, lambda i, j: ri(-9, 9))
-        cls.A = A
 
         # Compute ker, coker, im, coim and quotient group
-        cls.A_ker = free_kernel(A)
-        cls.A_coker = free_cokernel(A)
-        cls.A_im = free_image(A)
-        cls.A_coim = free_coimage(A)
-        cls.A_quotient = free_quotient(A)
+        A_ker = free_kernel(A)
+        A_coker = free_cokernel(A)
+        A_im = free_image(A)
+        A_coim = free_coimage(A)
+        A_quotient = free_quotient(A)
+
+        return A, A_ker, A_coker, A_im, A_coim, A_quotient
 
     def test_im_coim(self):
         """
         Test the image/coimage factorization of A.
         """
-        assert (self.A_im * self.A_coim == self.A)
+        A, A_ker, A_coker, A_im, A_coim, A_quotient = self.setup()
+
+        assert (A_im * A_coim == A)
 
     def test_kernel(self):
         """
         Test that the composition of A and ker(A) is zero.
         """
-        sum_entries = sum(abs(entry) for entry in self.A * self.A_ker)
+        A, A_ker, A_coker, A_im, A_coim, A_quotient = self.setup()
+
+        sum_entries = sum(abs(entry) for entry in A * A_ker)
         assert (sum_entries == 0)
 
     def test_cokernel(self):
         """
         Test that the composition of A and ker(A) is zero in the target group.
         """
-        prod = self.A_coker * self.A
+        A, A_ker, A_coker, A_im, A_coim, A_quotient = self.setup()
+
+        prod = A_coker * A
         m, n = prod.shape
         ones = Matrix(n, 1, list(1 for i in range(n)))
-        prod_in_target_grp = vector_mod_vector(prod * ones, self.A_quotient)
-        assert (prod_in_target_grp == self.A_quotient * 0)
+        prod_in_target_grp = vector_mod_vector(prod * ones, A_quotient)
+        assert (prod_in_target_grp == A_quotient * 0)

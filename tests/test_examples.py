@@ -77,21 +77,23 @@ class TestThesisExamples:
         assert close(func_dual([0, 0]), 0.9)
 
     def test_example_3_Hexagonal(self):
+        from random import choice
         from math import exp, sqrt, pi
 
         # Import objects, create function on R^n
         from abelian import HomLCA, LCA, LCAFunc, voronoi
         R = LCA(orders=[0], discrete=[False])
-        k = 0.5  # Decay of exponential
-        func_expr = lambda x: exp(-k * sum(x_j ** 2 for x_j in x))
+        k = choice([0.8, 0.9, 1, 1.1, 1.2])  # Decay of exponential
+        func_expr = lambda x: exp(-pi *k* sum(x_j ** 2 for x_j in x))
         func = LCAFunc(func_expr, domain=R ** 2)
 
         # Create a homomorphism to sample
         hexagonal_generators = [[1, 0.5], [0, sqrt(3) / 2]]
-        phi_sample = HomLCA(hexagonal_generators, target=R ** 2)
+        phi_sample = HomLCA(hexagonal_generators, target=R**2)
+        phi_sample = phi_sample * (1/7)
 
         # Create a homomorphism to periodize
-        n = 3
+        n = 5
         phi_periodize = HomLCA([[n, 0], [0, n]])
         coker_phi_p = phi_periodize.cokernel()
 
@@ -103,19 +105,18 @@ class TestThesisExamples:
         func_dual = func_periodized.dft()
         phi_periodize_ann = phi_periodize.annihilator()
 
+        scale_factor = phi_sample.A.det() * phi_periodize.A.det()
+
         # Compute a Voronoi transversal function, interpret on R**2
         sigma = voronoi(phi_sample.dual(), norm_p=2)
         for element in func_dual.domain.elements_by_maxnorm():
             value = func_dual(element)
             coords_on_R = sigma(phi_periodize_ann(element))
 
-        approx, true = func_dual([0, 0])*n*n, sqrt((2*pi)**2)
-        print(approx, true, true/approx)
+            approx_value = abs(value) * scale_factor
+            true_value = func(coords_on_R)
 
-        print(phi_sample.A.det()*2)
-
-        print(approx*phi_sample.A.det()*2, true/k)
-
+            assert abs(approx_value - true_value/k) < 0.01
 
 if __name__ == '__main__':
     t = TestThesisExamples()
