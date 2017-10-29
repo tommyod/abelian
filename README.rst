@@ -9,7 +9,8 @@ abelian
 ``abelian`` is a Python library for computations on elementary locally compact abelian groups (LCAs).
 The elementary LCAs are the groups R, Z, T = R/Z, Z_n and direct sums of these.
 The Fourier transformation is defined on these groups.
-Using ``abelian``, it is possible to sample, periodize and do Fourier analysis on elementary LCAs using group theory.
+With ``abelian`` it is possible to sample, periodize and perform Fourier
+analysis on elementary LCAs using homomorphisms between groups.
 
 .. image:: http://tommyodland.com/abelian/intro_figure.png
 
@@ -29,6 +30,7 @@ Example
 
 .. image:: http://tommyodland.com/abelian/fourier_hexa_25.png
 
+We create a Gaussian on R^2 and a homomorphism for sampling.
 
 .. code:: python
 
@@ -45,12 +47,21 @@ Example
     phi = phi * (1/7) # Downcale the hexagon
     function_sampled = function.pullback(phi)
 
+Next we approximate the two-dimensional integral of the Gaussian.
+
+.. code:: python
+
     # Approximate the two dimensional integral of the Gaussian
     scaling_factor = phi.A.det()
     integral_sum = 0
     for element in phi.source.elements_by_maxnorm(list(range(20))):
         integral_sum += function_sampled(element)
     print(integral_sum * scaling_factor) # 0.999999997457763
+
+
+We use the FFT to move approximate the Fourier transform of the Gaussian.
+
+.. code:: python
 
     # Sample, periodize and take DFT of the Gaussian
     phi_p = HomLCA([[10, 0], [0, 10]], source = Z**2, target = Z**2)
@@ -60,7 +71,7 @@ Example
     # Interpret the output of the DFT on R^2
     phi_periodize_ann = phi_p.annihilator()
 
-    # Compute a Voronoi transversal function, interpret on R**2
+    # Compute a Voronoi transversal function, interpret on R^2
     sigma = voronoi(phi.dual(), norm_p=2)
     factor = phi_p.A.det() * scaling_factor
     total_error = 0
