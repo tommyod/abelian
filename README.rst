@@ -12,7 +12,8 @@ The Fourier transformation is defined on these groups.
 Using ``abelian``, it is possible to sample, periodize and do Fourier analysis on elementary LCAs using group theory.
 
 .. image:: http://tommyodland.com/abelian/intro_figure.png
-
+   :width: 800 px
+   :align: center
 
 
 Classes and methods
@@ -29,47 +30,53 @@ Classes and methods
 Example
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: python
+.. image:: http://tommyodland.com/abelian/fourier_hexa.png
+   :width: 400 px
+   :align: center
 
+.. code:: python
     from abelian import LCA, HomLCA, LCAFunc, voronoi
-    from math import exp, pi
-    # Create groups Z and R
+    from math import exp, pi, sqrt
     Z = LCA(orders = [0], discrete = [True])
     R = LCA(orders = [0], discrete = [False])
 
     # Create the Gaussian function on R^2
     function = LCAFunc(lambda x: exp(-pi*sum(j**2 for j in x)), domain = R**2)
 
-    # Create an orthogonal sampling homomorphism
-    phi = HomLCA([[0.05, 0], [0, 0.05]], source = Z**2, target = R**2)
+    # Create an hexagonal sampling homomorphism (lattice on R^2)
+    phi = HomLCA([[1, 1/2], [0, sqrt(3)/2]], source = Z**2, target = R**2)
+    phi = phi * (1/7) # Downcale the hexagon
     function_sampled = function.pullback(phi)
 
-    # Approximate the two-dimensional integral of the gaussian
+    # Approximate the two dimensional integral of the Gaussian
     scaling_factor = phi.A.det()
-    integral_value = 0
-    for element in phi.source.elements_by_maxnorm(list(range(50))):
-        integral_value += function_sampled(element)
-    print(integral_value * scaling_factor) # 0.999999998926396
+    integral_sum = 0
+    for element in phi.source.elements_by_maxnorm(list(range(20))):
+        integral_sum += function_sampled(element)
+    print(integral_sum * scaling_factor) # 0.999999997457763
 
     # Sample, periodize and take DFT of the Gaussian
-    phi_p = HomLCA([[15, 0], [0, 15]], source = Z**2, target = Z**2)
+    phi_p = HomLCA([[10, 0], [0, 10]], source = Z**2, target = Z**2)
     periodized = function_sampled.pushforward(phi_p.cokernel())
     dual_func = periodized.dft()
-    DFT_ouput = dual_func.table * phi_p.A.det() * scaling_factor
 
     # Interpret the output of the DFT on R^2
     phi_periodize_ann = phi_p.annihilator()
 
     # Compute a Voronoi transversal function, interpret on R**2
     sigma = voronoi(phi.dual(), norm_p=2)
+    factor = phi_p.A.det() * scaling_factor
+    total_error = 0
     for element in dual_func.domain.elements_by_maxnorm():
         value = dual_func(element)
         coords_on_R = sigma(phi_periodize_ann(element))
 
-        # The function is invariant under Fourier transformation, so we can
-        # compare the error analytically
-        true_val = function(coords_on_R) # The function is invariant under FT
+        # The Gaussian is invariant under Fourier transformation, so we can
+        # compare the error using the analytical expression
+        true_val = function(coords_on_R)
         approximated_val = abs(value)
-        assert abs(true_val - approximated_val) < 0.01
+        total_error += abs(true_val - approximated_val*factor)
+
+    assert total_error < 10e-15
 
 Please see `the documentation <http://abelian.readthedocs.io/en/latest/>`_ for more examples and information.
