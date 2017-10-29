@@ -12,10 +12,6 @@ The Fourier transformation is defined on these groups.
 Using ``abelian``, it is possible to sample, periodize and do Fourier analysis on elementary LCAs using group theory.
 
 .. image:: http://tommyodland.com/abelian/intro_figure.png
-   :width: 600px
-   :scale: 50%
-   :align: center
-
 
 Classes and methods
 ^^^^^^^^^^^^^^^^^^^^^
@@ -31,10 +27,7 @@ Classes and methods
 Example
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: http://tommyodland.com/abelian/fourier_hexa.png
-   :width: 600px
-   :scale: 50%
-   :align: center
+.. image:: http://tommyodland.com/abelian/fourier_hexa_25.png
 
 
 .. code:: python
