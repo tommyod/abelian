@@ -12,7 +12,7 @@ The Fourier transformation is defined on these groups.
 Using ``abelian``, it is possible to sample, periodize and do Fourier analysis on elementary LCAs using group theory.
 
 .. image:: http://tommyodland.com/abelian/intro_figure.png
-   :width: 800 px
+   :width: 800px
    :align: center
 
 
@@ -31,10 +31,11 @@ Example
 ^^^^^^^^^^^^^^^^^^^^^
 
 .. image:: http://tommyodland.com/abelian/fourier_hexa.png
-   :width: 400 px
+   :width: 400px
    :align: center
 
 .. code:: python
+
     from abelian import LCA, HomLCA, LCAFunc, voronoi
     from math import exp, pi, sqrt
     Z = LCA(orders = [0], discrete = [True])
