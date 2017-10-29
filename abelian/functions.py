@@ -63,7 +63,7 @@ class LCAFunc(Callable):
         4
 
         If a table representation is used, the function can be defined on
-        direct products of Z_n.
+        direct sums of Z_n.
 
         >>> # Define a table: a list of lists
         >>> table = [[1, 2],
