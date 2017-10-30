@@ -139,7 +139,7 @@ class TestFreeToFree:
 
     @staticmethod
     def setup():
-        m, n = ri(3, 5), ri(3, 5)
+        m, n = ri(1, 5), ri(1, 5)
         A = Matrix(m, n, lambda i, j: ri(-9, 9))
 
         # Compute ker, coker, im, coim and quotient group

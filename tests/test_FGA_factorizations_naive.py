@@ -29,15 +29,12 @@ class TestFGAFactorizationsNaively:
         Test the quotient group.
         """
         # ----------- START SETUP ----------------
-        max_size = 10
+        max_size = 15
         m, n = ri(1, max_size), ri(2, max_size)
-        print(m, n)
         num_generators = ri(1, 2)
         generators = [[mod(ri(1, max_size), m), mod(ri(1, max_size), n)]
                       for i in range(num_generators)]
-        print(generators)
         periods = [order_of_vector(g, [m, n]) for g in generators]
-        print(periods)
 
         self.generators = generators
         self.periods = periods
@@ -63,8 +60,8 @@ class TestFGAFactorizationsNaively:
             seen_elements.add(tuple(element))
 
         naive_quotient = self.m * self.n / len(seen_elements)
-        assert naive_quotient % 1 == 0
 
+        assert naive_quotient % 1 == 0
         assert naive_quotient == functools.reduce(operator.mul, quotient)
 
 

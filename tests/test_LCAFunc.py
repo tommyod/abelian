@@ -10,7 +10,7 @@ def is_close(list1, list2):
 
 class TestLCAFunc:
 
-    def test_natural_transversal(self):
+    def test_natural_transversal_real(self):
         """
         Test transversal from T^2 to R^2.
         """
@@ -27,6 +27,8 @@ class TestLCAFunc:
         assert is_close(sigma([0.8, 0.4]), [0.3, -0.2])
 
 
+
+
 if __name__ == '__main__':
     tests = TestLCAFunc()
-    tests.test_natural_transversal()
+    tests.test_natural_transversal_real()

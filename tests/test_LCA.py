@@ -49,8 +49,6 @@ class TestLCA:
         """
         Border cases when initializing.
         """
-        self.G, self.H = self.setup()
-
         Id = LCA.trivial()
 
         assert Id.isomorphic(LCA([]))
@@ -59,9 +57,7 @@ class TestLCA:
         """
         Test that canonical is invariant under shuffling.
         """
-        self.G, self.H = self.setup()
-
-        G = self.G
+        G, H = self.setup()
 
         G_split = [grp for grp in G]
         shuffle(G_split)
@@ -73,11 +69,10 @@ class TestLCA:
         """
         Test the property of the trivial group.
         """
-        self.G, self.H = self.setup()
+        G, H = self.setup()
 
         Id = LCA.trivial()
-        G = self.G
-        H = self.H
+        assert (Id.compose_self(ri(0,3))).isomorphic(Id)
         assert (G + Id).isomorphic(G)
         assert (Id + G).isomorphic(G)
         assert (H + Id).isomorphic(H)
@@ -89,49 +84,42 @@ class TestLCA:
         """
         Test the rank of LCAs.
         """
-        self.G, self.H = self.setup()
+        G, H = self.setup()
 
-        G = self.G
-        H = self.H
         assert (G + H).rank() == (G.rank() + H.rank())
 
     def test_length(self):
         """
         Test the length of LCAs.
         """
-        self.G, self.H = self.setup()
+        G, H = self.setup()
 
-        G = random_LCA(ri(1, 9))
-        H = random_LCA(ri(1, 9))
         assert (G + H).length() == (G.length() + H.length())
 
     def test_remove_trivial(self):
         """
         Test the removal of trivial subgroups.
         """
-        self.G, self.H = self.setup()
+        G, H = self.setup()
 
-        G = self.G
-        H = self.H
         after = (G + H).remove_trivial()
         before = (G.remove_trivial() + H.remove_trivial())
         assert before == after
 
-    def test_proper_subgroup(self):
+    def test_proper_inclusion(self):
         """
-        Test proper subgroups.
+        Test proper inclusion.
         """
-        self.G, self.H = self.setup()
+        G, _ = self.setup()
 
-        G = self.G
         H = G[3:-3]
         assert (H in G)
 
-    def test_subgroup(self):
+    def test_inclusion(self):
         """
-        Test subgroups.
+        Test inclusion.
         """
-        self.G, self.H = self.setup()
+        G, H = self.setup()
 
-        G = self.G
         assert (G in G)
+        assert (H in H)

@@ -15,13 +15,13 @@ def random_zero_heavy(low, high):
 class TestSNF:
 
     @staticmethod
-    def setup_data():
+    def setup():
         """
         Setup a homomorphism.
         """
 
         # --------- START SETUP ---------
-        m, n = ri(2, 5), ri(2, 5)
+        m, n = ri(1, 5), ri(1, 5)
         A = Matrix(m, n, lambda i, j: random_zero_heavy(-9, 9))
         target = Matrix(m, 1, lambda i, j: random_zero_heavy(5, 50))
         target_vector = target
@@ -34,11 +34,11 @@ class TestSNF:
         """
         Test that phi.project to source == phi.coimage.project_to_source
         """
-        self.phi, self.target_vector = self.setup_data()
+        phi, target_vector = self.setup()
 
         # Project to source
-        phi = self.phi.project_to_source()
-        coimage = self.phi.coimage().project_to_source()
+        phi = phi.project_to_source()
+        coimage = phi.coimage().project_to_source()
         assert phi.source == coimage.source
 
 
@@ -46,10 +46,10 @@ class TestSNF:
         """
         Test the orders.
         """
-        self.phi, self.target_vector = self.setup_data()
+        phi, target_vector = self.setup()
 
         # Project to source
-        phi = self.phi.project_to_source()
+        phi = phi.project_to_source()
 
         # Retrieve the orders as a vector
         orders = Matrix(phi.source.orders)
@@ -62,15 +62,15 @@ class TestSNF:
         """
         Test the image/coimage factorization.
         """
-        self.phi, self.target_vector = self.setup_data()
+        phi, target_vector = self.setup()
 
         # Compute the image morphism and the coimage morphism
-        image = self.phi.image().remove_trivial_groups()
-        coimage = self.phi.coimage().remove_trivial_groups()
+        image = phi.image().remove_trivial_groups()
+        coimage = phi.coimage().remove_trivial_groups()
 
         # Asser that the coimage/image factorization holds
         factorization = (image * coimage).project_to_target()
-        original = (self.phi).project_to_target()
+        original = (phi).project_to_target()
         assert factorization == original
 
 
@@ -78,12 +78,12 @@ class TestSNF:
         """
         The that the kernel and the morphism is zero.
         """
-        self.phi, self.target_vector = self.setup_data()
+        phi, target_vector = self.setup()
 
         # Compute the kernel
-        kernel = self.phi.kernel()
-        phi_ker = (self.phi * kernel).project_to_target()
-        zero_morphism = HomLCA.zero(target = self.phi.target,
+        kernel = phi.kernel()
+        phi_ker = (phi * kernel).project_to_target()
+        zero_morphism = HomLCA.zero(target = phi.target,
                                     source = kernel.source)
         assert phi_ker == zero_morphism
 
@@ -92,10 +92,10 @@ class TestSNF:
         """
         Test that the composition of the cokernel and the morphism is zero.
         """
-        self.phi, self.target_vector = self.setup_data()
+        phi, target_vector = self.setup()
 
-        cokernel = self.phi.cokernel()
-        coker_phi = (cokernel * self.phi).project_to_target()
-        zero_morphism = HomLCA.zero(source = self.phi.source,
+        cokernel = phi.cokernel()
+        coker_phi = (cokernel * phi).project_to_target()
+        zero_morphism = HomLCA.zero(source = phi.source,
                                     target = cokernel.target)
         assert coker_phi == zero_morphism

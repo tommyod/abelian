@@ -15,11 +15,11 @@ def frob_norm(A, B):
     return sum(abs(i-j) for (i, j) in zip(A, B))
 
 
-class TestSNF:
+class TestSVDFactorizations:
 
     @staticmethod
     def setup():
-        m, n = ri(2, 4), ri(2, 4)
+        m, n = ri(2, 5), ri(2, 5)
         A = Matrix(m, n, lambda i, j: random())
 
         # Add an extra column to A
@@ -38,9 +38,8 @@ class TestSNF:
         """
         Test the real kernel.
         """
-        self.phi = self.setup()
+        phi = self.setup()
 
-        phi = self.phi
         phi_ker = phi.kernel()
 
         A = (phi * phi_ker).A
@@ -52,9 +51,8 @@ class TestSNF:
         """
         Test the real cokernel.
         """
-        self.phi = self.setup()
+        phi = self.setup()
 
-        phi = self.phi
         phi_coker = phi.cokernel()
 
         A = (phi_coker * phi).A
@@ -66,9 +64,8 @@ class TestSNF:
         """
         Test the real image/coimage.
         """
-        self.phi = self.setup()
+        phi = self.setup()
 
-        phi = self.phi
         phi_image = phi.image()
         phi_coimage = phi.coimage()
 

@@ -560,6 +560,9 @@ class HomLCA(Callable):
         [0]])
         """
 
+        # To be used when returning to verify type
+        input_class = type(source_element)
+
         # Project the element to the source LCA of the homomorphism
         source_element = self.source.project_element(source_element)
 
@@ -579,10 +582,10 @@ class HomLCA(Callable):
 
         # Return the same type of data as the input
         if isinstance(source_element, Matrix):
-            return projected
+            return input_class(projected)
         else:
             rows = columns_as_list(projected.T)
-            return [r[0] for r in rows]
+            return input_class([r[0] for r in rows])
 
     def getitem(self, args):
         """

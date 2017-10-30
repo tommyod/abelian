@@ -21,7 +21,7 @@ class TestFactorizationsReals:
         """
         # Add more zero entries to cover edge cases with higher probability
         numbers = [0] * 10 + list(range(-5, 5)) + [random() for i in range(8)]
-        m, n = choice([1,2,3,4]), choice([1,2,3,4])
+        m, n = choice([1, 2, 3, 4, 5]), choice([1, 2, 3, 4, 5])
         A = Matrix(m, n, lambda i, j: choice(numbers))
         return A, m, n
 
@@ -29,11 +29,9 @@ class TestFactorizationsReals:
         """
         Test the factorization.
         """
-        self.A, self.m, self.n = self.setup()
+        A, m, n = self.setup()
 
         # Take the kernel
-        A = self.A
-        m, n = A.shape
         ker = real_kernel(A)
 
         # Verify norm and dimension
@@ -47,11 +45,9 @@ class TestFactorizationsReals:
         """
         Test the kernel factorization.
         """
-        self.A, self.m, self.n = self.setup()
+        A, m, n = self.setup()
 
-        # Take the kernel
-        A = self.A
-        m, n = A.shape
+        # Take the cokernel
         coker = real_cokernel(A)
 
         # Verify norm and dimension
@@ -65,10 +61,9 @@ class TestFactorizationsReals:
         """
         Test the image/coimage factorization.
         """
-        self.A, self.m, self.n = self.setup()
+        A, m, n = self.setup()
 
         # Take the kernel
-        A = self.A
         im = real_image(A)
         coim = real_coimage(A)
 
