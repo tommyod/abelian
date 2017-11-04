@@ -12,4 +12,4 @@ from abelian.groups import LCA
 from abelian.morphisms import HomLCA
 from abelian.functions import LCAFunc, voronoi
 
-__all__ = ['LCA', 'HomLCA', 'LCAFunc', 'voronoi']
+#__all__ = ['LCA', 'HomLCA', 'LCAFunc', 'voronoi']

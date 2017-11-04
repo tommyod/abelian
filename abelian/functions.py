@@ -152,6 +152,7 @@ class LCAFunc(Callable):
         domain = self.domain.copy()
         return type(self)(representation = repr, domain = domain)
 
+
     def dft(self, func_type = None):
         """
         If the domain allows it, compute DFT.
@@ -195,7 +196,7 @@ class LCAFunc(Callable):
         4
         >>> # Take the discrete fourier transform and evaluate
         >>> func_dft = func.dft()
-        >>> func_dft([0, 0, 0])
+        >>> func_dft([0, 0, 0]) / (5*4*3) # Divide by number of points
         (4.5+0j)
         >>> # Take the inverse discrete fourier transform
         >>> func_dft_idft = func_dft.idft()
@@ -310,7 +311,7 @@ class LCAFunc(Callable):
         >>> func([1, 2, 1])
         (3+0j)
         >>> func_idft = func.idft()
-        >>> func_idft([0, 0, 0])
+        >>> func_idft([0, 0, 0]) * (5*4*3)
         (210-60j)
         """
         return self._fft_wrapper(func_to_wrap='ifftn', func_type=func_type)
@@ -514,6 +515,10 @@ class LCAFunc(Callable):
             # Compute a solution to phi(x) = y
             target_orders = Matrix(morphism.target.orders)
             base_ans = solve(morphism.A, Matrix(list_arg), target_orders)
+            
+            # If only one term is to be used, evaluate and return
+            if terms_in_sum == 1:
+                return self.representation(base_ans, *args, **kwargs)
 
             # The kernel is empty, do not start summing, just return
             if kernel_n == 0:
@@ -528,12 +533,11 @@ class LCAFunc(Callable):
                 # The `base_ans` is in the kernel of the morphism,
                 # we move to all points in the kernel by taking
                 # the `base_ans` + linear combinations of the kernel
-                linear_comb = Matrix(list(boundary_element))
+                linear_comb = Matrix(boundary_element)
                 kernel_element = base_ans + kernel.evaluate(linear_comb)
 
                 function = self.representation
-                func_in_ker = function(kernel_element, *args, **kwargs)
-                kernel_sum += func_in_ker
+                kernel_sum += function(kernel_element, *args, **kwargs)
                 if counter >= terms_in_sum:
                     break
 
@@ -805,11 +809,11 @@ class LCAFunc(Callable):
         # Numpy divides by prod(dims) when computing the inverse,
         # but we do it when we compute the forward transform
         if func_to_wrap == 'fftn':
-            table_computed =  table_computed / (functools.reduce(
-                operator.mul, dims))
+            table_computed =  table_computed
+                          #/ (functools.reduce(operator.mul, dims))
         elif func_to_wrap == 'ifftn':
-            table_computed =  table_computed * (functools.reduce(
-                operator.mul, dims))
+            table_computed =  table_computed
+            #* (functools.reduce(operator.mul, dims))
 
         # Create a new instance and return
         return type(self)(domain = domain, representation = table_computed)

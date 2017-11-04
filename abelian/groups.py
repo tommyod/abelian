@@ -72,6 +72,9 @@ class LCA(Sequence, Callable):
         orders, discrete = self._verify_init(orders, discrete)
         self.orders = orders
         self.discrete = discrete
+        
+        # Set up some properties
+        self._all_inf_order = all(o == 0 for o in orders)
 
 
     @classmethod

@@ -53,12 +53,14 @@ def solve(A, b, p = None):
     >>> vector_mod_vector(A*x_sol, p) == b
     True
     """
-
+    #print(A, b, p)
     # If no orders are supplied by the user, set the orders to zero,
     # i.e. infinite order or free-to-free.
     if p is None:
         m, n = b.shape
         p = Matrix(m, n, lambda i, j: 0)
+        
+        
 
     # Verify that the dimensions make sense
     (A_rows, A_cols) = A.shape
@@ -66,6 +68,12 @@ def solve(A, b, p = None):
     (p_rows, p_cols) = p.shape
     if not (A_rows == b_rows == p_rows):
         raise ValueError('Dimension mismatch.')
+        
+    # Special case if A is the identity
+    if A_rows == A_cols:
+        if A == Matrix.eye(A_rows):
+            if all(b_i < p_i for (b_i, p_i) in zip(b, p)):
+                return b
 
     # Find the kernel of the projection onto the space Z_`p`
     ker_pi = remove_zero_columns(diag(*p))

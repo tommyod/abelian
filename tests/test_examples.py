@@ -4,6 +4,7 @@
 import random
 from abelian import LCA, LCAFunc, HomLCA, voronoi
 from sympy import Matrix, diag, Integer, Float, Rational
+from random import randint
 
 
 def close(a, b):
@@ -56,7 +57,7 @@ class TestThesisExamples:
         func = LCAFunc(lambda x: sum(x), domain=T ** 2)
 
         # Create homomorphism to sample function
-        n = 10
+        n = randint(6, 10)
         Z_n = LCA(orders=[n], discrete=[True])
         phi = HomLCA(diag(Rational(1, n), Rational(1, n)),
                      target=T ** 2, source=Z_n ** 2)
@@ -70,11 +71,11 @@ class TestThesisExamples:
 
         assert func([0.5, 0.5]) == 1
         assert close(func([1.6, 0.6]), 1.2)
-        assert close(func_sampled([11, 11]), func([0.1, 0.1]))
-        assert close(func_sampled([1, 1]),   func([0.1, 0.1]))
+        assert close(func_sampled([n + 1, n + 1]), func([1/n, 1/n]))
+        assert close(func_sampled([1, 1]),   func([1/n, 1/n]))
 
         assert func_dual([11, 11]) == 0
-        assert close(func_dual([0, 0]), 0.9)
+        assert close(func_dual([0, 0]), (1 - 1/n) * n * n)
 
     def test_example_3_Hexagonal(self):
         from random import choice
@@ -83,7 +84,7 @@ class TestThesisExamples:
         # Import objects, create function on R^n
         from abelian import HomLCA, LCA, LCAFunc, voronoi
         R = LCA(orders=[0], discrete=[False])
-        k = choice([0.8, 0.9, 1, 1.1, 1.2])  # Decay of exponential
+        k = choice([0.85, 0.9, 1, 1.1, 1.15])  # Decay of exponential
         func_expr = lambda x: exp(-pi *k* sum(x_j ** 2 for x_j in x))
         func = LCAFunc(func_expr, domain=R ** 2)
 
@@ -93,7 +94,7 @@ class TestThesisExamples:
         phi_sample = phi_sample * (1/7)
 
         # Create a homomorphism to periodize
-        n = 5
+        n = 3
         phi_periodize = HomLCA([[n, 0], [0, n]])
         coker_phi_p = phi_periodize.cokernel()
 
@@ -105,7 +106,7 @@ class TestThesisExamples:
         func_dual = func_periodized.dft()
         phi_periodize_ann = phi_periodize.annihilator()
 
-        scale_factor = phi_sample.A.det() * phi_periodize.A.det()
+        scale_factor = phi_sample.A.det()
 
         # Compute a Voronoi transversal function, interpret on R**2
         sigma = voronoi(phi_sample.dual(), norm_p=2)
@@ -116,7 +117,7 @@ class TestThesisExamples:
             approx_value = abs(value) * scale_factor
             true_value = func(coords_on_R)
 
-            assert abs(approx_value - true_value/k) < 0.01
+            assert abs(approx_value - true_value/k) < 0.10
 
 if __name__ == '__main__':
     t = TestThesisExamples()

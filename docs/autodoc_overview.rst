@@ -103,6 +103,7 @@ Public classes (detailed)
     ~abelian.morphisms.HomLCA.compose
     ~abelian.morphisms.HomLCA.compose_self
     ~abelian.morphisms.HomLCA.copy
+    ~abelian.morphisms.HomLCA.det
     ~abelian.morphisms.HomLCA.dual
     ~abelian.morphisms.HomLCA.equal
     ~abelian.morphisms.HomLCA.evaluate

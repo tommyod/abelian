@@ -8,7 +8,7 @@ elementary LCAs, the HomLCA class.
 """
 
 from collections.abc import Callable
-from sympy import Matrix, diag, latex, Integer, gcd
+from sympy import Matrix, diag, latex, Integer, Rational, Float, gcd
 from abelian.groups import LCA
 from abelian.linalg.utils import remove_zero_columns, nonzero_diag_as_list, \
     matrix_mod_vector, order_of_vector, remove_cols, remove_rows, \
@@ -26,7 +26,7 @@ class HomLCA(Callable):
     """
 
     # The types allowed as entries in A
-    _A_all_entry_types = (int, float, complex)
+    _A_all_entry_types = (int, float, complex, Rational, Float, Integer)
     _A_integer_entry_types = (int, Integer)
 
     def __init__(self, A, target = None, source = None):
@@ -461,6 +461,33 @@ class HomLCA(Callable):
         """
         return type(self)(self.A, target = self.target, source = self.source)
 
+    def det(self):
+        """
+        Determinant of the matrix representing the HomLCA.
+
+        Returns
+        -------
+        determinant : float
+            Determinant of the matrix, if possible.
+
+        Examples
+        ---------
+        >>> from abelian import LCA, HomLCA
+        >>> phi = HomLCA([[2, 0], [0, 3]])
+        >>> phi.det()
+        6
+        >>> R = LCA([0], [False])
+        >>> phi = HomLCA([[2.5, 0], [0, 2.5]], R**2, R**2)
+        >>> phi.det() == 6.25
+        True
+        >>> HomLCA([[3, 1]]).det()
+        Traceback (most recent call last):
+        ...
+        sympy.matrices.common.NonSquareMatrixError
+
+        """
+        return self.A.det()
+
     def dual(self):
         """
         Compute the dual homomorphism.
@@ -578,7 +605,10 @@ class HomLCA(Callable):
             evaluated = self.A * Matrix(source_element)
 
         # Project to the target LCA of the homomorphism
-        projected = self.target.project_element(evaluated)
+        if self.target._all_inf_order:
+            projected = evaluated
+        else:
+            projected = self.target.project_element(evaluated)
 
         # Return the same type of data as the input
         if isinstance(source_element, Matrix):
