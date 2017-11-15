@@ -1,4 +1,5 @@
 # List of requirements
 # Run 
 sympy>=1.1.1
+numpy>=1.13.1
 
