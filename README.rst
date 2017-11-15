@@ -33,6 +33,8 @@ Example
 
 .. image:: http://tommyodland.com/abelian/fourier_hexa_33.png
 
+The following example shows Fourier analysis on a hexagonal lattice.
+
 We create a Gaussian on R^2 and a homomorphism for sampling.
 
 .. code:: python

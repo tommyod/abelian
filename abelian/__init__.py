@@ -3,7 +3,7 @@
 import pkg_resources
 
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 __author__ = 'Tommy Odland'
 
 from abelian.linalg.solvers import solve
