@@ -8,6 +8,6 @@ library.
 
    Tutorial: LCAs <LCA.ipynb>
    Tutorial: Homomorphisms <homomorphisms.ipynb>
-   Tutorial: Factoring HomFGAs <factor_homomorphisms.ipynb>
+   Tutorial: Factoring homomorphisms <factor_homomorphisms.ipynb>
    Tutorial: Functions on LCAs <functions.ipynb>
    Tutorial: Fourier series <fourier_series.ipynb>

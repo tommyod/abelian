@@ -41,7 +41,7 @@ Classes and methods
   complex numbers.
 
    * **Fundamental methods**: evaluation, composition, shift (translation),
-     pullback, pushforward, point-wise operators (i.e. addition).
+     pullback, pushforward, point-wise operators (e.g. addition).
 
 Algorithms for the Smith normal form and Hermite normal form are also
 implemented in
@@ -56,7 +56,8 @@ Project goals
 * Represent the groups :math:`\mathbb{R}`, :math:`T`,
   :math:`\mathbb{Z}` and :math:`\mathbb{Z}_n` and facilitate computations on
   these.
-* Relationship between continuous and discrete should be 'pretty'.
+* Handle the relationship between discrete and continuous groups in a
+  natural way using group homomorphisms.
 * DFT computations on discrete, finite groups and their products using the FFT.
 * The software should build on the mathematical theory.
 
@@ -64,13 +65,13 @@ Project goals
 Installation
 ~~~~~~~~~~~~~~~~~~~~
 
-(1) Download the Anaconda_ distribution of Python_, version 3.X.
+(1) Download the latest version of Python_, e.g. the Anaconda_ distribution.
 (2) Depending on your operating system, do one of the following:
 
     (a) If on **Windows**, open the Anaconda prompt and run
         ``pip install abelian`` to install ``abelian``
         from PyPI_.
-    (b) If on **Linux** og **Mac**, open the terminal and run
+    (b) If on **Linux** or **Mac**, open the terminal and run
         ``pip install abelian`` to install ``abelian``
         from PyPI_.
 

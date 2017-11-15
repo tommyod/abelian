@@ -12,7 +12,7 @@ The Fourier transformation is defined on these groups.
 With ``abelian`` it is possible to sample, periodize and perform Fourier
 analysis on elementary LCAs using homomorphisms between groups.
 
-.. image:: http://tommyodland.com/abelian/intro_figure.png
+.. image:: http://tommyodland.com/abelian/intro_figure_75.png
 
 Classes and methods
 ^^^^^^^^^^^^^^^^^^^^^
@@ -29,7 +29,7 @@ Classes and methods
 Example
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: http://tommyodland.com/abelian/fourier_hexa_25.png
+.. image:: http://tommyodland.com/abelian/fourier_hexa_33.png
 
 We create a Gaussian on R^2 and a homomorphism for sampling.
 
