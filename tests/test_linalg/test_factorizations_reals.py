@@ -2,34 +2,34 @@
 # -*- coding: utf-8 -*-
 
 """
-This module contains stochastic tests kernel, cokernel,
+This module contains stochastic tests' kernel, cokernel,
 image and coimage algorithms based on the SVD for maps
 between vector spaces over R.
 """
 
-from sympy import Matrix
 from random import choice, random
+
+import pytest
+from sympy import Matrix
+
 from abelian.linalg.factorizations_reals import real_kernel, real_cokernel, \
     real_coimage, real_image
 
+
 class TestFactorizationsReals:
 
-    @staticmethod
-    def setup():
-        """
-        Set up a random matrix.
-        """
+    @pytest.fixture
+    def random_matrix(self):
+        """ Set up a random matrix """
         # Add more zero entries to cover edge cases with higher probability
-        numbers = [0] * 10 + list(range(-5, 5)) + [random() for i in range(8)]
+        numbers = [0] * 10 + list(range(-5, 5)) + [random() for _ in range(8)]
         m, n = choice([1, 2, 3, 4, 5]), choice([1, 2, 3, 4, 5])
         A = Matrix(m, n, lambda i, j: choice(numbers))
         return A, m, n
 
-    def test_kernel(self):
-        """
-        Test the factorization.
-        """
-        A, m, n = self.setup()
+    def test_kernel(self, random_matrix):
+        """ Test the factorization """
+        A, m, n = random_matrix
 
         # Take the kernel
         ker = real_kernel(A)
@@ -41,11 +41,9 @@ class TestFactorizationsReals:
 
         assert small_norm and correct_dim
 
-    def test_cokernel(self):
-        """
-        Test the kernel factorization.
-        """
-        A, m, n = self.setup()
+    def test_cokernel(self, random_matrix):
+        """ Test the kernel factorization """
+        A, m, n = random_matrix
 
         # Take the cokernel
         coker = real_cokernel(A)
@@ -57,11 +55,9 @@ class TestFactorizationsReals:
 
         assert small_norm and correct_dim
 
-    def test_image_coimage(self):
-        """
-        Test the image/coimage factorization.
-        """
-        A, m, n = self.setup()
+    def test_image_coimage(self, random_matrix):
+        """ Test the image/coimage factorization """
+        A, m, n = random_matrix
 
         # Take the kernel
         im = real_image(A)
@@ -69,6 +65,4 @@ class TestFactorizationsReals:
 
         # Verify norm and dimension
         im_coim_product = im * coim
-        small_norm = sum(abs(k) for k in (A - im_coim_product)) < 10e-10
-
-        assert small_norm
+        assert sum(abs(k) for k in (A - im_coim_product)) < 10e-10
