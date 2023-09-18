@@ -1,6 +1,5 @@
 # List of requirements
 # Run
-python == 3.9.18
 sympy>=1.12
 numpy>=1.25.2
 
