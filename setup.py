@@ -10,7 +10,7 @@
 
 import sys
 from setuptools import setup, find_packages
-from abelian import __version__
+# from abelian import __version__
 VERSION = '1.0.1'
 
 with open('README.rst', 'r') as file:
