@@ -10,8 +10,13 @@
 
 import sys
 from setuptools import setup, find_packages
-from abelian import __version__
-VERSION = __version__
+import re
+import ast
+
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+with open('abelian/__init__.py', 'rb') as f:
+    VERSION = str(ast.literal_eval(_version_re.search(f.read().decode('utf-8')).group(1)))
 
 with open('README.rst', 'r') as file:
     README_TEXT = file.read()
