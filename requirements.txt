@@ -1,5 +1,4 @@
 # List of requirements
 # Run
-sympy>=1.12
-numpy>=1.25.2
-
+sympy
+numpy
