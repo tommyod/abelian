@@ -1,49 +1,59 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import random
-from abelian import LCA, LCAFunc, HomLCA, voronoi
-from sympy import Matrix, diag, Integer, Float, Rational
+from math import exp, sqrt, pi, isclose
+from random import choice
 from random import randint
 
+import pytest
+from sympy import Matrix
 
-def close(a, b):
-    numeric_types = (float, int, complex, Integer, Float, Rational)
-    if isinstance(a, numeric_types) and isinstance(a, numeric_types):
-        return abs(a-b) < 10e-10
-    return sum(abs(i-j) for (i, j) in zip(a, b))
+from abelian import HomLCA, LCA, LCAFunc, voronoi
+
 
 class TestThesisExamples:
 
-    def test_example_1_HomFGA(self):
-        """
-        Test example 1 from the abelian introductory chapter
-        in the thesis.
-        """
-
-        # Import the classes and create a homomorphism
-        from abelian import HomLCA, LCA
-        target = LCA([8, 5])  # Create Z_8 + Z_5
-        phi = HomLCA([[4, 2], [7, 3]], target=target)
-
-        # Compute cokernel, then remove trivial groups
-        cokernel = phi.cokernel().remove_trivial_groups()
-
-        # Compute image, then remove trivial groups
+    @pytest.mark.parametrize(
+        'target, phi, excepted_output',
+        [(
+                LCA([8, 5]), HomLCA([[4, 2], [7, 3]], target=LCA([8, 5])), Matrix([[2], [3]]),
+        )]
+    )
+    def test_example_1_image(self, target, phi, excepted_output):
         image = phi.image().remove_trivial_groups()
+        assert image.A == excepted_output
 
-        # Compute coimage, remove trivial, then project
+    @pytest.mark.parametrize(
+        'target, phi, excepted_output',
+        [(
+                LCA([8, 5]), HomLCA([[4, 2], [7, 3]], target=LCA([8, 5])), Matrix([[14, 1]]),
+        )]
+    )
+    def test_example_1_coimage(self, target, phi, excepted_output):
         coimage = phi.coimage().remove_trivial_groups()
         coimage = coimage.project_to_source()
+        assert coimage.A == excepted_output
 
-        # Project phi, compute kernel
+    @pytest.mark.parametrize(
+        'target, phi, excepted_output',
+        [(
+                LCA([8, 5]), HomLCA([[4, 2], [7, 3]], target=LCA([8, 5])), Matrix([[2, 5], [12, 10]]),
+        )]
+    )
+    def test_example_1_kernel(self, target, phi, excepted_output):
         phi_projected = phi.project_to_source()
         kernel = phi_projected.kernel().project_to_source()
+        assert kernel.A == excepted_output
 
-        assert cokernel.A == Matrix([[1, 0]])
-        assert image.A == Matrix([[2], [3]])
-        assert coimage.A == Matrix([[14, 1]])
-        assert kernel.A == Matrix([[2, 5], [12, 10]])
+    @pytest.mark.parametrize(
+        'target, phi, excepted_output',
+        [(
+                LCA([8, 5]), HomLCA([[4, 2], [7, 3]], target=LCA([8, 5])), Matrix([[1, 0]]),
+        )]
+    )
+    def test_example_1_cokernel(self, target, phi, excepted_output):
+        cokernel = phi.cokernel().remove_trivial_groups()
+        assert cokernel.A == excepted_output
 
     def test_example_2_FourierSeries(self):
         """
@@ -70,22 +80,19 @@ class TestThesisExamples:
         func_dual = func_sample_dual.transversal(phi.dual())
 
         assert func([0.5, 0.5]) == 1
-        assert close(func([1.6, 0.6]), 1.2)
-        assert close(func_sampled([n + 1, n + 1]), func([1/n, 1/n]))
-        assert close(func_sampled([1, 1]),   func([1/n, 1/n]))
+        assert isclose(func([1.6, 0.6]), 1.2)
+        assert isclose(func_sampled([n + 1, n + 1]), func([1 / n, 1 / n]))
+        assert isclose(func_sampled([1, 1]), func([1 / n, 1 / n]))
 
         assert func_dual([11, 11]) == 0
-        assert close(func_dual([0, 0]), (1 - 1/n) * n * n)
+        assert isclose(func_dual([0, 0]), (1 - 1 / n) * n * n)
 
     def test_example_3_Hexagonal(self):
-        from random import choice
-        from math import exp, sqrt, pi
 
         # Import objects, create function on R^n
-        from abelian import HomLCA, LCA, LCAFunc, voronoi
         R = LCA(orders=[0], discrete=[False])
         k = choice([0.85, 0.9, 1, 1.1, 1.15])  # Decay of exponential
-        func_expr = lambda x: exp(-pi *k* sum(x_j ** 2 for x_j in x))
+        func_expr = lambda x: exp(-pi * k * sum(x_j ** 2 for x_j in x))
         func = LCAFunc(func_expr, domain=R ** 2)
 
         # Create a homomorphism to sample
@@ -118,7 +125,3 @@ class TestThesisExamples:
             true_value = func(coords_on_R)
 
             assert abs(approx_value - true_value/k) < 0.10
-
-if __name__ == '__main__':
-    t = TestThesisExamples()
-    t.test_example_3_Hexagonal()

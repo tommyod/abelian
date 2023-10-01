@@ -1,125 +1,82 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import random
-from random import randint as ri
-from random import shuffle
-from abelian.groups import LCA
 from functools import reduce
 from operator import add
+from random import randint as ri
+from random import shuffle
 
-def random_zero_heavy(low, high):
-    """
-    Draw a random number, with approx 50% probability of zero.
-    """
-    return random.choice(list(range(low, high)) + [0]*(high - low))
+import pytest
 
-def random_from_list(number, list_to_take_from):
-    """
-    Draw several random values from the same list.
-    """
-    return [random.choice(list_to_take_from) for i in range(number)]
-
-def random_LCA(length):
-    """
-    Create a random LCA of a given length.
-    """
-    discrete = random_from_list(length, [True, False])
-    periods = []
-    for d in discrete:
-        if d:
-            # Discrete group, any integer
-            periods.append(random_zero_heavy(0, 99))
-        else:
-            periods.append(random.choice([0, 1]))
-
-    return LCA(orders= periods, discrete = discrete)
+from abelian.groups import LCA
+from utils import random_LCA
 
 
 class TestLCA:
 
-    @staticmethod
-    def setup():
+    @pytest.fixture
+    def random_LCAs(self):
         G = random_LCA(10)
         H = random_LCA(10)
 
         return G, H
 
     def test_border_cases(self):
-        """
-        Border cases when initializing.
-        """
-        Id = LCA.trivial()
+        """ Border cases when initializing """
+        identity = LCA.trivial()
+        assert identity.isomorphic(LCA([]))
 
-        assert Id.isomorphic(LCA([]))
-
-    def test_canonical(self):
-        """
-        Test that canonical is invariant under shuffling.
-        """
-        G, H = self.setup()
-
+    def test_canonical(self, random_LCAs):
+        """ Test that canonical is invariant under shuffling """
+        G, _ = random_LCAs
         G_split = [grp for grp in G]
+
         shuffle(G_split)
         G_shuffled = reduce(add, G_split)
 
         assert G.canonical() == G_shuffled.canonical()
 
-    def test_trivial_group(self):
-        """
-        Test the property of the trivial group.
-        """
-        G, H = self.setup()
+    def test_trivial_group(self, random_LCAs):
+        """ Test the property of the trivial group """
+        G, H = random_LCAs
 
-        Id = LCA.trivial()
-        assert (Id.compose_self(ri(0,3))).isomorphic(Id)
-        assert (G + Id).isomorphic(G)
-        assert (Id + G).isomorphic(G)
-        assert (H + Id).isomorphic(H)
-        assert (Id + H).isomorphic(H)
-        assert (Id + Id).isomorphic(Id)
+        identity = LCA.trivial()
+        assert (identity.compose_self(ri(0, 3))).isomorphic(identity)
+        assert (G + identity).isomorphic(G)
+        assert (identity + G).isomorphic(G)
+        assert (H + identity).isomorphic(H)
+        assert (identity + H).isomorphic(H)
+        assert (identity + identity).isomorphic(identity)
 
-
-    def test_rank(self):
-        """
-        Test the rank of LCAs.
-        """
-        G, H = self.setup()
+    def test_rank(self, random_LCAs):
+        """ Test the rank of LCAs """
+        G, H = random_LCAs
 
         assert (G + H).rank() == (G.rank() + H.rank())
 
-    def test_length(self):
-        """
-        Test the length of LCAs.
-        """
-        G, H = self.setup()
+    def test_length(self, random_LCAs):
+        """ Test the length of LCAs """
+        G, H = random_LCAs
 
         assert (G + H).length() == (G.length() + H.length())
 
-    def test_remove_trivial(self):
-        """
-        Test the removal of trivial subgroups.
-        """
-        G, H = self.setup()
-
+    def test_remove_trivial(self, random_LCAs):
+        """ Test the removal of trivial subgroups """
+        G, H = random_LCAs
         after = (G + H).remove_trivial()
         before = (G.remove_trivial() + H.remove_trivial())
+
         assert before == after
 
-    def test_proper_inclusion(self):
-        """
-        Test proper inclusion.
-        """
-        G, _ = self.setup()
-
+    def test_proper_inclusion(self, random_LCAs):
+        """ Test proper inclusion """
+        G, _ = random_LCAs
         H = G[3:-3]
+
         assert (H in G)
 
-    def test_inclusion(self):
-        """
-        Test inclusion.
-        """
-        G, H = self.setup()
+    def test_inclusion(self, random_LCAs):
+        """ Test inclusion """
+        G, H = random_LCAs
 
-        assert (G in G)
-        assert (H in H)
+        assert (G in G) and (H in H)
