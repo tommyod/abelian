@@ -87,8 +87,7 @@ def naive_FGA_elements_by_norm(orders, maxnorm_value):
         # Project argument
         prod = mod(prod, tuple(orders))
         # If not yielded and correct norm
-        if (prod not in yielded) and \
-                (max(maxnorm_in_finite(prod, tuple(orders))) == maxnorm_value):
+        if prod not in yielded and max(maxnorm_in_finite(prod, tuple(orders))) == maxnorm_value:
             yielded.add(prod)
             yield prod
 
