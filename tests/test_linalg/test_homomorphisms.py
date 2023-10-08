@@ -65,7 +65,7 @@ def test_stack_diagonally(setup):
 
 def test_call_order(setup):
     """
-    Test that (a \circ b)(x) == a (b(x)).
+    Test that (a * b)(x) == a (b(x)).
     """
     m, n, phi, psi = setup
 

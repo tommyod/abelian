@@ -33,10 +33,10 @@ class LCA(Sequence, Callable):
         orders and whether or not they are discrete. An order of 0 means
         infinite order. The possible groups are:
 
-        * :math:`\mathbb{Z}_n` : order = `n`, discrete = `True`
-        * :math:`\mathbb{Z}` : order = `0`, discrete = `True`
+        * :math:`Z_n` : order = `n`, discrete = `True`
+        * :math:`Z` : order = `0`, discrete = `True`
         * :math:`T` : order = `1`, discrete = `False`
-        * :math:`\mathbb{R}` : order = `0`, discrete = `False`
+        * :math:`R` : order = `0`, discrete = `False`
 
         Every locally compact abelian group is isomorphic to a direct sum
         or one or several of the groups above.
@@ -813,7 +813,7 @@ class LCA(Sequence, Callable):
 
     def to_latex(self):
         """
-        Return the LCA as a :math:`\LaTeX` string.
+        Return the LCA as a :math:`LaTeX` string.
 
         Returns
         -------
@@ -824,12 +824,12 @@ class LCA(Sequence, Callable):
         ---------
         >>> G = LCA([5, 0], [True, False])
         >>> G.to_latex()
-        '\\\mathbb{Z}_{5} \\\oplus \\\mathbb{R}'
+        'Z_{5} oplus R'
         """
         def repr_single(p, d):
             if p == 0:
                 if d:
-                    return r'\mathbb{Z}'
+                    return r'Z'
                 return r'\mathbb{R}'
             if d:
                 return r'\mathbb{Z}_{' + str(p) + '}'
