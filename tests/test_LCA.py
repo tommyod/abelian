@@ -10,7 +10,7 @@ from random import shuffle
 import pytest
 
 from abelian.groups import LCA
-from utils import random_zero_heavy, random_from_list
+from abelian.utils import random_zero_heavy, random_from_list
 
 
 def random_LCA(length):

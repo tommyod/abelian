@@ -9,7 +9,7 @@ from sympy import Matrix
 
 from abelian import HomLCA, LCA
 from abelian import LCAFunc, voronoi
-from utils import close
+from abelian.utils import close
 
 
 def test_example_1_HomFGA():

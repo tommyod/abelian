@@ -7,7 +7,7 @@ import pytest
 from sympy import Matrix
 
 from abelian.morphisms import HomLCA
-from utils import random_zero_heavy
+from abelian.utils import random_zero_heavy
 
 
 @pytest.fixture

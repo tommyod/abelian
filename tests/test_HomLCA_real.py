@@ -9,7 +9,7 @@ import pytest
 from sympy import Matrix
 
 from abelian.morphisms import HomLCA, LCA
-from utils import frob_norm
+from abelian.utils import frob_norm
 
 
 @pytest.fixture

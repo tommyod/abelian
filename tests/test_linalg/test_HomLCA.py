@@ -6,7 +6,7 @@ from random import randint as ri
 from sympy import Matrix
 import pytest
 from abelian import LCA, HomLCA
-from tests.utils import random_from_list
+from abelian.utils import random_from_list
 
 
 @pytest.fixture
