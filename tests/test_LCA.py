@@ -2,23 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import random
-from random import randint as ri
-from random import shuffle
-from abelian.groups import LCA
 from functools import reduce
 from operator import add
+from random import randint as ri
+from random import shuffle
 
-def random_zero_heavy(low, high):
-    """
-    Draw a random number, with approx 50% probability of zero.
-    """
-    return random.choice(list(range(low, high)) + [0]*(high - low))
+import pytest
 
-def random_from_list(number, list_to_take_from):
-    """
-    Draw several random values from the same list.
-    """
-    return [random.choice(list_to_take_from) for i in range(number)]
+from abelian.groups import LCA
+from abelian.utils import random_zero_heavy, random_from_list
+
 
 def random_LCA(length):
     """
@@ -33,93 +26,98 @@ def random_LCA(length):
         else:
             periods.append(random.choice([0, 1]))
 
-    return LCA(orders= periods, discrete = discrete)
+    return LCA(orders=periods, discrete=discrete)
 
 
-class TestLCA:
+@pytest.fixture
+def setup():
+    G = random_LCA(10)
+    H = random_LCA(10)
 
-    @staticmethod
-    def setup():
-        G = random_LCA(10)
-        H = random_LCA(10)
-
-        return G, H
-
-    def test_border_cases(self):
-        """
-        Border cases when initializing.
-        """
-        Id = LCA.trivial()
-
-        assert Id.isomorphic(LCA([]))
-
-    def test_canonical(self):
-        """
-        Test that canonical is invariant under shuffling.
-        """
-        G, H = self.setup()
-
-        G_split = [grp for grp in G]
-        shuffle(G_split)
-        G_shuffled = reduce(add, G_split)
-
-        assert G.canonical() == G_shuffled.canonical()
-
-    def test_trivial_group(self):
-        """
-        Test the property of the trivial group.
-        """
-        G, H = self.setup()
-
-        Id = LCA.trivial()
-        assert (Id.compose_self(ri(0,3))).isomorphic(Id)
-        assert (G + Id).isomorphic(G)
-        assert (Id + G).isomorphic(G)
-        assert (H + Id).isomorphic(H)
-        assert (Id + H).isomorphic(H)
-        assert (Id + Id).isomorphic(Id)
+    return G, H
 
 
-    def test_rank(self):
-        """
-        Test the rank of LCAs.
-        """
-        G, H = self.setup()
+def test_border_cases():
+    """
+    Border cases when initializing.
+    """
+    Id = LCA.trivial()
 
-        assert (G + H).rank() == (G.rank() + H.rank())
+    assert Id.isomorphic(LCA([]))
 
-    def test_length(self):
-        """
-        Test the length of LCAs.
-        """
-        G, H = self.setup()
 
-        assert (G + H).length() == (G.length() + H.length())
+def test_canonical(setup):
+    """
+    Test that canonical is invariant under shuffling.
+    """
+    G, H = setup
 
-    def test_remove_trivial(self):
-        """
-        Test the removal of trivial subgroups.
-        """
-        G, H = self.setup()
+    G_split = [grp for grp in G]
+    shuffle(G_split)
+    G_shuffled = reduce(add, G_split)
 
-        after = (G + H).remove_trivial()
-        before = (G.remove_trivial() + H.remove_trivial())
-        assert before == after
+    assert G.canonical() == G_shuffled.canonical()
 
-    def test_proper_inclusion(self):
-        """
-        Test proper inclusion.
-        """
-        G, _ = self.setup()
 
-        H = G[3:-3]
-        assert (H in G)
+def test_trivial_group(setup):
+    """
+    Test the property of the trivial group.
+    """
+    G, H = setup
 
-    def test_inclusion(self):
-        """
-        Test inclusion.
-        """
-        G, H = self.setup()
+    Id = LCA.trivial()
+    assert (Id.compose_self(ri(0, 3))).isomorphic(Id)
+    assert (G + Id).isomorphic(G)
+    assert (Id + G).isomorphic(G)
+    assert (H + Id).isomorphic(H)
+    assert (Id + H).isomorphic(H)
+    assert (Id + Id).isomorphic(Id)
 
-        assert (G in G)
-        assert (H in H)
+
+def test_rank(setup):
+    """
+    Test the rank of LCAs.
+    """
+    G, H = setup
+
+    assert (G + H).rank() == (G.rank() + H.rank())
+
+
+def test_length(setup):
+    """
+    Test the length of LCAs.
+    """
+    G, H = setup
+
+    assert (G + H).length() == (G.length() + H.length())
+
+
+def test_remove_trivial(setup):
+    """
+    Test the removal of trivial subgroups.
+    """
+    G, H = setup
+
+    after = (G + H).remove_trivial()
+    before = (G.remove_trivial() + H.remove_trivial())
+    assert before == after
+
+
+def test_proper_inclusion(setup):
+    """
+    Test proper inclusion.
+    """
+    G, _ = setup
+
+    H = G[3:-3]
+    assert (H in G)
+
+
+def test_inclusion(setup):
+    """
+    Test inclusion.
+    """
+    G, H = setup
+
+    assert (G in G)
+    assert (H in H)

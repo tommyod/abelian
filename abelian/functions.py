@@ -754,17 +754,6 @@ class LCAFunc(Callable):
         """
         Common wrapper for FFT and IFFT routines.
 
-        The numpy DFT is defined as:
-        :math:`A_{kl} =  \sum_{m=0}^{M-1} \sum_{n=0}^{N-1}
-        a_{mn}\exp\left\{-2\pi i \left({mk\over M}+{nl\over N}\right)\right\}
-        \qquad k = 0, \ldots, M-1;\quad l = 0, \ldots, N-1.`
-
-        And the inverse DFT is defined as:
-        :math:`a_{mn} = \frac{1}{MN} \sum_{k=0}^{M-1} \sum_{l=0}^{N-1}
-        A_{kl}\exp\left\{2\pi i \left({mk\over M}+{nl\over N}\right)\right\}
-        \qquad m = 0, \ldots, M-1;\quad n = 0, \ldots, N-1.`
-
-
         Parameters
         ----------
         func_to_wrap : str

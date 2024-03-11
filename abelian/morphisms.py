@@ -876,7 +876,7 @@ class HomLCA(Callable):
 
     def to_latex(self):
         """
-        Return the homomorphism as a :math:`\LaTeX` string.
+        Return the homomorphism as a :math:`LaTeX` string.
 
         Returns
         -------
@@ -887,7 +887,7 @@ class HomLCA(Callable):
         --------
         >>> phi = HomLCA([1])
         >>> phi.to_latex()
-        '\\\\begin{pmatrix}1\\\\end{pmatrix}:\\\\mathbb{Z} \\\\to \\\\mathbb{Z}'
+        'pmatrix1->pmatrix:Z -> Z'
         """
         latex_code = latex(self.A)
         latex_code = latex_code.replace(r'\left[\begin{matrix}',
