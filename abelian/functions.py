@@ -615,7 +615,7 @@ class LCAFunc(Callable):
 
     def to_latex(self):
         """
-        Return as a :math:`LaTeX` string.
+        Return as a :math:`\LaTeX` string.
 
 
         Returns
